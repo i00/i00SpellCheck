@@ -1,6 +1,27 @@
-MIT License
+License Copyright: i00 (Kris Bennett)
+License License: MIT License
+License Contact: KrisBennett@i00Productions.org
 
-Copyright (c) [year] [fullname]
+i00 SpellCheck is licenced under the MIT licence.
+If you wish to use ANY part of this spell checker in your projects you must
+first state that you are going to use it in a post in the issues part of:
+	https://github.com/i00/i00SpellCheck/issues
+	(be sure to add the label "using in my project")
+
+All content in the i00SpellCheck project is, and remains, the property of i00
+Productions, regardless of its usage.
+
+i00 holds no responsibility for damages due to the use of this product.
+
+This product is only a component and thus is intended to be used as part of
+other software, it is not a complete software package, thus i00 Productions is
+not responsible for any legal ramifications that any software using this
+product breaches.
+
+Copyright 2012- i00 (Kris Bennett)
+
+
+
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,0 +1,264 @@
+﻿Imports i00SpellCheck
+
+Public Class Form1
+
+    Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        ''For the status bar to show the dictionary loading stats
+        ''dictionary only loads 1st time you call EnableSpellCheck
+        AddHandler SpellCheckFormExtension.DictionaryLoaded, AddressOf DictionaryLoaded
+        tslStatus.Text = "Loading dictionary..."
+
+        'SpellCheckTextBoxAdded/Removed events are called whenever a spell check is created (auto or manual) on a textbox
+        'Here this is used to process new textboxes for owner-draw events
+        AddHandler SpellCheckTextBoxExtension.SpellCheckTextBoxAdded, AddressOf SpellCheckTextBoxAdded
+        AddHandler SpellCheckTextBoxExtension.SpellCheckTextBoxRemoved, AddressOf SpellCheckTextBoxRemoved
+
+        ''enable the spell check
+        ''this will enable the spell check on ALL TEXT FIELDS ON THIS form AND ALL TEXT FIELDS ON ALL OWNED FORMS AS THEY OPEN automatically :)
+        ''... but only for multi line Rich/Text Boxes
+        Me.EnableSpellCheck()
+        ''To enable spell check on single line textboxes you will need to call:
+        ''TextBox.SpellCheck()
+
+        ''if you wanted to pass in options you can do so by going:
+        'Dim SpellCheckSettings As New i00SpellCheck.SpellCheckTextBox.SpellCheckSettings
+        'SpellCheckSettings.DoSubforms = True 'Specifies if owned forms should be automatically spell checked
+        'SpellCheckSettings.AllowAdditions = True 'Specifies if you want to allow the user to add words to the dictionary
+        'SpellCheckSettings.AllowIgnore = True 'Specifies if you want to allow the user ignore words
+        'SpellCheckSettings.AllowRemovals = True 'Specifies if you want to allow users to delete words from the dictionary
+        'SpellCheckSettings.AllowInMenuDefs = True 'Specifies if the in menu definitions should be shown for correctly spelled words
+        'SpellCheckSettings.AllowChangeTo = True 'Specifies if "Change to..." (to change to a synonym) should be shown in the menu for correctly spelled words
+        'Me.EnableSpellCheck(SpellCheckSettings)
+
+        ''You can also enable spell checking on one text field:
+        'TextBox1.SpellCheck()
+        ''Note that the above is NOT threaded - so if you fire it from the interface it can "freeze" for a second if the dictionary is not yet loaded (unless you load the dictionary in a seperate thread).
+
+        ''To change options on an individual text box:
+        'TextBox1.SpellCheck.Settings.AllowAdditions = True
+        'TextBox1.SpellCheck.Settings.AllowIgnore = True
+        'TextBox1.SpellCheck.Settings.AllowRemovals = True
+        'TextBox1.SpellCheck.Settings.ShowMistakes = True
+        ''etc
+
+        ''To show a spellcheck dialog for an individual text box:
+        'TextBox1.SpellCheck.ShowDialog()
+
+        ''To load a custom dictionary from a saved file:
+        'Dim Dictionary = New i00SpellCheck.SpellCheckTextBox.Dictionary("c:\Custom.dic")
+
+        ''To create a new blank dictionary and save it as a file
+        'Dim Dictionary = New i00SpellCheck.SpellCheckTextBox.Dictionary("c:\Custom.dic", True)
+        'Dictionary.Add("CustomWord1")
+        'Dictionary.Add("CustomWord2")
+        'Dictionary.Add("CustomWord3")
+        'Dictionary.Save()
+
+        ''To Load a custom dictionary for an individual text box:
+        'TextBox1.SpellCheck.CurrentDictionary = Dictionary
+
+        ''To Open the dictionary editor for a dictionary associated with a text box:
+        'Using DictionaryEditor As New DictionaryEditor
+        '    TextBox1.SpellCheck.CurrentDictionary = DictionaryEditor.ShowDialog(RichTextBox1.SpellCheck.CurrentDictionary)
+        '    TextBox1.SpellCheck.InvalidateAllTextBoxesWithSameDict()
+        'End Using
+
+    End Sub
+
+    Private Sub DictionaryLoaded(ByVal sender As Object, ByVal e As EventArgs)
+        tslStatus.Text = "Dictionary loaded " & i00SpellCheck.SpellCheckTextBox.DefaultDictionary.Count & " word" & If(i00SpellCheck.SpellCheckTextBox.DefaultDictionary.Count = 1, "", "s")
+    End Sub
+
+    Private Sub SpellCheckTextBoxAdded(ByVal sender As Object, ByVal e As TextBoxAddedRemovedEventArgs)
+        'add the custom draw event handlers...
+        AddHandler SpellCheckTextBoxes(e.TextBoxBase).SpellCheckErrorPaint, AddressOf SpellCheckErrorPaint
+    End Sub
+
+    Private Sub SpellCheckTextBoxRemoved(ByVal sender As Object, ByVal e As TextBoxAddedRemovedEventArgs)
+        'remove the custom draw event handlers...
+        RemoveHandler SpellCheckTextBoxes(e.TextBoxBase).SpellCheckErrorPaint, AddressOf SpellCheckErrorPaint
+    End Sub
+
+    Private Sub SpellCheckErrorPaint(ByVal sender As Object, ByRef e As SpellCheckTextBox.SpellCheckCustomPaintEventArgs)
+        Dim SpellCheckTextBox = TryCast(sender, SpellCheckTextBox)
+        If SpellCheckTextBox IsNot Nothing Then
+            Dim Color As Color
+            Select Case e.WordState
+                Case i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.CaseError
+                    Color = SpellCheckTextBox.Settings.CaseMistakeColor
+                Case i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.Ignore
+                    Color = SpellCheckTextBox.Settings.IgnoreColor
+                Case i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.SpellError
+                    Color = SpellCheckTextBox.Settings.MistakeColor
+            End Select
+            Select Case tsiDrawStyle.Text
+                Case "Boxed In"
+                    Using sb As New SolidBrush(Color.FromArgb(63, Color))
+                        e.Graphics.FillRectangle(sb, e.Bounds)
+                    End Using
+                    Using p As New Pen(Color)
+                        e.Graphics.DrawRectangle(p, e.Bounds)
+                    End Using
+                    e.DrawDefault = False
+                Case "Opera"
+                    Using p As New Pen(Color)
+                        p.DashPattern = New Single() {1, 2}
+                        p.DashStyle = Drawing2D.DashStyle.Custom
+                        e.Graphics.DrawLine(p, e.Bounds.X, e.Bounds.Bottom, e.Bounds.Right, e.Bounds.Bottom)
+                    End Using
+                    e.DrawDefault = False
+                Case "Draft Plan"
+                    If e.WordState = i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.Ignore Then
+                        e.DrawDefault = True
+                    Else
+                        Randomize()
+                        'e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
+                        Using gp As New Drawing2D.GraphicsPath
+                            Dim Points As New List(Of PointF)
+                            Dim StartX = e.Bounds.X + ((Rnd() * 16) - 8)
+                            For i = StartX To e.Bounds.Right + 8 Step (Rnd() * 16) + 16
+                                Dim y = ((Rnd() * 8) + ((e.Bounds.Height / 2) - 4) + e.Bounds.Top)
+                                Points.Add(New PointF(i, CSng(y)))
+                            Next
+                            If Points.Count = 1 Then
+                                'add another point
+                                Dim y = ((Rnd() * 8) + ((e.Bounds.Height / 2) - 4) + e.Bounds.Top)
+                                Points.Add(New PointF(Points.First.X, CSng(y)))
+                            End If
+                            If Points.Count > 1 Then
+                                gp.AddCurve(Points.ToArray)
+                                Using p As New Pen(Color, 3)
+                                    e.Graphics.DrawPath(p, gp)
+                                End Using
+                            End If
+                            e.DrawDefault = False
+                        End Using
+                    End If
+                Case Else
+                    'draw default
+            End Select
+        End If
+    End Sub
+
+    Private Sub tstbAnagramLookup_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles tstbAnagramLookup.KeyPress
+        If e.KeyChar = vbCr Then
+            Dim Anagrams = i00SpellCheck.SpellCheckTextBox.DefaultDictionary.AnagramLookup(tstbAnagramLookup.Text).ToArray
+            MsgBox("Found " & Anagrams.Count & " anogram" & If(Anagrams.Count = 1, "", "s") & If(Anagrams.Count = 0, "", ":" & vbCrLf & Join(Anagrams, vbCrLf)))
+        End If
+    End Sub
+
+    Private Sub tstbScrabbleHelper_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles tstbScrabbleHelper.KeyPress
+        If e.KeyChar = vbCr Then
+            Dim Scrabble = i00SpellCheck.SpellCheckTextBox.DefaultDictionary.ScrabbleLookup(tstbScrabbleHelper.Text).ToArray
+            MsgBox("Found " & Scrabble.Count & " scrabble combination" & If(Scrabble.Count = 1, "", "s") & If(Scrabble.Count = 0, "", ":" & vbCrLf & Join((From xItem In Scrabble Order By xItem.Score Descending, xItem.Word Ascending Select xItem.Word & " (" & xItem.Score & ")").ToArray, ",")), , "Scrabble combinations for " & tstbScrabbleHelper.Text)
+        End If
+    End Sub
+
+    Private Sub tsbSuggestionLookup_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles tsbSuggestionLookup.KeyPress
+        If e.KeyChar = vbCr Then
+            tsbSuggestionLookup.Text = tsbSuggestionLookup.Text.Replace(" ", "") 'remove spaces
+            If i00SpellCheck.SpellCheckTextBox.DefaultDictionary.SpellCheckWord(tsbSuggestionLookup.Text) = SpellCheckTextBox.Dictionary.SpellCheckWordError.OK Then
+                'Correct spelling
+                'look up the meaning of the word :)
+                Dim WordDefs = Join(SpellCheckTextBox.Definitions.DefaultDefinitions.FindWord(tsbSuggestionLookup.Text, SpellCheckTextBox.DefaultDictionary).ToArray, vbCrLf)
+                If WordDefs <> "" Then
+                    MsgBox(tsbSuggestionLookup.Text & vbCrLf & vbCrLf & WordDefs)
+                    Return
+                End If
+                MsgBox("Your word is spelt correctly!")
+            Else
+                'Incorrect - Offer suggestions
+                Dim Suggestions = i00SpellCheck.SpellCheckTextBox.DefaultDictionary.SpellCheckSuggestions(tsbSuggestionLookup.Text)
+                Dim TopCloseness = Suggestions.Max(Function(x As i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckSuggestionInfo) x.Closness)
+                Dim FilteredSuggestions = (From xItem In Suggestions Order By xItem.Closness Descending, xItem.Word Ascending Where xItem.Closness >= TopCloseness * 0.75 Select xItem.Word).ToArray
+                FilteredSuggestions = (From xItem In FilteredSuggestions Where Array.IndexOf(FilteredSuggestions, xItem) < 15).ToArray
+
+                MsgBox("Found " & FilteredSuggestions.Count & " suggestion" & If(FilteredSuggestions.Count = 1, "", "s") & If(FilteredSuggestions.Count = 0, "", ":" & vbCrLf & Join(FilteredSuggestions, vbCrLf)) & vbCrLf & vbCrLf & _
+                       "This sugguestion lookup uses closeness tolerance of 25% to filter results and limited to 15 results.")
+            End If
+        End If
+    End Sub
+
+    Private Sub CrosswordSolverToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles CrosswordSolverToolStripMenuItem.Click
+        Using frmCrosswordGenerator As New i00SpellCheck.frmCrosswordGenerator()
+            frmCrosswordGenerator.StartPosition = FormStartPosition.CenterParent
+            frmCrosswordGenerator.ShowInTaskbar = False
+            frmCrosswordGenerator.ShowDialog(Me)
+        End Using
+    End Sub
+
+    Private Sub ShowErrorsToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ShowErrorsToolStripMenuItem.Click
+        ShowIgnoredToolStripMenuItem.Enabled = ShowErrorsToolStripMenuItem.Checked
+        For Each item In SpellCheckTextBoxes
+            item.Value.Settings.ShowMistakes = ShowErrorsToolStripMenuItem.Checked
+        Next
+        UpdatePropertyGrids()
+    End Sub
+
+    Private Sub ShowIgnoredToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
+        Dim SelectedEnum = SpellCheckTextBox.SpellCheckSettings.ShowIgnoreState.OnKeyDown
+        For Each item In ShowIgnoredToolStripMenuItem.DropDownItems.OfType(Of ToolStripMenuItem)()
+            If item Is sender Then
+                item.Checked = True
+                SelectedEnum = CType(Val(item.Tag), SpellCheckTextBox.SpellCheckSettings.ShowIgnoreState)
+            Else
+                item.Checked = False
+            End If
+        Next
+        For Each item In SpellCheckTextBoxes
+            item.Value.Settings.ShowIgnored = SelectedEnum
+        Next
+        UpdatePropertyGrids()
+    End Sub
+
+    Private Sub tsiCPSpellingError_ColorChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsiCPSpellingError.ColorChanged
+        For Each item In SpellCheckTextBoxes
+            item.Value.Settings.MistakeColor = tsiCPSpellingError.SelectedColor
+        Next
+        UpdatePropertyGrids()
+    End Sub
+
+    Private Sub tsiCPCaseError_ColorChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsiCPCaseError.ColorChanged
+        For Each item In SpellCheckTextBoxes
+            item.Value.Settings.CaseMistakeColor = tsiCPCaseError.SelectedColor
+        Next
+        UpdatePropertyGrids()
+    End Sub
+
+    Private Sub tsiCPIgnoreColor_ColorChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsiCPIgnoreColor.ColorChanged
+        For Each item In SpellCheckTextBoxes
+            item.Value.Settings.IgnoreColor = tsiCPIgnoreColor.SelectedColor
+        Next
+        UpdatePropertyGrids()
+    End Sub
+
+    Private Sub tsbSpellCheck_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbSpellCheck.Click
+        For Each item In tabSpellControls.SelectedTab.Controls.OfType(Of TextBoxBase)()
+            item.SpellCheck.ShowDialog()
+        Next
+    End Sub
+
+    Private Sub tsbProperties_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbProperties.Click
+        tsbProperties.Checked = Not tsbProperties.Checked
+        UpdatePropertyGrids()
+    End Sub
+
+    Private Sub UpdatePropertyGrids()
+        Dim ctl As Control = Me
+        Do Until ctl Is Nothing
+            Dim PropertyGrid = TryCast(ctl, PropertyGrid)
+            If PropertyGrid IsNot Nothing Then
+                PropertyGrid.Visible = tsbProperties.Checked
+                PropertyGrid.Refresh()
+            End If
+            ctl = Me.GetNextControl(ctl, True)
+        Loop
+    End Sub
+
+    Private Sub tsiDrawStyle_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsiDrawStyle.SelectedIndexChanged
+        For Each item In SpellCheckTextBoxes
+            item.Value.RepaintTextBox()
+        Next
+    End Sub
+
+End Class
