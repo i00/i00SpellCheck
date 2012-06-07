@@ -111,7 +111,7 @@ Partial Class SpellCheckTextBox
                 End If
             Else
                 If Me.Settings.RenderCompatibility Then
-                    If Me.Settings.ShowMistakes Then
+                    If Me.Settings.ShowMistakes AndAlso Me.parentTextBox.IsSpellCheckEnabled Then
                         parentTextBox.Invalidate()
                     End If
                 Else
@@ -119,7 +119,7 @@ Partial Class SpellCheckTextBox
                     If DrawOverlayForm Is Nothing Then
                         OpenOverlay()
                     End If
-                    If Me.Settings.ShowMistakes = False Then
+                    If Me.Settings.ShowMistakes = False OrElse Me.parentTextBox.IsSpellCheckEnabled = False Then
                         DrawOverlayForm.Visible = False
                     Else
                         DrawOverlayForm.Visible = mc_parentTextBox.Visible
@@ -128,7 +128,7 @@ Partial Class SpellCheckTextBox
                         Me.CustomPaint()
                     End If
                 End If
-                End If
+            End If
         Catch ex As Exception
 
         End Try
@@ -186,74 +186,78 @@ Partial Class SpellCheckTextBox
                 ToChar += Len(RightSide)
 
                 Dim VisibleText = Mid(theText, FromChar + 1, ToChar - FromChar)
-                If Trim(VisibleText) = "" Then Exit Sub
-                Dim words = Replace(Replace(VisibleText, vbCr, " "), vbLf, " ").Split(" "c)
 
                 Dim NewWords As New Dictionary(Of String, Dictionary.SpellCheckWordError)
 
-                For iWord = LBound(words) To UBound(words)
-                    If words(iWord) <> "" Then
-                        Dim P1 = parentTextBox.GetPositionFromCharIndex(LetterIndex)
-                        If P1.Y < parentTextBox.Height Then
-                            Dim WordState As Dictionary.SpellCheckWordError = Dictionary.SpellCheckWordError.SpellError
-                            If dictCache.ContainsKey(words(iWord)) Then
-                                'load from cache
-                                WordState = dictCache(words(iWord))
-                            Else
-                                ''item is not in the dict cache
-                                'WordState = SpellCheckWord(words(iWord))
-                                'If dictCache.ContainsKey(words(iWord)) = False Then
-                                '    dictCache.Add(words(iWord), WordState)
-                                'End If
-                                'assume ok for now and add word to be processed
-                                If NewWords.ContainsKey(words(iWord)) = False Then
-                                    NewWords.Add(words(iWord), Dictionary.SpellCheckWordError.OK)
-                                End If
+                If Trim(VisibleText) <> "" Then
+                    Dim words = Replace(Replace(VisibleText, vbCr, " "), vbLf, " ").Split(" "c)
 
-                                WordState = Dictionary.SpellCheckWordError.OK
-                            End If
-                            If WordState = Dictionary.SpellCheckWordError.OK Then
-
-                            Else
-                                If WordState = Dictionary.SpellCheckWordError.Ignore Then
-                                    If Settings.ShowIgnored = SpellCheckSettings.ShowIgnoreState.OnKeyDown AndAlso My.Computer.Keyboard.CtrlKeyDown = False Then
-                                        GoTo ContinueFor
-                                    ElseIf Settings.ShowIgnored = SpellCheckSettings.ShowIgnoreState.AlwaysHide Then
-                                        GoTo ContinueFor
+                    For iWord = LBound(words) To UBound(words)
+                        If words(iWord) <> "" Then
+                            Dim P1 = parentTextBox.GetPositionFromCharIndex(LetterIndex)
+                            If P1.Y < parentTextBox.Height Then
+                                Dim WordState As Dictionary.SpellCheckWordError = Dictionary.SpellCheckWordError.SpellError
+                                If dictCache.ContainsKey(words(iWord)) Then
+                                    'load from cache
+                                    WordState = dictCache(words(iWord))
+                                Else
+                                    ''item is not in the dict cache
+                                    'WordState = SpellCheckWord(words(iWord))
+                                    'If dictCache.ContainsKey(words(iWord)) = False Then
+                                    '    dictCache.Add(words(iWord), WordState)
+                                    'End If
+                                    'assume ok for now and add word to be processed
+                                    If NewWords.ContainsKey(words(iWord)) = False Then
+                                        NewWords.Add(words(iWord), Dictionary.SpellCheckWordError.OK)
                                     End If
-                                End If
 
-                                Dim P2 = parentTextBox.GetPositionFromCharIndex(LetterIndex + Len(words(iWord)))
-                                If P2.X = 0 Then
-                                    'we are the last char ... :(
-                                    P2 = parentTextBox.GetPositionFromCharIndex(LetterIndex + Len(words(iWord)) - 1)
-                                    P2.X += System.Windows.Forms.TextRenderer.MeasureText("-" & Right(words(iWord), 1) & "-", parentTextBox.Font).Width - BufferWidth
+                                    WordState = Dictionary.SpellCheckWordError.OK
                                 End If
-                                Dim LineHeight As Integer = GetLineHeightFromCharPosition(LetterIndex)
-                                'P1.Y += LineHeight
-                                P2.Y = P1.Y + LineHeight
-                                'P2.Y = P1.Y
+                                If WordState = Dictionary.SpellCheckWordError.OK Then
 
-                                Dim e = New SpellCheckCustomPaintEventArgs With {.Graphics = g, .Word = words(iWord), .Bounds = New Rectangle(P1.X, P1.Y, P2.X - P1.X, P2.Y - P1.Y), .WordState = WordState}
-                                RaiseEvent SpellCheckErrorPaint(Me, e)
-                                If e.DrawDefault Then
-                                    Select Case WordState
-                                        Case Dictionary.SpellCheckWordError.Ignore
-                                            Using p As New Pen(Settings.IgnoreColor)
-                                                g.DrawLine(p, P1.X, P2.Y + 1, P2.X, P2.Y + 1)
-                                            End Using
-                                        Case Dictionary.SpellCheckWordError.CaseError
-                                            DrawWave(g, P1, P2, Settings.CaseMistakeColor)
-                                        Case Dictionary.SpellCheckWordError.SpellError
-                                            DrawWave(g, P1, P2, Settings.MistakeColor)
-                                    End Select
+                                Else
+                                    If WordState = Dictionary.SpellCheckWordError.Ignore Then
+                                        If Settings.ShowIgnored = SpellCheckSettings.ShowIgnoreState.OnKeyDown AndAlso My.Computer.Keyboard.CtrlKeyDown = False Then
+                                            GoTo ContinueFor
+                                        ElseIf Settings.ShowIgnored = SpellCheckSettings.ShowIgnoreState.AlwaysHide Then
+                                            GoTo ContinueFor
+                                        End If
+                                    End If
+
+                                    Dim P2 = parentTextBox.GetPositionFromCharIndex(LetterIndex + Len(words(iWord)))
+                                    If P2.X = 0 Then
+                                        'we are the last char ... :(
+                                        P2 = parentTextBox.GetPositionFromCharIndex(LetterIndex + Len(words(iWord)) - 1)
+                                        P2.X += System.Windows.Forms.TextRenderer.MeasureText("-" & Right(words(iWord), 1) & "-", parentTextBox.Font).Width - BufferWidth
+                                    End If
+                                    Dim LineHeight As Integer = GetLineHeightFromCharPosition(LetterIndex)
+                                    'P1.Y += LineHeight
+                                    P2.Y = P1.Y + LineHeight
+                                    'P2.Y = P1.Y
+
+                                    Dim e = New SpellCheckCustomPaintEventArgs With {.Graphics = g, .Word = words(iWord), .Bounds = New Rectangle(P1.X, P1.Y, P2.X - P1.X, P2.Y - P1.Y), .WordState = WordState}
+                                    RaiseEvent SpellCheckErrorPaint(Me, e)
+                                    If e.DrawDefault Then
+                                        Select Case WordState
+                                            Case Dictionary.SpellCheckWordError.Ignore
+                                                Using p As New Pen(Settings.IgnoreColor)
+                                                    g.DrawLine(p, P1.X, P2.Y + 1, P2.X, P2.Y + 1)
+                                                End Using
+                                            Case Dictionary.SpellCheckWordError.CaseError
+                                                DrawWave(g, P1, P2, Settings.CaseMistakeColor)
+                                            Case Dictionary.SpellCheckWordError.SpellError
+                                                DrawWave(g, P1, P2, Settings.MistakeColor)
+                                        End Select
+                                    End If
                                 End If
                             End If
                         End If
-                    End If
 ContinueFor:
-                    LetterIndex += 1 + Len(words(iWord))
-                Next
+                        LetterIndex += 1 + Len(words(iWord))
+                    Next
+                End If
+
+Draw:
                 If DrawOverlayForm IsNot Nothing Then
                     DrawOverlayForm.SetBitmap(b, 255)
                 Else

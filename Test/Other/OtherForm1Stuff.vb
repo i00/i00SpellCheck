@@ -2,6 +2,38 @@
 
 Partial Class Form1
 
+    Const WM_SYSCOMMAND As Integer = &H112
+    Const SC_KEYMENU As Integer = &HF100
+
+    Protected Overrides Sub WndProc(ByRef m As System.Windows.Forms.Message)
+
+        Select Case m.Msg
+            Case WM_SYSCOMMAND
+                Select Case m.WParam.ToInt32
+                    Case SC_KEYMENU
+                        Static LastControl As Control
+                        If ToolStripDropDownButton1.GetCurrentParent.Focused() Then
+                            If LastControl IsNot Nothing Then
+                                Try
+                                    LastControl.Focus()
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                        Else
+                            LastControl = Me.ActiveControl
+                            ToolStripDropDownButton1.GetCurrentParent.Focus()
+                            ToolStripDropDownButton1.Select()
+                        End If
+                    Case Else
+                        MyBase.WndProc(m)
+                End Select
+            Case Else
+                MyBase.WndProc(m)
+        End Select
+
+    End Sub
+
     Private Sub Form1_Load_2(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         ''do not select the text
         TextBox1.SelectionStart = 0
@@ -51,6 +83,8 @@ Partial Class Form1
 
         propRichTextBox.SelectedObject = RichTextBox1.SpellCheck
         propTextBox.SelectedObject = TextBox1.SpellCheck
+
+        UpdateEnabledCheck()
     End Sub
 
     Private Class FavIconData
@@ -134,7 +168,9 @@ Partial Class Form1
 
     Private Sub Form1_Shown(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Shown
         Using frmSplash As New frmSplash
-            frmSplash.ShowDialog(Me)
+            If frmSplash.ShowDialog(Me) = False Then
+                Close()
+            End If
         End Using
     End Sub
 

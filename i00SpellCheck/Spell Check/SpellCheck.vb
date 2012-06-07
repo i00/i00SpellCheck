@@ -244,13 +244,12 @@ NextWord:
 
     Friend Shared Function RemoveWordBreaks(ByVal Text As String) As String
         If Text <> "" Then
+            'replace all chrs
             Dim arr = (From xItem In WordBreakChrs Select System.Text.RegularExpressions.Regex.Escape(xItem)).ToArray
-            Text = System.Text.RegularExpressions.Regex.Replace(Text, "[" & Join(arr, "|") & "]", " ")
-            'old method
-            'For Each item In WordBreakChrs
-            '    Text = Replace(Text, item, New String(" "c, Len(item)))
-            'Next
-            'remove "'" but only for words ending in this eg "chris'" = "chris ", but "heather's" <> "heather s"
+            Text = System.Text.RegularExpressions.Regex.Replace(Text, "[" & Join(arr, "|") & "]", New System.Text.RegularExpressions.MatchEvaluator(Function(x As System.Text.RegularExpressions.Match) New String(" "c, x.Length)))
+            'hrm... regex doesn't work for tab char???
+            Text = Replace(Text, vbTab, New String(" "c, Len(vbTab)))
+            'regex below removes "'" but only for words ending in this eg "chris'" = "chris ", but "heather's" <> "heather s"
             Text = System.Text.RegularExpressions.Regex.Replace(Text, "'(?![A-Z0-9_])", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
         End If
         Return Text

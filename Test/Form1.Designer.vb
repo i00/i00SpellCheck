@@ -64,6 +64,7 @@ Partial Class Form1
         Me.tabTextBox = New System.Windows.Forms.TabPage
         Me.propTextBox = New System.Windows.Forms.PropertyGrid
         Me.ToolStrip3 = New System.Windows.Forms.ToolStrip
+        Me.tsiEnabled = New System.Windows.Forms.ToolStripButton
         Me.ToolStrip1.SuspendLayout()
         Me.ToolStrip2.SuspendLayout()
         Me.tabSpellControls.SuspendLayout()
@@ -421,12 +422,21 @@ Partial Class Form1
         'ToolStrip3
         '
         Me.ToolStrip3.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden
-        Me.ToolStrip3.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsbSpellCheck, Me.tsbProperties})
+        Me.ToolStrip3.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsbSpellCheck, Me.tsbProperties, Me.tsiEnabled})
         Me.ToolStrip3.Location = New System.Drawing.Point(0, 25)
         Me.ToolStrip3.Name = "ToolStrip3"
         Me.ToolStrip3.Size = New System.Drawing.Size(624, 25)
         Me.ToolStrip3.TabIndex = 7
         Me.ToolStrip3.Text = "ToolStrip3"
+        '
+        'tsiEnabled
+        '
+        Me.tsiEnabled.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.tsiEnabled.Image = CType(resources.GetObject("tsiEnabled.Image"), System.Drawing.Image)
+        Me.tsiEnabled.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.tsiEnabled.Name = "tsiEnabled"
+        Me.tsiEnabled.Size = New System.Drawing.Size(69, 22)
+        Me.tsiEnabled.Text = "Enabled"
         '
         'Form1
         '
@@ -496,5 +506,6 @@ Partial Class Form1
     Friend WithEvents propTextBox As System.Windows.Forms.PropertyGrid
     Friend WithEvents tsbProperties As System.Windows.Forms.ToolStripButton
     Friend WithEvents ToolStrip3 As System.Windows.Forms.ToolStrip
+    Friend WithEvents tsiEnabled As System.Windows.Forms.ToolStripButton
 
 End Class

@@ -123,6 +123,9 @@
 This product is only a component and thus is intended to be used as part of other software, it is not a complete software package, thus i00 Productions is not responsible for any legal ramifications that any software using this product breaches.
 </value>
   </data>
+  <metadata name="cmsLinks.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

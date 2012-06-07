@@ -452,7 +452,7 @@ AllDone:
                 MenuSpellClickReturn = New MenuSpellClickReturnItem(parentTextBox, True)
             End If
 
-            If MenuSpellClickReturn.Word <> "" Then
+            If MenuSpellClickReturn.Word <> "" AndAlso parentTextBox.IsSpellCheckEnabled Then
                 SpellMenuItems.ContextMenuStrip = ContextMenuStrip
                 SpellMenuItems.AddItems(MenuSpellClickReturn.Word, CurrentDictionary, CurrentDefinitions, CurrentSynonyms, Settings)
             End If

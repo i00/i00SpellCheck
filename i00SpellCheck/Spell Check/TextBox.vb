@@ -239,7 +239,7 @@ Public Class SpellCheckTextBox
     End Property
 
     Private Sub parentTextBox_KeyUp(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles mc_parentTextBox.KeyUp
-        Select Case e.KeyCode
+        Select e.KeyCode
             Case Keys.Apps 'right click menu
                 If ContextMenuStrip.Visible Then
                     'menu is open already ... so hide
@@ -247,17 +247,22 @@ Public Class SpellCheckTextBox
                 Else
                     MenuSpellClickReturn = New MenuSpellClickReturnItem(parentTextBox, False)
                 End If
+            Case Keys.F3
+                If Settings.AllowF3 Then
+                    'cycle through case's ... sentence, propper, upper, lower, origional
+                    CycleCase()
+                End If
+        End Select
+
+        If parentTextBox.IsSpellCheckEnabled = False Then Return
+
+        Select Case e.KeyCode
             Case Keys.F7
                 'spell check dialogue
                 If Settings.AllowF7 Then
                     ShowDialog()
                     'update the ignored/added/removed words...
                     RepaintTextBox()
-                End If
-            Case Keys.F3
-                If Settings.AllowF3 Then
-                    'cycle through case's ... sentence, propper, upper, lower, origional
-                    CycleCase()
                 End If
         End Select
     End Sub
@@ -275,8 +280,10 @@ Public Class SpellCheckTextBox
     End Sub
 
     Private Sub parentTextBox_TextChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.TextChanged
-        'RepaintTextBox()
-        'parentTextBox.Invalidate()
+        'Standard TextBoxes do not fire the WM_PAINT event when adding text so need to do it this way
+        If TypeOf parentTextBox Is TextBox Then
+            parentTextBox.Invalidate()
+        End If
     End Sub
 
     Private Const WM_VSCROLL As Integer = &H115
@@ -284,10 +291,9 @@ Public Class SpellCheckTextBox
     Private Const WM_PAINT As Integer = &HF
 
     Protected Overrides Sub WndProc(ByRef m As Message)
-        'Debug.Print(Now & " - " & m.ToString)
-        If Settings.ShowMistakes Then
-            Select Case m.Msg
-                Case WM_PAINT
+        Select Case m.Msg
+            Case WM_PAINT
+                If Settings.ShowMistakes AndAlso Me.parentTextBox.IsSpellCheckEnabled Then
                     If Me.Settings.RenderCompatibility Then
                         'old draw method...
                         parentTextBox.Invalidate()
@@ -300,12 +306,10 @@ Public Class SpellCheckTextBox
                         'OpenOverlay()
                         'Me.CustomPaint()
                     End If
-                Case Else
-                    MyBase.WndProc(m)
-            End Select
-        Else
-            MyBase.WndProc(m)
-        End If
+                End If
+            Case Else
+                MyBase.WndProc(m)
+        End Select
     End Sub
 
 #End Region

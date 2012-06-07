@@ -30,9 +30,15 @@ Public Class Form1
         'SpellCheckSettings.AllowChangeTo = True 'Specifies if "Change to..." (to change to a synonym) should be shown in the menu for correctly spelled words
         'Me.EnableSpellCheck(SpellCheckSettings)
 
-        ''You can also enable spell checking on one text field:
+        ''You can also enable spell checking on an individual TextBox:
         'TextBox1.SpellCheck()
         ''Note that the above is NOT threaded - so if you fire it from the interface it can "freeze" for a second if the dictionary is not yet loaded (unless you load the dictionary in a seperate thread).
+
+        ''To disable the spell check on a TextBox:
+        'TextBox1.DisableSpellCheck()
+
+        ''To see if the spell check is enabled on a TextBox:
+        'Dim SpellCheckEnabled = TextBox1.IsSpellCheckEnabled()
 
         ''To change options on an individual text box:
         'TextBox1.SpellCheck.Settings.AllowAdditions = True
@@ -76,7 +82,9 @@ Public Class Form1
 
     Private Sub SpellCheckTextBoxRemoved(ByVal sender As Object, ByVal e As TextBoxAddedRemovedEventArgs)
         'remove the custom draw event handlers...
-        RemoveHandler SpellCheckTextBoxes(e.TextBoxBase).SpellCheckErrorPaint, AddressOf SpellCheckErrorPaint
+        If SpellCheckTextBoxes.ContainsKey(e.TextBoxBase) Then
+            RemoveHandler SpellCheckTextBoxes(e.TextBoxBase).SpellCheckErrorPaint, AddressOf SpellCheckErrorPaint
+        End If
     End Sub
 
     Private Sub SpellCheckErrorPaint(ByVal sender As Object, ByRef e As SpellCheckTextBox.SpellCheckCustomPaintEventArgs)
@@ -259,6 +267,60 @@ Public Class Form1
         For Each item In SpellCheckTextBoxes
             item.Value.RepaintTextBox()
         Next
+    End Sub
+
+    Private Sub tabSpellControls_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tabSpellControls.SelectedIndexChanged
+        UpdateEnabledCheck()
+    End Sub
+
+    Private Sub UpdateEnabledCheck()
+        Dim selectedTabTextBox = tabSpellControls.SelectedTab.Controls.OfType(Of TextBoxBase)().FirstOrDefault
+        If selectedTabTextBox Is Nothing Then
+            tsiEnabled.Visible = False
+        Else
+            Dim ts = DirectCast(tsiEnabled.Owner, ToolStrip)
+            Dim state As VisualStyles.CheckBoxState = If(selectedTabTextBox.IsSpellCheckEnabled, VisualStyles.CheckBoxState.CheckedNormal, VisualStyles.CheckBoxState.UncheckedNormal)
+            Dim Size = System.Windows.Forms.CheckBoxRenderer.GetGlyphSize(Me.CreateGraphics, state)
+
+            Dim bWidth As Integer, bHeight As Integer
+
+            bWidth = ts.ImageScalingSize.Width
+            bHeight = ts.ImageScalingSize.Height
+
+            Dim Offset As New Point(0, 0)
+
+            If Size.Width < ts.ImageScalingSize.Width Then
+                Offset.X = CInt(Int((ts.ImageScalingSize.Width - Size.Width) / 2))
+            Else
+                bWidth = Size.Width
+            End If
+            If Size.Height < ts.ImageScalingSize.Height Then
+                Offset.Y = CInt(Int((ts.ImageScalingSize.Height - Size.Height) / 2))
+            Else
+                bHeight = Size.Height
+            End If
+
+
+            Dim b As New Bitmap(bWidth, bHeight)
+            Using g = Graphics.FromImage(b)
+                g.TranslateTransform(Offset.X, Offset.Y)
+                System.Windows.Forms.CheckBoxRenderer.DrawCheckBox(g, New Point(0, 0), state)
+            End Using
+            tsiEnabled.Image = b
+            tsiEnabled.Visible = True
+        End If
+    End Sub
+
+    Private Sub tsiEnabled_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsiEnabled.Click
+        Dim selectedTabTextBox = tabSpellControls.SelectedTab.Controls.OfType(Of TextBoxBase)().FirstOrDefault
+        If selectedTabTextBox IsNot Nothing Then
+            If selectedTabTextBox.IsSpellCheckEnabled Then
+                selectedTabTextBox.DisableSpellCheck()
+            Else
+                selectedTabTextBox.EnableSpellCheck()
+            End If
+        End If
+        UpdateEnabledCheck()
     End Sub
 
 End Class

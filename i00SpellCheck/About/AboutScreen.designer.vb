@@ -42,7 +42,7 @@ Partial Class AboutScreen
         Me.bpTabs = New i00SpellCheck.BufferedPanel
         Me.SiteLink = New System.Windows.Forms.LinkLabel
         Me.Label2 = New System.Windows.Forms.Label
-        Me.Button1 = New System.Windows.Forms.Button
+        Me.btnClose = New System.Windows.Forms.Button
         Me.bpLogo.SuspendLayout()
         Me.pnlTabHolders.SuspendLayout()
         Me.pnlAbout.SuspendLayout()
@@ -59,7 +59,7 @@ Partial Class AboutScreen
         Me.bpLogo.Controls.Add(Me.bpTabs)
         Me.bpLogo.Controls.Add(Me.SiteLink)
         Me.bpLogo.Controls.Add(Me.Label2)
-        Me.bpLogo.Controls.Add(Me.Button1)
+        Me.bpLogo.Controls.Add(Me.btnClose)
         Me.bpLogo.Dock = System.Windows.Forms.DockStyle.Fill
         Me.bpLogo.Location = New System.Drawing.Point(0, 0)
         Me.bpLogo.Name = "bpLogo"
@@ -273,20 +273,22 @@ Partial Class AboutScreen
         Me.Label2.TabIndex = 3
         Me.Label2.Text = "©2010 i00 Productions.  All rights reserved."
         '
-        'Button1
+        'btnClose
         '
-        Me.Button1.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button1.Location = New System.Drawing.Point(697, 531)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(75, 23)
-        Me.Button1.TabIndex = 0
-        Me.Button1.Text = "Close"
-        Me.Button1.UseVisualStyleBackColor = True
+        Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel
+        Me.btnClose.Location = New System.Drawing.Point(697, 531)
+        Me.btnClose.Name = "btnClose"
+        Me.btnClose.Size = New System.Drawing.Size(75, 23)
+        Me.btnClose.TabIndex = 0
+        Me.btnClose.Text = "Close"
+        Me.btnClose.UseVisualStyleBackColor = True
         '
         'AboutScreen
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.CancelButton = Me.btnClose
         Me.ClientSize = New System.Drawing.Size(784, 566)
         Me.Controls.Add(Me.bpLogo)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow
@@ -329,5 +331,5 @@ Partial Class AboutScreen
     Friend WithEvents lblReferenced As System.Windows.Forms.Label
     Friend WithEvents pnlReferences As i00SpellCheck.BufferedPanel
     Friend WithEvents lblReferences As i00SpellCheck.AutoGrowLabel
-    Friend WithEvents Button1 As System.Windows.Forms.Button
+    Friend WithEvents btnClose As System.Windows.Forms.Button
 End Class

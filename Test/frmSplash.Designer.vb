@@ -22,6 +22,7 @@ Partial Class frmSplash
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSplash))
         Me.btnClose = New System.Windows.Forms.Button
         Me.bpBackGround = New Test.BufferedPanel
@@ -31,9 +32,14 @@ Partial Class frmSplash
         Me.ProductLink = New Test.AutoGrowLabel
         Me.AutoGrowLabel1 = New Test.AutoGrowLabel
         Me.bpCommandBar = New Test.BufferedPanel
+        Me.chkAccept = New System.Windows.Forms.CheckBox
+        Me.cmsLinks = New System.Windows.Forms.ContextMenuStrip(Me.components)
+        Me.VBForumsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.CodeProjectToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.bpBackGround.SuspendLayout()
         Me.bpDocumentHolder.SuspendLayout()
         Me.bpCommandBar.SuspendLayout()
+        Me.cmsLinks.SuspendLayout()
         Me.SuspendLayout()
         '
         'btnClose
@@ -44,7 +50,7 @@ Partial Class frmSplash
         Me.btnClose.Name = "btnClose"
         Me.btnClose.Size = New System.Drawing.Size(75, 23)
         Me.btnClose.TabIndex = 1
-        Me.btnClose.Text = "Close"
+        Me.btnClose.Text = "Exit"
         Me.btnClose.UseVisualStyleBackColor = True
         '
         'bpBackGround
@@ -120,17 +126,48 @@ Partial Class frmSplash
         Me.AutoGrowLabel1.Size = New System.Drawing.Size(367, 80)
         Me.AutoGrowLabel1.TabIndex = 4
         Me.AutoGrowLabel1.Text = "If you wish to use ANY part of this spell checker in your projects you must first" & _
-            " state that you are going to use it in a post on vbforums under the thread:"
+            " state that you are going to use it in a post on VB Forums or Code Project under" & _
+            " the thread:"
         '
         'bpCommandBar
         '
         Me.bpCommandBar.BackColor = System.Drawing.Color.Transparent
+        Me.bpCommandBar.Controls.Add(Me.chkAccept)
         Me.bpCommandBar.Controls.Add(Me.btnClose)
         Me.bpCommandBar.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.bpCommandBar.Location = New System.Drawing.Point(0, 233)
         Me.bpCommandBar.Name = "bpCommandBar"
         Me.bpCommandBar.Size = New System.Drawing.Size(384, 29)
         Me.bpCommandBar.TabIndex = 4
+        '
+        'chkAccept
+        '
+        Me.chkAccept.AutoSize = True
+        Me.chkAccept.Location = New System.Drawing.Point(3, 6)
+        Me.chkAccept.Name = "chkAccept"
+        Me.chkAccept.Size = New System.Drawing.Size(114, 17)
+        Me.chkAccept.TabIndex = 2
+        Me.chkAccept.TabStop = False
+        Me.chkAccept.Text = "Accept Agreement"
+        Me.chkAccept.UseVisualStyleBackColor = True
+        '
+        'cmsLinks
+        '
+        Me.cmsLinks.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.VBForumsToolStripMenuItem, Me.CodeProjectToolStripMenuItem})
+        Me.cmsLinks.Name = "cmsLinks"
+        Me.cmsLinks.Size = New System.Drawing.Size(153, 70)
+        '
+        'VBForumsToolStripMenuItem
+        '
+        Me.VBForumsToolStripMenuItem.Name = "VBForumsToolStripMenuItem"
+        Me.VBForumsToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.VBForumsToolStripMenuItem.Text = "VB Forums"
+        '
+        'CodeProjectToolStripMenuItem
+        '
+        Me.CodeProjectToolStripMenuItem.Name = "CodeProjectToolStripMenuItem"
+        Me.CodeProjectToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.CodeProjectToolStripMenuItem.Text = "Code Project"
         '
         'frmSplash
         '
@@ -149,6 +186,8 @@ Partial Class frmSplash
         Me.bpBackGround.ResumeLayout(False)
         Me.bpDocumentHolder.ResumeLayout(False)
         Me.bpCommandBar.ResumeLayout(False)
+        Me.bpCommandBar.PerformLayout()
+        Me.cmsLinks.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
@@ -160,4 +199,8 @@ Partial Class frmSplash
     Friend WithEvents ProductLink As Test.AutoGrowLabel
     Friend WithEvents AutoGrowLabel3 As Test.AutoGrowLabel
     Friend WithEvents AutoGrowLabel4 As Test.AutoGrowLabel
+    Friend WithEvents chkAccept As System.Windows.Forms.CheckBox
+    Friend WithEvents cmsLinks As System.Windows.Forms.ContextMenuStrip
+    Friend WithEvents VBForumsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents CodeProjectToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 End Class

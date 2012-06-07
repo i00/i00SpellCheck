@@ -52,6 +52,7 @@ Public Module SpellCheckTextBoxExtension
         If txtSender IsNot Nothing Then
             RaiseEvent SpellCheckTextBoxRemoved(Nothing, New TextBoxAddedRemovedEventArgs With {.TextBoxBase = txtSender})
             SpellCheckTextBoxes.Remove(txtSender)
+            DisabledSpellCheckTextBoxes.Remove(txtSender)
         End If
     End Sub
 
@@ -102,23 +103,57 @@ Public Module SpellCheckFormExtension
 
     <System.Runtime.CompilerServices.Extension()> _
     Public Sub EnableSpellCheck(ByVal sender As Control, Optional ByVal SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings = Nothing)
-        If SpellCheckSettings Is Nothing Then
-            SpellCheckSettings = New SpellCheckTextBox.SpellCheckSettings
+        Dim tbb = TryCast(sender, TextBoxBase)
+        If tbb IsNot Nothing AndAlso SpellCheckTextBoxes.ContainsKey(tbb) Then
+            If DisabledSpellCheckTextBoxes.Contains(tbb) Then
+                DisabledSpellCheckTextBoxes.Remove(tbb)
+            End If
+            If SpellCheckSettings IsNot Nothing Then
+                'Dim SpellCheckSettingsClone As SpellCheckTextBox.SpellCheckSettings
+                tbb.SpellCheck.Settings = SpellCheckSettings
+            End If
+            tbb.SpellCheck.RepaintTextBox()
+        Else
+            If SpellCheckSettings Is Nothing Then
+                SpellCheckSettings = New SpellCheckTextBox.SpellCheckSettings
+            End If
+            SpellCheckSettings.MasterControl = sender
+            'load default dictionary... on a thread ... so we don't hold things up...
+            'after the dictionary is loaded it automatically invokes the rest...
+            Dim t As New Threading.Thread(AddressOf LoadDictionary)
+            t.Name = "Load spell check dictionary"
+
+            t.IsBackground = True 'make it abort when the app is killed
+            t.Start(SpellCheckSettings)
+
+            'Dim t2 As New Threading.Thread(AddressOf LoadDefs)
+            't2.Name = "Load spell check definitions"
+            't2.IsBackground = True
+            't2.Start(SpellCheckSettings)
         End If
-        SpellCheckSettings.MasterControl = sender
-        'load default dictionary... on a thread ... so we don't hold things up...
-        'after the dictionary is loaded it automatically invokes the rest...
-        Dim t As New Threading.Thread(AddressOf LoadDictionary)
-        t.Name = "Load spell check dictionary"
-
-        t.IsBackground = True 'make it abort when the app is killed
-        t.Start(SpellCheckSettings)
-
-        'Dim t2 As New Threading.Thread(AddressOf LoadDefs)
-        't2.Name = "Load spell check definitions"
-        't2.IsBackground = True
-        't2.Start(SpellCheckSettings)
     End Sub
+
+    <System.Runtime.CompilerServices.Extension()> _
+    Public Sub DisableSpellCheck(ByVal sender As TextBoxBase)
+        If SpellCheckTextBoxes.ContainsKey(sender) Then
+            If DisabledSpellCheckTextBoxes.Contains(sender) Then
+                DisabledSpellCheckTextBoxes.Remove(sender)
+            Else
+                DisabledSpellCheckTextBoxes.Add(sender)
+            End If
+            sender.SpellCheck.RepaintTextBox()
+        End If
+    End Sub
+
+    <System.Runtime.CompilerServices.Extension()> _
+    Public Function IsSpellCheckEnabled(ByVal sender As TextBoxBase) As Boolean
+        Return SpellCheckTextBoxes.ContainsKey(sender) AndAlso DisabledSpellCheckTextBoxes.Contains(sender) = False
+    End Function
+#End Region
+
+#Region "DisableSpellCheck"
+
+    Friend DisabledSpellCheckTextBoxes As New List(Of TextBoxBase)
 
 #End Region
 
@@ -207,7 +242,7 @@ Public Module SpellCheckFormExtension
 
                 End Try
             Else
-                Debug.Print(SpellCheckSettings.MasterControl.ToString & " - is opening - " & NewForm.ToString)
+                Debug.Print(SpellCheckSettings.MasterControl.GetType.ToString & " - is opening - " & NewForm.GetType.ToString)
                 SetupControl(SpellCheckTextBox.SpellCheckSettings.NewClone(NewForm, SpellCheckSettings))
             End If
         End Sub
