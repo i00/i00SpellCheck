@@ -271,6 +271,9 @@ Public Class Form1
 
     Private Sub tabSpellControls_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tabSpellControls.SelectedIndexChanged
         UpdateEnabledCheck()
+        If tabSpellControls.SelectedTab Is tabDataGridView Then
+            DataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells)
+        End If
     End Sub
 
     Private Sub UpdateEnabledCheck()

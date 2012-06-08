@@ -281,7 +281,7 @@ Public Module SpellCheckFormExtension
             Dim TextBox = DirectCast(SpellCheckSettings.MasterControl, TextBoxBase)
             RemoveHandler TextBox.MultilineChanged, AddressOf TextBox_MultilineChanged
             AddHandler TextBox.MultilineChanged, AddressOf TextBox_MultilineChanged
-            If TextBox.Multiline = True Then
+            If TextBox.Multiline = True OrElse TypeOf (TextBox) Is IDataGridViewEditingControl Then
                 TextBox.SpellCheck()
                 ApplyTextBoxSpellingSettings(SpellCheckSettings)
             End If

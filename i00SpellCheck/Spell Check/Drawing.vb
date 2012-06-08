@@ -164,7 +164,14 @@ Partial Class SpellCheckTextBox
 
         Dim TextHeight As Integer = System.Windows.Forms.TextRenderer.MeasureText("Ag", parentTextBox.Font).Height
         Dim BufferWidth As Integer = System.Windows.Forms.TextRenderer.MeasureText("--", parentTextBox.Font).Width
-        Using b As New Bitmap(parentTextBox.ClientSize.Width, parentTextBox.ClientSize.Height)
+
+        'for drawing underlines below the textbox drawing bounds when on a single line text box
+        Dim bHeight = parentTextBox.ClientSize.Height
+        If DrawOverlayForm IsNot Nothing Then
+            bHeight = DrawOverlayForm.Height
+        End If
+
+        Using b As New Bitmap(parentTextBox.ClientSize.Width, bHeight)
             Using g = Graphics.FromImage(b)
                 g.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
 
@@ -187,6 +194,10 @@ Partial Class SpellCheckTextBox
 
                 Dim VisibleText = Mid(theText, FromChar + 1, ToChar - FromChar)
 
+                'If parentTextBox.Multiline = False Then
+                'g.TranslateTransform(-System.Windows.Forms.TextRenderer.MeasureText(LeftSide, parentTextBox.Font).Width, -5)
+                'End If
+
                 Dim NewWords As New Dictionary(Of String, Dictionary.SpellCheckWordError)
 
                 If Trim(VisibleText) <> "" Then
@@ -195,6 +206,11 @@ Partial Class SpellCheckTextBox
                     For iWord = LBound(words) To UBound(words)
                         If words(iWord) <> "" Then
                             Dim P1 = parentTextBox.GetPositionFromCharIndex(LetterIndex)
+                            Dim P1OffsetPlus As Integer = 0
+                            If iWord = 0 AndAlso P1.X >= TextBox.ClientSize.Width Then
+                                P1OffsetPlus = 1
+                                P1.X = 0
+                            End If
                             If P1.Y < parentTextBox.Height Then
                                 Dim WordState As Dictionary.SpellCheckWordError = Dictionary.SpellCheckWordError.SpellError
                                 If dictCache.ContainsKey(words(iWord)) Then
@@ -225,6 +241,11 @@ Partial Class SpellCheckTextBox
                                     End If
 
                                     Dim P2 = parentTextBox.GetPositionFromCharIndex(LetterIndex + Len(words(iWord)))
+                                    If LeftSide <> "" AndAlso iWord = 0 Then
+                                        Dim NormalStringWidth = g.MeasureString(Mid(words(iWord), Len(LeftSide) + 1 + P1OffsetPlus), parentTextBox.Font).Width
+                                        Dim XOffsetDiff = g.MeasureString("-" & Mid(words(iWord), Len(LeftSide) + 1 + P1OffsetPlus) & "-", parentTextBox.Font).Width - NormalStringWidth
+                                        P2.X = CInt(parentTextBox.GetPositionFromCharIndex(LetterIndex + P1OffsetPlus).X + (NormalStringWidth - XOffsetDiff))
+                                    End If
                                     If P2.X = 0 Then
                                         'we are the last char ... :(
                                         P2 = parentTextBox.GetPositionFromCharIndex(LetterIndex + Len(words(iWord)) - 1)
@@ -253,6 +274,9 @@ Partial Class SpellCheckTextBox
                             End If
                         End If
 ContinueFor:
+                        If LeftSide <> "" AndAlso iWord = 0 Then
+                            LetterIndex -= Len(LeftSide)
+                        End If
                         LetterIndex += 1 + Len(words(iWord))
                     Next
                 End If
@@ -325,7 +349,13 @@ Draw:
 
     Private Sub SetOverlayBounds()
         If DrawOverlayForm IsNot Nothing Then
-            DrawOverlayForm.Bounds = Me.parentTextBox.RectangleToScreen(New Rectangle(0, 0, Me.parentTextBox.ClientSize.Width, Me.parentTextBox.ClientSize.Height))
+            'for drawing underlines below the textbox drawing bounds when on a single line text box
+            Dim toBeHeight = Me.parentTextBox.ClientSize.Height
+            If parentTextBox.Multiline = False Then
+                'add wave height
+                toBeHeight += 3
+            End If
+            DrawOverlayForm.Bounds = Me.parentTextBox.RectangleToScreen(New Rectangle(0, 0, Me.parentTextBox.ClientSize.Width, toBeHeight))
         End If
     End Sub
 
@@ -402,7 +432,11 @@ Draw:
     Private Sub mc_parentTextBox_ParentChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.ParentChanged
         If DrawOverlayForm IsNot Nothing Then
             SetOverlayBounds()
-            DrawOverlayForm.Visible = mc_parentTextBox.Visible
+            Try
+                DrawOverlayForm.Visible = mc_parentTextBox.Visible
+            Catch ex As ObjectDisposedException
+
+            End Try
             Dim parentControl As Control = Me.parentTextBox.Parent
             RemoveAllOverlayHandlers()
             Do Until parentControl Is Nothing

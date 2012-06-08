@@ -85,7 +85,37 @@ Partial Class Form1
         propTextBox.SelectedObject = TextBox1.SpellCheck
 
         UpdateEnabledCheck()
+
+        Dim GridData As New System.ComponentModel.BindingList(Of GridViewData)
+        GridData.Add(New GridViewData("This is a grid view example to demonistrate that i00 Spell Check can be used in grids!"))
+        GridData.Add(New GridViewData("So comeon and edit a cell!"))
+
+        Dim bs As New BindingSource
+        bs.DataSource = GridData
+        bs.AllowNew = True
+        DataGridView1.DataSource = bs
+        BindingNavigator1.BindingSource = bs
+
     End Sub
+
+    Private Class GridViewData
+        Dim mc_GridViewExample As String
+        <System.ComponentModel.DisplayName("Data Grid View Example")> _
+        Public Property GridViewExample() As String
+            Get
+                Return mc_GridViewExample
+            End Get
+            Set(ByVal value As String)
+                mc_GridViewExample = value
+            End Set
+        End Property
+        Public Sub New(ByVal GridViewExample As String)
+            Me.mc_GridViewExample = GridViewExample
+        End Sub
+        Public Sub New()
+
+        End Sub
+    End Class
 
     Private Class FavIconData
         Public URL As String
