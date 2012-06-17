@@ -23,6 +23,7 @@ Partial Class AboutScreen
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(AboutScreen))
+        Me.btnClose = New System.Windows.Forms.Button
         Me.bpLogo = New i00SpellCheck.BufferedPanel
         Me.pnlTabHolders = New System.Windows.Forms.Panel
         Me.pnlAbout = New System.Windows.Forms.Panel
@@ -42,7 +43,6 @@ Partial Class AboutScreen
         Me.bpTabs = New i00SpellCheck.BufferedPanel
         Me.SiteLink = New System.Windows.Forms.LinkLabel
         Me.Label2 = New System.Windows.Forms.Label
-        Me.btnClose = New System.Windows.Forms.Button
         Me.bpLogo.SuspendLayout()
         Me.pnlTabHolders.SuspendLayout()
         Me.pnlAbout.SuspendLayout()
@@ -52,6 +52,17 @@ Partial Class AboutScreen
         Me.bpLicence.SuspendLayout()
         Me.pnlReferences.SuspendLayout()
         Me.SuspendLayout()
+        '
+        'btnClose
+        '
+        Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel
+        Me.btnClose.Location = New System.Drawing.Point(697, 531)
+        Me.btnClose.Name = "btnClose"
+        Me.btnClose.Size = New System.Drawing.Size(75, 23)
+        Me.btnClose.TabIndex = 0
+        Me.btnClose.Text = "Close"
+        Me.btnClose.UseVisualStyleBackColor = True
         '
         'bpLogo
         '
@@ -272,17 +283,6 @@ Partial Class AboutScreen
         Me.Label2.Size = New System.Drawing.Size(211, 13)
         Me.Label2.TabIndex = 3
         Me.Label2.Text = "©2010 i00 Productions.  All rights reserved."
-        '
-        'btnClose
-        '
-        Me.btnClose.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.btnClose.Location = New System.Drawing.Point(697, 531)
-        Me.btnClose.Name = "btnClose"
-        Me.btnClose.Size = New System.Drawing.Size(75, 23)
-        Me.btnClose.TabIndex = 0
-        Me.btnClose.Text = "Close"
-        Me.btnClose.UseVisualStyleBackColor = True
         '
         'AboutScreen
         '

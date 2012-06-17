@@ -14,45 +14,102 @@
 'as part of other software, it is not a complete software package, thus i00 Productions is not 
 'responsible for any legal ramifications that software using this product breaches.
 
-#Region "TextBox.SpellCheck"
+#Region "Control.SpellCheck"
 
-Public Module SpellCheckTextBoxExtension
+Public Module SpellCheckControlExtension
 
-    'store a list of the SpellCheckTextBox items that are associated with each text box
-    Public SpellCheckTextBoxes As New Dictionary(Of TextBoxBase, SpellCheckTextBox)
+    'store a list of the SpellCheckControlBase items that are associated with each control
+    Public SpellCheckControls As New Dictionary(Of Control, SpellCheckControlBase)
 
-    Public Class TextBoxAddedRemovedEventArgs
+    Public Class SpellCheckControlAddedRemovedEventArgs
         Inherits EventArgs
-        Public TextBoxBase As TextBoxBase
+        Public Control As Control
     End Class
 
-    Public Event SpellCheckTextBoxAdded(ByVal sender As Object, ByVal e As TextBoxAddedRemovedEventArgs)
-    Public Event SpellCheckTextBoxRemoved(ByVal sender As Object, ByVal e As TextBoxAddedRemovedEventArgs)
+    Public Event SpellCheckControlAdded(ByVal sender As Object, ByVal e As SpellCheckControlAddedRemovedEventArgs)
+    Public Event SpellCheckControlRemoved(ByVal sender As Object, ByVal e As SpellCheckControlAddedRemovedEventArgs)
+
+    Private Class BaseClassesInfo
+        Public SpellCheckControlBase As SpellCheckControlBase
+        Public [Class] As Type
+        Public Assembly As System.Reflection.Assembly
+        Public Function CreateObject() As Object
+            Dim CreateType = Assembly.GetType([Class].FullName)
+            Return System.Activator.CreateInstance(CreateType)
+        End Function
+    End Class
+
+    Private ReadOnly Property SpellCheckControlBaseClasses() As List(Of BaseClassesInfo)
+        Get
+            Static AcceptedClasses As List(Of BaseClassesInfo)
+            If AcceptedClasses Is Nothing Then
+                AcceptedClasses = New List(Of BaseClassesInfo)
+
+
+                For Each file In FileIO.FileSystem.GetFiles(IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly.Location()), FileIO.SearchOption.SearchTopLevelOnly, "*.dll", "*.exe")
+                    Try
+                        Dim a = System.Reflection.Assembly.LoadFile(file)
+                        Dim t As Type = GetType(SpellCheckControlBase)
+                        Dim Classes = (From xItem In a.GetTypes() Where t.IsAssignableFrom(xItem) AndAlso xItem.IsAbstract = False).ToList
+                        For Each item In Classes
+                            Try
+                                Dim CreateType = a.GetType(item.FullName)
+                                Dim CreateObject = System.Activator.CreateInstance(CreateType)
+                                Dim SpellCheckControlBase = TryCast(CreateObject, SpellCheckControlBase)
+                                If SpellCheckControlBase IsNot Nothing Then
+                                    AcceptedClasses.Add(New BaseClassesInfo() With {.SpellCheckControlBase = SpellCheckControlBase, .[Class] = item, .Assembly = a})
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+                        Next
+                    Catch ex As Exception
+
+                    End Try
+                Next
+            End If
+            Return AcceptedClasses
+        End Get
+    End Property
 
     <System.Runtime.CompilerServices.Extension()> _
-    Public Function SpellCheck(ByVal sender As TextBoxBase, Optional ByVal AutoCreate As Boolean = True) As SpellCheckTextBox
-        If SpellCheckTextBoxes.ContainsKey(sender) Then
+    Public Function SpellCheck(ByVal sender As Control, Optional ByVal AutoCreate As Boolean = True, Optional ByVal SpellCheckSettings As SpellCheckSettings = Nothing) As SpellCheckControlBase
+        If SpellCheckControls.ContainsKey(sender) Then
             'exists
+
         Else
             If AutoCreate Then
-                'create SpellCheckTextBox object and send it back...
-                Dim SpellCheckTextBox = New SpellCheckTextBox(sender)
-                AddHandler sender.Disposed, AddressOf TextBox_Disposed
-                SpellCheckTextBoxes.Add(sender, SpellCheckTextBox)
-                RaiseEvent SpellCheckTextBoxAdded(Nothing, New TextBoxAddedRemovedEventArgs With {.TextBoxBase = sender})
+                'create SpellCheckControlBase object and send it back...
+                Dim AcceptedClass = (From xItem In SpellCheckControlBaseClasses Where xItem.SpellCheckControlBase.ControlType.IsAssignableFrom(sender.GetType)).FirstOrDefault
+                If AcceptedClass IsNot Nothing Then
+                    Dim o = TryCast(AcceptedClass.CreateObject, SpellCheckControlBase)
+                    If o IsNot Nothing Then
+                        SpellCheckControls.Add(sender, o)
+                        o.mc_Control = sender
+                        o.DoLoad()
+                        RaiseEvent SpellCheckControlAdded(Nothing, New SpellCheckControlAddedRemovedEventArgs With {.Control = sender})
+                    Else
+                        Return Nothing
+                    End If
+                Else
+                    Return Nothing
+                End If
             Else
                 Return Nothing
             End If
         End If
-        Return SpellCheckTextBoxes(sender)
+        If SpellCheckSettings IsNot Nothing Then
+            SpellCheckControls(sender).Settings = SpellCheckSettings
+        End If
+        Return SpellCheckControls(sender)
     End Function
 
-    Private Sub TextBox_Disposed(ByVal sender As Object, ByVal e As System.EventArgs)
-        Dim txtSender = TryCast(sender, TextBoxBase)
-        If txtSender IsNot Nothing Then
-            RaiseEvent SpellCheckTextBoxRemoved(Nothing, New TextBoxAddedRemovedEventArgs With {.TextBoxBase = txtSender})
-            SpellCheckTextBoxes.Remove(txtSender)
-            DisabledSpellCheckTextBoxes.Remove(txtSender)
+    Private Sub Control_Disposed(ByVal sender As Object, ByVal e As System.EventArgs)
+        Dim ctlSender = TryCast(sender, Control)
+        If ctlSender IsNot Nothing Then
+            RaiseEvent SpellCheckControlRemoved(Nothing, New SpellCheckControlAddedRemovedEventArgs With {.Control = ctlSender})
+            SpellCheckControls.Remove(ctlSender)
+            DisabledSpellCheckControls.Remove(ctlSender)
         End If
     End Sub
 
@@ -66,11 +123,11 @@ Public Module SpellCheckFormExtension
 
 #Region "Control.AutoSpellCheckSettings"
 
-    'store a list of the SpellCheckTextBox items that are associated with each text box
-    Private ControlSpellCheckSettings As New Dictionary(Of Control, SpellCheckTextBox.SpellCheckSettings)
+    'store a list of the SpellCheckControl items that are associated with each control
+    Private ControlSpellCheckSettings As New Dictionary(Of Control, i00SpellCheck.SpellCheckSettings)
 
     <System.Runtime.CompilerServices.Extension()> _
-    Friend Function AutoSpellCheckSettings(ByVal sender As Control, Optional ByVal SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings = Nothing) As SpellCheckTextBox.SpellCheckSettings
+    Public Function AutoSpellCheckSettings(ByVal sender As Control, Optional ByVal SpellCheckSettings As i00SpellCheck.SpellCheckSettings = Nothing) As i00SpellCheck.SpellCheckSettings
         If SpellCheckSettings IsNot Nothing Then
             If ControlSpellCheckSettings.ContainsKey(sender) Then
                 'exists
@@ -102,20 +159,18 @@ Public Module SpellCheckFormExtension
     'Public Event DefinitionsLoaded(ByVal sender As Object, ByVal e As EventArgs)
 
     <System.Runtime.CompilerServices.Extension()> _
-    Public Sub EnableSpellCheck(ByVal sender As Control, Optional ByVal SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings = Nothing)
-        Dim tbb = TryCast(sender, TextBoxBase)
-        If tbb IsNot Nothing AndAlso SpellCheckTextBoxes.ContainsKey(tbb) Then
-            If DisabledSpellCheckTextBoxes.Contains(tbb) Then
-                DisabledSpellCheckTextBoxes.Remove(tbb)
+    Public Sub EnableSpellCheck(ByVal sender As Control, Optional ByVal SpellCheckSettings As i00SpellCheck.SpellCheckSettings = Nothing)
+        If sender.SpellCheck IsNot Nothing Then
+            If DisabledSpellCheckControls.Contains(sender) Then
+                DisabledSpellCheckControls.Remove(sender)
             End If
             If SpellCheckSettings IsNot Nothing Then
-                'Dim SpellCheckSettingsClone As SpellCheckTextBox.SpellCheckSettings
-                tbb.SpellCheck.Settings = SpellCheckSettings
+                sender.SpellCheck.Settings = SpellCheckSettings
             End If
-            tbb.SpellCheck.RepaintTextBox()
+            sender.SpellCheck.RepaintControl()
         Else
             If SpellCheckSettings Is Nothing Then
-                SpellCheckSettings = New SpellCheckTextBox.SpellCheckSettings
+                SpellCheckSettings = New i00SpellCheck.SpellCheckSettings
             End If
             SpellCheckSettings.MasterControl = sender
             'load default dictionary... on a thread ... so we don't hold things up...
@@ -134,41 +189,41 @@ Public Module SpellCheckFormExtension
     End Sub
 
     <System.Runtime.CompilerServices.Extension()> _
-    Public Sub DisableSpellCheck(ByVal sender As TextBoxBase)
-        If SpellCheckTextBoxes.ContainsKey(sender) Then
-            If DisabledSpellCheckTextBoxes.Contains(sender) Then
-                DisabledSpellCheckTextBoxes.Remove(sender)
+    Public Sub DisableSpellCheck(ByVal sender As Control)
+        If SpellCheckControls.ContainsKey(sender) Then
+            If DisabledSpellCheckControls.Contains(sender) Then
+                DisabledSpellCheckControls.Remove(sender)
             Else
-                DisabledSpellCheckTextBoxes.Add(sender)
+                DisabledSpellCheckControls.Add(sender)
             End If
-            sender.SpellCheck.RepaintTextBox()
+            sender.SpellCheck.RepaintControl()
         End If
     End Sub
 
     <System.Runtime.CompilerServices.Extension()> _
-    Public Function IsSpellCheckEnabled(ByVal sender As TextBoxBase) As Boolean
-        Return SpellCheckTextBoxes.ContainsKey(sender) AndAlso DisabledSpellCheckTextBoxes.Contains(sender) = False
+    Public Function IsSpellCheckEnabled(ByVal sender As Control) As Boolean
+        Return SpellCheckControls.ContainsKey(sender) AndAlso DisabledSpellCheckControls.Contains(sender) = False
     End Function
 #End Region
 
 #Region "DisableSpellCheck"
 
-    Friend DisabledSpellCheckTextBoxes As New List(Of TextBoxBase)
+    Friend DisabledSpellCheckControls As New List(Of Control)
 
 #End Region
 
 #Region "Load dictionary/Definitions"
 
-    Private Delegate Sub ReloadTextBoxes_cb(ByVal SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings)
-    Private Sub ReloadTextBoxes(ByVal SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings)
+    Private Delegate Sub ReloadSpellCheckControls_cb(ByVal SpellCheckSettings As i00SpellCheck.SpellCheckSettings)
+    Private Sub ReloadSpellCheckControls(ByVal SpellCheckSettings As i00SpellCheck.SpellCheckSettings)
         If SpellCheckSettings.MasterControl.InvokeRequired Then
-            Dim ReloadTextBoxes_cb As New ReloadTextBoxes_cb(AddressOf ReloadTextBoxes)
-            SpellCheckSettings.MasterControl.Invoke(ReloadTextBoxes_cb, SpellCheckSettings)
+            Dim ReloadSpellCheckControls_cb As New ReloadSpellCheckControls_cb(AddressOf ReloadSpellCheckControls)
+            SpellCheckSettings.MasterControl.Invoke(ReloadSpellCheckControls_cb, SpellCheckSettings)
         Else
             SetupControl(SpellCheckSettings)
             RaiseEvent DictionaryLoaded(Nothing, EventArgs.Empty)
-            For Each item In SpellCheckTextBoxes
-                item.Value.RepaintTextBox()
+            For Each item In SpellCheckControls
+                item.Value.RepaintControl()
                 'old method:
                 'item.Value.CustomPaint()
             Next
@@ -177,27 +232,21 @@ Public Module SpellCheckFormExtension
 
     Private Sub LoadDictionary(ByVal oSpellCheckSettings As Object)
         'use DirectCast so that error is thrown if wrong object is passed in
-        Dim SpellCheckSettings = DirectCast(oSpellCheckSettings, SpellCheckTextBox.SpellCheckSettings)
+        Dim SpellCheckSettings = DirectCast(oSpellCheckSettings, i00SpellCheck.SpellCheckSettings)
 
-        SpellCheckTextBox.LoadDefaultDictionary()
+        Dictionary.LoadDefaultDictionary()
 
         'qwertyuiop - check SpellCheckSettings.MasterControl.IsHandleCreated = true here?
         'force create the handle
         'Dim hdl = SpellCheckSettings.MasterControl.Handle
 
-        ReloadTextBoxes(SpellCheckSettings)
+        ReloadSpellCheckControls(SpellCheckSettings)
     End Sub
-
-    'Private Sub LoadDefs(ByVal oSpellCheckSettings As Object)
-    '    Dim DefaultDefs = SpellCheckTextBox.Definitions.DefaultDefs
-    '    RaiseEvent DefinitionsLoaded(Nothing, EventArgs.Empty)
-    'End Sub
 
 #End Region
 
 #Region "Owned Forms Poller"
 
-    'store a list of the SpellCheckTextBox items that are associated with each text box
 
     Private Class OwnedFormsPoll
         Public Shared OwnedFormsPolls As New Dictionary(Of Control, OwnedFormsPoll)
@@ -205,9 +254,9 @@ Public Module SpellCheckFormExtension
         'Private WithEvents MasterForm As Form
         Private LastOwnedForms As Form()
         Private tt As System.Threading.Timer
-        Private SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings
+        Private SpellCheckSettings As i00SpellCheck.SpellCheckSettings
 
-        Friend Shared Sub CreateOwnedFormsPoll(ByVal SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings)
+        Friend Shared Sub CreateOwnedFormsPoll(ByVal SpellCheckSettings As i00SpellCheck.SpellCheckSettings)
             If TypeOf SpellCheckSettings.MasterControl Is Form Then
                 If OwnedFormsPolls.ContainsKey(SpellCheckSettings.MasterControl) Then
                     'already exists
@@ -219,7 +268,7 @@ Public Module SpellCheckFormExtension
             End If
         End Sub
 
-        Private Sub New(ByVal SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings)
+        Private Sub New(ByVal SpellCheckSettings As i00SpellCheck.SpellCheckSettings)
             LastOwnedForms = CType(SpellCheckSettings.MasterControl, Form).OwnedForms
             AddHandler SpellCheckSettings.MasterControl.Disposed, AddressOf Form_Disposed
             Me.SpellCheckSettings = SpellCheckSettings
@@ -243,7 +292,7 @@ Public Module SpellCheckFormExtension
                 End Try
             Else
                 Debug.Print(SpellCheckSettings.MasterControl.GetType.ToString & " - is opening - " & NewForm.GetType.ToString)
-                SetupControl(SpellCheckTextBox.SpellCheckSettings.NewClone(NewForm, SpellCheckSettings))
+                SetupControl(i00SpellCheck.SpellCheckSettings.NewClone(NewForm, SpellCheckSettings))
             End If
         End Sub
 
@@ -269,7 +318,7 @@ Public Module SpellCheckFormExtension
 
 #Region "Configure controls"
 
-    Private Sub SetupControl(ByVal SpellCheckSettings As SpellCheckTextBox.SpellCheckSettings)
+    Private Sub SetupControl(ByVal SpellCheckSettings As i00SpellCheck.SpellCheckSettings)
         If TypeOf SpellCheckSettings.MasterControl Is Form AndAlso SpellCheckSettings.DoSubforms = True Then
             'Add .ownedforms change poll here
             OwnedFormsPoll.CreateOwnedFormsPoll(SpellCheckSettings)
@@ -277,46 +326,23 @@ Public Module SpellCheckFormExtension
 
         SpellCheckSettings.MasterControl.AutoSpellCheckSettings(SpellCheckSettings)
 
-        If TypeOf SpellCheckSettings.MasterControl Is TextBoxBase Then
-            Dim TextBox = DirectCast(SpellCheckSettings.MasterControl, TextBoxBase)
-            RemoveHandler TextBox.MultilineChanged, AddressOf TextBox_MultilineChanged
-            AddHandler TextBox.MultilineChanged, AddressOf TextBox_MultilineChanged
-            If TextBox.Multiline = True OrElse TypeOf (TextBox) Is IDataGridViewEditingControl Then
-                TextBox.SpellCheck()
-                ApplyTextBoxSpellingSettings(SpellCheckSettings)
-            End If
-        ElseIf TypeOf SpellCheckSettings.MasterControl Is SplitContainer Then
+        If TypeOf SpellCheckSettings.MasterControl Is SplitContainer Then
             Dim SplitContainer = DirectCast(SpellCheckSettings.MasterControl, SplitContainer)
-            SetupControl(SpellCheckTextBox.SpellCheckSettings.NewClone(SplitContainer.Panel1, SpellCheckSettings))
-            SetupControl(SpellCheckTextBox.SpellCheckSettings.NewClone(SplitContainer.Panel2, SpellCheckSettings))
+            SetupControl(i00SpellCheck.SpellCheckSettings.NewClone(SplitContainer.Panel1, SpellCheckSettings))
+            SetupControl(i00SpellCheck.SpellCheckSettings.NewClone(SplitContainer.Panel2, SpellCheckSettings))
+        ElseIf TypeOf SpellCheckSettings.MasterControl Is PropertyGrid Then
+            'don't spell check property grids
+            Return
+        Else
+            SpellCheckSettings.MasterControl.SpellCheck(, SpellCheckSettings)
         End If
+
         RemoveHandler SpellCheckSettings.MasterControl.ControlAdded, AddressOf Control_ControlAdded
         AddHandler SpellCheckSettings.MasterControl.ControlAdded, AddressOf Control_ControlAdded
 
         For Each ctl In SpellCheckSettings.MasterControl.Controls.OfType(Of Control)()
-            SetupControl(SpellCheckTextBox.SpellCheckSettings.NewClone(ctl, SpellCheckSettings))
+            SetupControl(i00SpellCheck.SpellCheckSettings.NewClone(ctl, SpellCheckSettings))
         Next
-    End Sub
-
-    Private Sub ApplyTextBoxSpellingSettings(ByVal AutoSpellCheckSettings As SpellCheckTextBox.SpellCheckSettings)
-        If AutoSpellCheckSettings IsNot Nothing AndAlso TypeOf AutoSpellCheckSettings.MasterControl Is TextBoxBase Then
-            Dim TextBox As TextBoxBase = DirectCast(AutoSpellCheckSettings.MasterControl, TextBoxBase)
-            TextBox.SpellCheck.Settings.AllowAdditions = AutoSpellCheckSettings.AllowAdditions
-            TextBox.SpellCheck.Settings.AllowIgnore = AutoSpellCheckSettings.AllowIgnore
-            TextBox.SpellCheck.Settings.AllowRemovals = AutoSpellCheckSettings.AllowRemovals
-            TextBox.SpellCheck.Settings.AllowInMenuDefs = AutoSpellCheckSettings.AllowInMenuDefs
-            TextBox.SpellCheck.Settings.AllowChangeTo = AutoSpellCheckSettings.AllowChangeTo
-        End If
-    End Sub
-
-    Private Sub TextBox_MultilineChanged(ByVal sender As Object, ByVal e As System.EventArgs)
-        Dim senderTextBox = TryCast(sender, TextBox)
-        If senderTextBox IsNot Nothing Then
-            If senderTextBox.Multiline = True Then
-                senderTextBox.SpellCheck()
-                ApplyTextBoxSpellingSettings(senderTextBox.AutoSpellCheckSettings)
-            End If
-        End If
     End Sub
 
     Private Sub Control_ControlAdded(ByVal sender As Object, ByVal e As System.Windows.Forms.ControlEventArgs)
@@ -325,7 +351,7 @@ Public Module SpellCheckFormExtension
             If OwnedFormsPoll.OwnedFormsPolls.ContainsKey(senderControl) Then
                 'don't add it this control is a form that has been added through form polling!
             Else
-                SetupControl(SpellCheckTextBox.SpellCheckSettings.NewClone(e.Control, senderControl.AutoSpellCheckSettings))
+                SetupControl(i00SpellCheck.SpellCheckSettings.NewClone(e.Control, senderControl.AutoSpellCheckSettings))
             End If
         End If
     End Sub

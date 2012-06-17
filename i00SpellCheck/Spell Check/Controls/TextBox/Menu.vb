@@ -79,8 +79,8 @@ Partial Class SpellCheckTextBox
             If UseMouseLocation = True Then
                 'Work out the location that was clicked on
                 Dim Point0 As New Point(0, 0)
-                Dim cmLocationRelToTxtLocationX = Control.MousePosition.X - TextBox.PointToScreen(Point0).X - (TextBox.ClientRectangle.X)
-                Dim cmLocationRelToTxtLocationY = Control.MousePosition.Y - TextBox.PointToScreen(Point0).Y
+                Dim cmLocationRelToTxtLocationX = System.Windows.Forms.Control.MousePosition.X - TextBox.PointToScreen(Point0).X - (TextBox.ClientRectangle.X)
+                Dim cmLocationRelToTxtLocationY = System.Windows.Forms.Control.MousePosition.Y - TextBox.PointToScreen(Point0).Y
                 'Get the char index for the location we clicked on
                 CharIndex = TextBox.GetCharIndexFromPosition(New Point(cmLocationRelToTxtLocationX, cmLocationRelToTxtLocationY))
             Else
@@ -95,7 +95,7 @@ Partial Class SpellCheckTextBox
             End If
 
             'Get the word that is @ the CharIndex
-            Dim theText As String = RemoveWordBreaks(TextBox.Text)
+            Dim theText As String = Dictionary.Formatting.RemoveWordBreaks(TextBox.Text)
             Dim LeftSide As String = Left(theText, CharIndex)
             Dim RightSide As String = Right(theText, Len(theText) - CharIndex)
             LeftSide = LeftSide.Split(" "c).Last
@@ -250,23 +250,7 @@ Partial Class SpellCheckTextBox
 
     Private Sub SpellMenuItems_WordAdded(ByVal sender As Object, ByVal e As AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordAdded
         Try
-            CurrentDictionary.Add(e.Word)
-            For Each iSellClassWithSameDict In AllSameDicCache()
-                'remove item from cache
-                For Each item In (From xItem In iSellClassWithSameDict.dictCache Where LCase(xItem.Key) = LCase(e.Word) OrElse LCase(xItem.Key) = LCase(e.Word) & "'s" OrElse LCase(xItem.Key) = LCase(e.Word) & Chr(146) & "s").ToArray
-                    iSellClassWithSameDict.dictCache.Remove(item.Key)
-                Next
-                iSellClassWithSameDict.RepaintTextBox()
-                'iSellClassWithSameDict.parentTextBox.Invalidate()
-            Next
-
-            If CurrentDictionary.Filename <> "" Then
-                Try
-                    CurrentDictionary.Save()
-                Catch ex As Exception
-                    MsgBox("The following error occured saving the dictionary:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
-                End Try
-            End If
+            DictionaryAddWord(e.Word)
         Catch ex As Exception
             MsgBox("The following error occured adding """ & e.Word & """ to the dictionary:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
         End Try
@@ -277,10 +261,10 @@ Partial Class SpellCheckTextBox
         LockWindowUpdate(parentTextBox.Handle)
         parentTextBox.SuspendLayout()
 
-        If mc_parentRichTextBox IsNot Nothing Then
+        If parentRichTextBox IsNot Nothing Then
             'rich text box :(... use alternate method ... this will ensure that the formatting isn't lost
-            mc_parentRichTextBox.Select(LastMenuSpellClickReturn.WordStart, LastMenuSpellClickReturn.Word.Length)
-            mc_parentRichTextBox.SelectedText = e.Word
+            parentRichTextBox.Select(LastMenuSpellClickReturn.WordStart, LastMenuSpellClickReturn.Word.Length)
+            parentRichTextBox.SelectedText = e.Word
         Else
             'standard text box .. can just replace all of the text
 
@@ -308,19 +292,7 @@ Partial Class SpellCheckTextBox
 
     Private Sub SpellMenuItems_WordIgnored(ByVal sender As Object, ByVal e As AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordIgnored
         Try
-            CurrentDictionary.Add(e.Word, True)
-
-            'for all items with the same dict
-            For Each iSellClassWithSameDict In AllSameDicCache()
-                'remove item from cache
-                For Each item In (From xItem In iSellClassWithSameDict.dictCache Where LCase(xItem.Key) = LCase(e.Word) OrElse LCase(xItem.Key) = LCase(e.Word) & "'s" OrElse LCase(xItem.Key) = LCase(e.Word) & Chr(146) & "s").ToArray
-                    iSellClassWithSameDict.dictCache.Remove(item.Key)
-                    iSellClassWithSameDict.dictCache.Add(item.Key, Dictionary.SpellCheckWordError.Ignore)
-                Next
-                iSellClassWithSameDict.RepaintTextBox()
-                'iSellClassWithSameDict.parentTextBox.Invalidate()
-            Next
-
+            DictionaryIgnoreWord(e.Word)
         Catch ex As Exception
             MsgBox("The following error ignoring """ & e.Word & """:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
         End Try
@@ -328,30 +300,7 @@ Partial Class SpellCheckTextBox
 
     Private Sub SpellMenuItems_WordRemoved(ByVal sender As Object, ByVal e As AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordRemoved
         Try
-            Dim NoApoS = SpellCheckTextBox.RemoveApoS(e.Word)
-            For Each item In (From xItem In CurrentDictionary Where LCase(xItem.Entry) = LCase(e.Word) OrElse LCase(xItem.Entry) = LCase(NoApoS))
-                item.ItemState = Dictionary.DictionaryItem.eItemState.Delete
-            Next
-
-            'for all items with the same dict
-            For Each iSellClassWithSameDict In AllSameDicCache()
-                'remove item from cache
-                For Each item In (From xItem In iSellClassWithSameDict.dictCache Where LCase(xItem.Key) = LCase(e.Word) OrElse LCase(xItem.Key) = LCase(NoApoS)).ToArray
-                    iSellClassWithSameDict.dictCache.Remove(item.Key)
-                    iSellClassWithSameDict.dictCache.Add(item.Key, Dictionary.SpellCheckWordError.SpellError)
-                Next
-                iSellClassWithSameDict.RepaintTextBox()
-                'iSellClassWithSameDict.parentTextBox.Invalidate()
-            Next
-
-            If CurrentDictionary.Filename <> "" Then
-                Try
-                    CurrentDictionary.Save()
-                Catch ex As Exception
-                    MsgBox("The following error occured saving the dictionary:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
-                End Try
-
-            End If
+            DictionaryRemoveWord(e.Word)
         Catch ex As Exception
             MsgBox("The following error occured removing """ & e.Word & """ from the dictionary:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
         End Try
@@ -364,7 +313,7 @@ Partial Class SpellCheckTextBox
 
     Private WithEvents ContextMenuStrip As ContextMenuStrip
 
-    Private Sub parentTextBox_ContextMenuStripChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.ContextMenuStripChanged
+    Private Sub parentTextBox_ContextMenuStripChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.ContextMenuStripChanged
         ContextMenuStrip = parentTextBox.ContextMenuStrip
         If ContextMenuStrip Is Nothing Then
             ContextMenuStrip = New StandardContextMenuStrip
@@ -617,7 +566,7 @@ AllDone:
             Me.Dictionary = Dictionary
 
             Dim Result = Dictionary.SpellCheckWord(Word)
-            Dim NiceWord As String = SpellCheckTextBox.RemoveApoS(Word)
+            Dim NiceWord As String = Dictionary.Formatting.RemoveApoS(Word)
             If NiceWord = "" Then Exit Sub 'shouldn't happen
             If Result = Dictionary.SpellCheckWordError.OK OrElse Result = Dictionary.SpellCheckWordError.CaseError OrElse Dictionary.Count = 0 Then
                 'word is in the dictionary... regardless of case...

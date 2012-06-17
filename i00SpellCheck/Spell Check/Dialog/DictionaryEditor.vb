@@ -1,18 +1,18 @@
 ﻿Public Class DictionaryEditor
 
-    Dim mc_Dictionary As SpellCheckTextBox.Dictionary
-    Private Property Dictionary() As SpellCheckTextBox.Dictionary
+    Dim mc_Dictionary As Dictionary
+    Private Property Dictionary() As Dictionary
         Get
             Return mc_Dictionary
         End Get
-        Set(ByVal value As SpellCheckTextBox.Dictionary)
+        Set(ByVal value As Dictionary)
             mc_Dictionary = value
             UpdateLV()
         End Set
     End Property
 
-    Public Overloads Function ShowDialog(ByVal dict As SpellCheckTextBox.Dictionary) As SpellCheckTextBox.Dictionary
-        If dict Is Nothing Then dict = New SpellCheckTextBox.Dictionary
+    Public Overloads Function ShowDialog(ByVal dict As Dictionary) As Dictionary
+        If dict Is Nothing Then dict = New Dictionary
         Me.Dictionary = dict
         Me.StartPosition = FormStartPosition.CenterParent
         MyBase.ShowDialog()

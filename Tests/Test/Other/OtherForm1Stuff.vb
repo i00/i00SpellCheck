@@ -52,6 +52,9 @@ Partial Class Form1
             Me.Icon = IconExtraction.GetDefaultIcon(a.Location, IconExtraction.IconSize.LargeIcon)
         End If
 
+        Dim propToolBoxIcon As New ToolboxBitmapAttribute(GetType(PropertyGrid))
+        tsbProperties.Image = propToolBoxIcon.GetImage(GetType(PropertyGrid), False)
+
         Dim URLIcon = IconExtraction.GetDefaultIcon(".url", IconExtraction.IconSize.SmallIcon).ToBitmap
         tsbi00Productions.Image = URLIcon
         tsbVBForums.Image = URLIcon
@@ -71,6 +74,7 @@ Partial Class Form1
         RichTextBox1.Select(0, 0)
         RichTextBox1.ClearUndo()
 
+        LoadFavicon("http://www.paypal.com/favicon.ico", tsbDonate)
         LoadFavicon("http://vbforums.com/favicon.ico", tsbVBForums)
         LoadFavicon("http://i00Productions.org/favicon.ico", tsbi00Productions)
         LoadFavicon("http://codeproject.com/favicon.ico", tsbCodeProject)
@@ -83,12 +87,15 @@ Partial Class Form1
 
         propRichTextBox.SelectedObject = RichTextBox1.SpellCheck
         propTextBox.SelectedObject = TextBox1.SpellCheck
+        propDataGridView.SelectedObject = DataGridView1.SpellCheck
 
         UpdateEnabledCheck()
 
         Dim GridData As New System.ComponentModel.BindingList(Of GridViewData)
         GridData.Add(New GridViewData("This is a grid view example to demonistrate that i00 Spell Check can be used in grids!"))
         GridData.Add(New GridViewData("So comeon and edit a cell!"))
+
+        DataGridView1.DefaultCellStyle.WrapMode = DataGridViewTriState.True
 
         Dim bs As New BindingSource
         bs.DataSource = GridData
@@ -186,6 +193,10 @@ Partial Class Form1
 
     Private Sub tsbCodeProject_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbCodeProject.Click
         System.Diagnostics.Process.Start("http://www.codeproject.com/KB/edit/i00VBNETSpellCheck.aspx")
+    End Sub
+
+    Private Sub tsbDonate_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsbDonate.Click
+        System.Diagnostics.Process.Start("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=6C7Y9ECSD2YPA")
     End Sub
 
     Private Sub tsbAbout_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbAbout.Click

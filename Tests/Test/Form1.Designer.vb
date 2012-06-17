@@ -29,6 +29,7 @@ Partial Class Form1
         Me.tsbCodeProject = New System.Windows.Forms.ToolStripButton
         Me.tsbVBForums = New System.Windows.Forms.ToolStripButton
         Me.tsbi00Productions = New System.Windows.Forms.ToolStripButton
+        Me.tsbDonate = New System.Windows.Forms.ToolStripButton
         Me.TextBox1 = New System.Windows.Forms.TextBox
         Me.ToolStrip2 = New System.Windows.Forms.ToolStrip
         Me.ToolStripDropDownButton1 = New System.Windows.Forms.ToolStripDropDownButton
@@ -78,6 +79,7 @@ Partial Class Form1
         Me.BindingNavigatorMoveNextItem = New System.Windows.Forms.ToolStripButton
         Me.BindingNavigatorMoveLastItem = New System.Windows.Forms.ToolStripButton
         Me.BindingNavigatorSeparator2 = New System.Windows.Forms.ToolStripSeparator
+        Me.propDataGridView = New System.Windows.Forms.PropertyGrid
         Me.ToolStrip3 = New System.Windows.Forms.ToolStrip
         Me.tsiEnabled = New System.Windows.Forms.ToolStripButton
         Me.DataGridViewTextBoxColumn1 = New System.Windows.Forms.DataGridViewTextBoxColumn
@@ -97,7 +99,7 @@ Partial Class Form1
         '
         Me.ToolStrip1.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.ToolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden
-        Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tslStatus, Me.tsbCodeProject, Me.tsbVBForums, Me.tsbi00Productions})
+        Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tslStatus, Me.tsbCodeProject, Me.tsbVBForums, Me.tsbi00Productions, Me.tsbDonate})
         Me.ToolStrip1.Location = New System.Drawing.Point(0, 417)
         Me.ToolStrip1.Name = "ToolStrip1"
         Me.ToolStrip1.Size = New System.Drawing.Size(624, 25)
@@ -136,6 +138,14 @@ Partial Class Form1
         Me.tsbi00Productions.Name = "tsbi00Productions"
         Me.tsbi00Productions.Size = New System.Drawing.Size(93, 22)
         Me.tsbi00Productions.Text = "i00 Productions"
+        '
+        'tsbDonate
+        '
+        Me.tsbDonate.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.tsbDonate.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.tsbDonate.Name = "tsbDonate"
+        Me.tsbDonate.Size = New System.Drawing.Size(49, 22)
+        Me.tsbDonate.Text = "Donate"
         '
         'TextBox1
         '
@@ -370,10 +380,9 @@ Partial Class Form1
         '
         Me.tsbProperties.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
         Me.tsbProperties.AutoToolTip = False
-        Me.tsbProperties.Image = CType(resources.GetObject("tsbProperties.Image"), System.Drawing.Image)
         Me.tsbProperties.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.tsbProperties.Name = "tsbProperties"
-        Me.tsbProperties.Size = New System.Drawing.Size(80, 22)
+        Me.tsbProperties.Size = New System.Drawing.Size(64, 22)
         Me.tsbProperties.Text = "Properties"
         '
         'tabSpellControls
@@ -444,6 +453,7 @@ Partial Class Form1
         '
         Me.tabDataGridView.Controls.Add(Me.DataGridView1)
         Me.tabDataGridView.Controls.Add(Me.BindingNavigator1)
+        Me.tabDataGridView.Controls.Add(Me.propDataGridView)
         Me.tabDataGridView.Location = New System.Drawing.Point(4, 22)
         Me.tabDataGridView.Name = "tabDataGridView"
         Me.tabDataGridView.Padding = New System.Windows.Forms.Padding(3)
@@ -459,7 +469,7 @@ Partial Class Form1
         Me.DataGridView1.Dock = System.Windows.Forms.DockStyle.Fill
         Me.DataGridView1.Location = New System.Drawing.Point(3, 3)
         Me.DataGridView1.Name = "DataGridView1"
-        Me.DataGridView1.Size = New System.Drawing.Size(610, 310)
+        Me.DataGridView1.Size = New System.Drawing.Size(352, 310)
         Me.DataGridView1.TabIndex = 0
         '
         'BindingNavigator1
@@ -477,7 +487,7 @@ Partial Class Form1
         Me.BindingNavigator1.MovePreviousItem = Me.BindingNavigatorMovePreviousItem
         Me.BindingNavigator1.Name = "BindingNavigator1"
         Me.BindingNavigator1.PositionItem = Me.BindingNavigatorPositionItem
-        Me.BindingNavigator1.Size = New System.Drawing.Size(610, 25)
+        Me.BindingNavigator1.Size = New System.Drawing.Size(352, 25)
         Me.BindingNavigator1.TabIndex = 1
         Me.BindingNavigator1.Text = "BindingNavigator1"
         '
@@ -566,6 +576,15 @@ Partial Class Form1
         Me.BindingNavigatorSeparator2.Name = "BindingNavigatorSeparator2"
         Me.BindingNavigatorSeparator2.Size = New System.Drawing.Size(6, 25)
         '
+        'propDataGridView
+        '
+        Me.propDataGridView.Dock = System.Windows.Forms.DockStyle.Right
+        Me.propDataGridView.Location = New System.Drawing.Point(355, 3)
+        Me.propDataGridView.Name = "propDataGridView"
+        Me.propDataGridView.Size = New System.Drawing.Size(258, 335)
+        Me.propDataGridView.TabIndex = 8
+        Me.propDataGridView.Visible = False
+        '
         'ToolStrip3
         '
         Me.ToolStrip3.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden
@@ -579,10 +598,9 @@ Partial Class Form1
         'tsiEnabled
         '
         Me.tsiEnabled.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
-        Me.tsiEnabled.Image = CType(resources.GetObject("tsiEnabled.Image"), System.Drawing.Image)
         Me.tsiEnabled.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.tsiEnabled.Name = "tsiEnabled"
-        Me.tsiEnabled.Size = New System.Drawing.Size(69, 22)
+        Me.tsiEnabled.Size = New System.Drawing.Size(53, 22)
         Me.tsiEnabled.Text = "Enabled"
         '
         'DataGridViewTextBoxColumn1
@@ -680,5 +698,7 @@ Partial Class Form1
     Friend WithEvents BindingNavigatorMoveNextItem As System.Windows.Forms.ToolStripButton
     Friend WithEvents BindingNavigatorMoveLastItem As System.Windows.Forms.ToolStripButton
     Friend WithEvents BindingNavigatorSeparator2 As System.Windows.Forms.ToolStripSeparator
+    Friend WithEvents propDataGridView As System.Windows.Forms.PropertyGrid
+    Friend WithEvents tsbDonate As System.Windows.Forms.ToolStripButton
 
 End Class

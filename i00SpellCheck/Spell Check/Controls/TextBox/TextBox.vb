@@ -17,7 +17,8 @@
 'NativeWindow thinks it can be designed... so disable the designer 
 <System.ComponentModel.DesignerCategory("")> _
 Public Class SpellCheckTextBox
-    Inherits NativeWindow
+    Inherits SpellCheckControlBase
+    Implements iSpellCheckDialog
 
 #Region "Text Box"
 
@@ -47,7 +48,7 @@ Public Class SpellCheckTextBox
 #Region "To get the height of a given line / chr position"
 
     Dim RTBContents As Rectangle
-    Private Sub mc_parentRichTextBox_ContentsResized(ByVal sender As Object, ByVal e As System.Windows.Forms.ContentsResizedEventArgs) Handles mc_parentRichTextBox.ContentsResized
+    Private Sub parentRichTextBox_ContentsResized(ByVal sender As Object, ByVal e As System.Windows.Forms.ContentsResizedEventArgs)
         RTBContents = e.NewRectangle
     End Sub
 
@@ -55,12 +56,12 @@ Public Class SpellCheckTextBox
     'to do this by line
     Private Function GetLineHeightFromCharPosition(ByVal LetterIndex As Integer) As Integer
         Dim TextHeight As Integer = System.Windows.Forms.TextRenderer.MeasureText("Ag", parentTextBox.Font).Height
-        If mc_parentRichTextBox IsNot Nothing Then
+        If parentRichTextBox IsNot Nothing Then
             'rich text box :(... need to get the height for each bit...
-            Dim OldStart = mc_parentRichTextBox.SelectionStart
-            Dim OldLength = mc_parentRichTextBox.SelectionLength
-            Dim ThisLine = mc_parentRichTextBox.GetLineFromCharIndex(LetterIndex)
-            Dim LineBelow = mc_parentRichTextBox.GetPositionFromCharIndex(mc_parentRichTextBox.GetFirstCharIndexFromLine(ThisLine + 1))
+            Dim OldStart = parentRichTextBox.SelectionStart
+            Dim OldLength = parentRichTextBox.SelectionLength
+            Dim ThisLine = parentRichTextBox.GetLineFromCharIndex(LetterIndex)
+            Dim LineBelow = parentRichTextBox.GetPositionFromCharIndex(parentRichTextBox.GetFirstCharIndexFromLine(ThisLine + 1))
             If LineBelow.IsEmpty Then
                 If RTBContents.IsEmpty Then
                     'qwertyuiop ....
@@ -68,10 +69,10 @@ Public Class SpellCheckTextBox
                     'use the standard text height 4 now...
                     Return TextHeight
                 Else
-                    Return (RTBContents.Height + mc_parentRichTextBox.GetPositionFromCharIndex(0).Y) - mc_parentRichTextBox.GetPositionFromCharIndex(LetterIndex).Y
+                    Return (RTBContents.Height + parentRichTextBox.GetPositionFromCharIndex(0).Y) - parentRichTextBox.GetPositionFromCharIndex(LetterIndex).Y
                 End If
             Else
-                Return LineBelow.Y - mc_parentRichTextBox.GetPositionFromCharIndex(LetterIndex).Y
+                Return LineBelow.Y - parentRichTextBox.GetPositionFromCharIndex(LetterIndex).Y
             End If
         Else
             Return TextHeight
@@ -98,27 +99,27 @@ Public Class SpellCheckTextBox
 
     Dim TipCase As New HTMLToolTip With {.IsBalloon = True, .ToolTipIcon = ToolTipIcon.Info, .ToolTipTitle = "Case changed", .ToolTipOrientation = HTMLToolTip.ToolTipOrientations.TopLeft}
 
-    Private Sub parentTextBox_ForChangeCase_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.Disposed
+    Private Sub parentTextBox_ForChangeCase_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.Disposed
         TipCase.Dispose()
     End Sub
 
     Private Sub CycleCase()
-        If mc_parentTextBox.SelectedText = "" Then Return
+        If parentTextBox.SelectedText = "" Then Return
 
         Static LastSelectedText As String = ""
         Static CurrentCase As Cases
         Static OrigionalRTF As String
-        If UCase(LastSelectedText) <> UCase(mc_parentTextBox.SelectedText) Then
+        If UCase(LastSelectedText) <> UCase(parentTextBox.SelectedText) Then
             'new text selected
-            LastSelectedText = mc_parentTextBox.SelectedText
+            LastSelectedText = parentTextBox.SelectedText
             CurrentCase = Cases.Origional
-            LastSelectedText = mc_parentTextBox.SelectedText
-            If mc_parentRichTextBox IsNot Nothing Then OrigionalRTF = mc_parentRichTextBox.SelectedRtf
+            LastSelectedText = parentTextBox.SelectedText
+            If parentRichTextBox IsNot Nothing Then OrigionalRTF = parentRichTextBox.SelectedRtf
         End If
 
         CurrentCase = CType((CInt(CurrentCase) + 1) Mod (UBound([Enum].GetValues(GetType(Cases))) + 1), Cases)
 
-        If mc_parentRichTextBox IsNot Nothing Then
+        If parentRichTextBox IsNot Nothing Then
             'this section is used to preserve RTB formatting when changing case...
             Dim ToBeText As String = OrigionalRTF
             Dim RTFMatchPatern = "(?<=\s).(?<![\s|\\]).*?((?=\s)|(?=((?<!\\)\\[^\\]))(?=((?<!\\)\\[^}]))(?=((?<!\\)\\[^{])))"
@@ -163,18 +164,18 @@ Public Class SpellCheckTextBox
                 Case Cases.Lower
                     ToBeText = System.Text.RegularExpressions.Regex.Replace(ToBeText, RTFMatchPatern, Function(m) If(isInRTFTextSegment(ToBeText, m), m.Value.ToLower(), m.Value))
             End Select
-            Dim OldSelectionStart = mc_parentTextBox.SelectionStart
-            Dim OldSelectionLen = mc_parentTextBox.SelectionLength
+            Dim OldSelectionStart = parentTextBox.SelectionStart
+            Dim OldSelectionLen = parentTextBox.SelectionLength
             Dim SetWholeText As Boolean  'gets round the empty line rtb bug...
             '                qwertyuiop - unfortunatly it creates another... the undo stack is cleared :(
-            If OldSelectionStart = 0 AndAlso OldSelectionLen = mc_parentTextBox.TextLength Then SetWholeText = True
+            If OldSelectionStart = 0 AndAlso OldSelectionLen = parentTextBox.TextLength Then SetWholeText = True
             If SetWholeText Then
-                mc_parentRichTextBox.Rtf = ToBeText.TrimEnd(CChar(vbCr), CChar(vbLf))
+                parentRichTextBox.Rtf = ToBeText.TrimEnd(CChar(vbCr), CChar(vbLf))
             Else
-                mc_parentRichTextBox.SelectedRtf = ToBeText
+                parentRichTextBox.SelectedRtf = ToBeText
             End If
-            mc_parentTextBox.SelectionStart = OldSelectionStart
-            mc_parentTextBox.SelectionLength = OldSelectionLen
+            parentTextBox.SelectionStart = OldSelectionStart
+            parentTextBox.SelectionLength = OldSelectionLen
         Else
             Dim ToBeText As String = LastSelectedText
             Select Case CurrentCase
@@ -189,11 +190,11 @@ Public Class SpellCheckTextBox
                 Case Cases.Lower
                     ToBeText = LCase(ToBeText)
             End Select
-            Dim OldSelectionStart = mc_parentTextBox.SelectionStart
-            Dim OldSelectionLen = mc_parentTextBox.SelectionLength
-            mc_parentTextBox.SelectedText = ToBeText
-            mc_parentTextBox.SelectionStart = OldSelectionStart
-            mc_parentTextBox.SelectionLength = OldSelectionLen
+            Dim OldSelectionStart = parentTextBox.SelectionStart
+            Dim OldSelectionLen = parentTextBox.SelectionLength
+            parentTextBox.SelectedText = ToBeText
+            parentTextBox.SelectionStart = OldSelectionStart
+            parentTextBox.SelectionLength = OldSelectionLen
         End If
 
         'tooltip
@@ -208,8 +209,8 @@ Public Class SpellCheckTextBox
         ChrPos.X += 8
 
         If ChrPos.Y < 0 Then ChrPos.Y = 0
-        If ChrPos.Y > mc_parentTextBox.Height Then ChrPos.Y = mc_parentTextBox.Height
-        TipCase.ShowHTML("to " & CurrentCase.ToString & " " & If(CurrentCase = Cases.Origional, "state", "case"), mc_parentTextBox, ChrPos, 2500)
+        If ChrPos.Y > parentTextBox.Height Then ChrPos.Y = parentTextBox.Height
+        TipCase.ShowHTML("to " & CurrentCase.ToString & " " & If(CurrentCase = Cases.Origional, "state", "case"), parentTextBox, ChrPos, 2500)
 
     End Sub
 
@@ -219,27 +220,10 @@ Public Class SpellCheckTextBox
 
 #End Region
 
-    <System.ComponentModel.Description("The text box associated with the SpellCheckTextBox object")> _
-    Public ReadOnly Property TextBox() As TextBoxBase
-        Get
-            Return mc_parentTextBox
-        End Get
-    End Property
+#Region "Key handlers"
 
-    Private WithEvents mc_parentTextBox As TextBoxBase
-    Private WithEvents mc_parentRichTextBox As RichTextBox 'for specific rich text box events :)
-    Private Property parentTextBox() As TextBoxBase
-        Get
-            Return mc_parentTextBox
-        End Get
-        Set(ByVal value As TextBoxBase)
-            mc_parentRichTextBox = TryCast(value, RichTextBox)
-            mc_parentTextBox = value
-        End Set
-    End Property
-
-    Private Sub parentTextBox_KeyUp(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles mc_parentTextBox.KeyUp
-        Select e.KeyCode
+    Private Sub parentTextBox_KeyUp(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles mc_Control.KeyUp
+        Select Case e.KeyCode
             Case Keys.Apps 'right click menu
                 If ContextMenuStrip.Visible Then
                     'menu is open already ... so hide
@@ -262,29 +246,31 @@ Public Class SpellCheckTextBox
                 If Settings.AllowF7 Then
                     ShowDialog()
                     'update the ignored/added/removed words...
-                    RepaintTextBox()
+                    RepaintControl()
                 End If
         End Select
     End Sub
 
-    Public Sub ShowDialog()
-        If CurrentDictionary IsNot Nothing AndAlso CurrentDictionary.Loading = False Then
-            Using SpellCheckDialog As New SpellCheckDialog
-                SpellCheckDialog.ShowDialog(parentTextBox, Me)
-            End Using
-        End If
-    End Sub
+#End Region
 
-    Private Sub parentTextBox_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.SizeChanged
-        textBoxGraphics = Graphics.FromHwnd(parentTextBox.Handle)
-    End Sub
-
-    Private Sub parentTextBox_TextChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.TextChanged
+    Private Sub parentTextBox_TextChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.TextChanged
         'Standard TextBoxes do not fire the WM_PAINT event when adding text so need to do it this way
         If TypeOf parentTextBox Is TextBox Then
             parentTextBox.Invalidate()
         End If
     End Sub
+
+    Private Sub parentTextBox_MultilineChanged(ByVal sender As Object, ByVal e As System.EventArgs)
+        Dim senderTextBox = TryCast(sender, TextBoxBase)
+        If senderTextBox IsNot Nothing Then
+            If senderTextBox.Multiline Then
+                senderTextBox.EnableSpellCheck()
+            Else
+                senderTextBox.DisableSpellCheck()
+            End If
+        End If
+    End Sub
+
 
     Private Const WM_VSCROLL As Integer = &H115
     Private Const WM_MOUSEWHEEL As Integer = &H20A
@@ -302,10 +288,12 @@ Public Class SpellCheckTextBox
                         Me.CustomPaint()
                     Else
                         MyBase.WndProc(m)
-                        RepaintTextBox()
+                        RepaintControl()
                         'OpenOverlay()
                         'Me.CustomPaint()
                     End If
+                Else
+                    MyBase.WndProc(m)
                 End If
             Case Else
                 MyBase.WndProc(m)
@@ -316,27 +304,23 @@ Public Class SpellCheckTextBox
 
 #Region "Constructor"
 
-    Public Sub New(ByVal textBox As TextBoxBase, Optional ByVal Dictionary As Dictionary = Nothing)
-        mc_CurrentDictionary = Dictionary
-        parentTextBox = textBox
-        parentTextBox_ContextMenuStripChanged(parentTextBox, EventArgs.Empty)
-        parentTextBox_SizeChanged(parentTextBox, EventArgs.Empty)
-        Try
-            AssignHandle(textBox.Handle)
-        Catch ex As Exception
+    Overrides Sub Load()
+        If parentTextBox IsNot Nothing Then
 
-        End Try
-        RepaintTextBox()
-        'parentTextBox.Invalidate()
-        Application.AddMessageFilter(Me)
-    End Sub
+            'setup control specific event handlers
+            AddHandler parentTextBox.MultilineChanged, AddressOf parentTextBox_MultilineChanged
+            If parentRichTextBox IsNot Nothing Then
+                AddHandler parentRichTextBox.ContentsResized, AddressOf parentRichTextBox_ContentsResized
+            End If
 
-#End Region
+            'parentTextBox = TextBoxBase
+            parentTextBox_ContextMenuStripChanged(parentTextBox, EventArgs.Empty)
+            parentTextBox_SizeChanged(parentTextBox, EventArgs.Empty)
 
-#Region "Update the WndProc Handle when the textbox gets a new handle - for when properties like RightToLeft are changed"
-
-    Private Sub mc_parentTextBox_HandleCreated(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.HandleCreated
-        AssignHandle(TextBox.Handle)
+            If parentTextBox.Multiline = False Then parentTextBox.DisableSpellCheck()
+            RepaintControl()
+            'parentTextBox.Invalidate()
+        End If
     End Sub
 
 #End Region

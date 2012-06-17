@@ -15,149 +15,53 @@
 'responsible for any legal ramifications that software using this product breaches.
 
 Partial Class SpellCheckTextBox
-    Implements IMessageFilter
 
-#Region "For Keypress to Make Ignore Underline Appear"
+#Region "Repaint events"
 
-    Const WM_KEYDOWN As Integer = &H100
-    Const WM_KEYUP As Integer = &H101
-
-    Public Function PreFilterMessage(ByRef m As System.Windows.Forms.Message) As Boolean Implements System.Windows.Forms.IMessageFilter.PreFilterMessage
-        Static ctlPressed As Boolean
-        Select Case m.Msg
-            Case WM_KEYDOWN
-                Select Case m.WParam.ToInt32
-                    Case Keys.ControlKey
-                        If ctlPressed = False Then
-                            ctlPressed = True
-                            RepaintTextBox()
-                            'parentTextBox.Invalidate()
-                        End If
-                End Select
-            Case WM_KEYUP
-                Select Case m.WParam.ToInt32
-                    Case Keys.ControlKey
-                        ctlPressed = False
-                        RepaintTextBox()
-                        'parentTextBox.Invalidate()
-                End Select
-        End Select
-    End Function
-
-#End Region
-
-#Region "Dictionary cache object + Thread to add to cache"
-
-    Friend dictCache As New Dictionary(Of String, Dictionary.SpellCheckWordError)
-
-    Private Sub parentTextBox_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.Disposed
-        'kill all running threads
-        AbortSpellCheckThreads()
+    Private Sub SpellCheckTextBox_DictionaryChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.DictionaryChanged
+        RepaintControl()
     End Sub
 
-    Private Sub AbortSpellCheckThreads()
-        SyncLock AddWordThreads
-            For Each item In AddWordThreads
-                If item.IsAlive Then
-                    item.Abort()
-                End If
-            Next
-        End SyncLock
-    End Sub
-
-    Dim AddWordThreads As New List(Of Threading.Thread)
-    Private Sub AddWordsToCache(ByVal oDictionary_String_SpellCheckWordError As Object)
-        'use DirectCast so that error is thrown if wrong object is passed in
-        Dim NewItems = DirectCast(oDictionary_String_SpellCheckWordError, Dictionary(Of String, Dictionary.SpellCheckWordError))
-        If parentTextBox.InvokeRequired = False Then
-            'open in another thread to the textbox
-            Dim mtSpellCheck As New Threading.Thread(AddressOf AddWordsToCache)
-            mtSpellCheck.Name = "Spell check"
-            mtSpellCheck.IsBackground = True 'make it abort when the app is killed
-            SyncLock AddWordThreads
-                AddWordThreads.Add(mtSpellCheck)
-            End SyncLock
-            mtSpellCheck.Start(NewItems)
-        Else
-            'we are on another thread
-            SyncLock dictCache
-                For Each item In NewItems
-                    'Debug.Print("Spell checking: " & item.Key)
-                    If dictCache.ContainsKey(item.Key) = False Then
-                        dictCache.Add(item.Key, CurrentDictionary.SpellCheckWord(item.Key))
-                    End If
-                Next
-            End SyncLock
-            'all words added
-            Dim AddWordThreadsCount As Integer
-            SyncLock AddWordThreads
-                AddWordThreads.Remove(Threading.Thread.CurrentThread)
-                AddWordThreadsCount = AddWordThreads.Count
-            End SyncLock
-            If AddWordThreadsCount = 0 Then
-                RepaintTextBox()
-            End If
-        End If
-    End Sub
-
-    Private Delegate Sub cb_RepaintTextBox()
-
-    Public Sub RepaintTextBox()
-        Try
-            If parentTextBox.InvokeRequired Then
-                If parentTextBox.Visible Then
-                    Dim cb As New cb_RepaintTextBox(AddressOf RepaintTextBox)
-                    parentTextBox.Invoke(cb)
-                End If
-            Else
-                If Me.Settings.RenderCompatibility Then
-                    If Me.Settings.ShowMistakes AndAlso Me.parentTextBox.IsSpellCheckEnabled Then
-                        parentTextBox.Invalidate()
-                    End If
-                Else
-                    'only redraw if the overlay hasn't been created yet or if the overlay is visible
-                    If DrawOverlayForm Is Nothing Then
-                        OpenOverlay()
-                    End If
-                    If Me.Settings.ShowMistakes = False OrElse Me.parentTextBox.IsSpellCheckEnabled = False Then
-                        DrawOverlayForm.Visible = False
-                    Else
-                        DrawOverlayForm.Visible = mc_parentTextBox.Visible
-                    End If
-                    If DrawOverlayForm.Visible Then
-                        Me.CustomPaint()
-                    End If
-                End If
-            End If
-        Catch ex As Exception
-
-        End Try
+    Private Sub SpellCheckTextBox_SettingsChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.SettingsChanged
+        RepaintControl()
     End Sub
 
 #End Region
 
 #Region "Drawing"
 
-    Public Sub Invalidate()
-        Me.dictCache.Clear()
-        If Me.TextBox IsNot Nothing Then
-            RepaintTextBox()
-            'Me.TextBox.Invalidate()
+#Region "Repaint"
+
+    Public Overrides Sub RepaintControl()
+        If Me.Settings.RenderCompatibility Then
+            If Me.Settings.ShowMistakes AndAlso Me.parentTextBox.IsSpellCheckEnabled Then
+                parentTextBox.Invalidate()
+            End If
+        Else
+            'only redraw if the overlay hasn't been created yet or if the overlay is visible
+            If DrawOverlayForm Is Nothing Then
+                OpenOverlay()
+            End If
+            If Me.Settings.ShowMistakes = False OrElse Me.parentTextBox.IsSpellCheckEnabled = False Then
+                DrawOverlayFormVisible = False
+            Else
+                DrawOverlayFormVisible = parentTextBox.Visible
+            End If
+            If DrawOverlayFormVisible Then
+                Me.CustomPaint()
+            End If
         End If
     End Sub
 
+#End Region
+
+#Region "Painting"
+
+    'For compatibility mode...
     Private textBoxGraphics As Graphics
-
-    Public Class SpellCheckCustomPaintEventArgs
-        Inherits EventArgs
-        Public Bounds As Rectangle
-        Public Graphics As Graphics
-        Public DrawDefault As Boolean = True
-        Public Word As String
-        Public WordState As Dictionary.SpellCheckWordError
-    End Class
-
-    Public Event SpellCheckErrorPaint(ByVal sender As Object, ByRef e As SpellCheckCustomPaintEventArgs)
+    Private Sub parentTextBox_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.SizeChanged
+        textBoxGraphics = Graphics.FromHwnd(parentTextBox.Handle)
+    End Sub
 
     Private Sub CustomPaint()
         If CurrentDictionary IsNot Nothing AndAlso (CurrentDictionary.Loading = True OrElse CurrentDictionary.Count = 0) Then Exit Sub
@@ -182,7 +86,7 @@ Partial Class SpellCheckTextBox
                 Dim FromChar = parentTextBox.GetCharIndexFromPosition(New Point(0, 0))
                 Dim ToChar = parentTextBox.GetCharIndexFromPosition(New Point(parentTextBox.ClientRectangle.Width - 1, parentTextBox.ClientRectangle.Height - 1))
 
-                Dim theText As String = RemoveWordBreaks(parentTextBox.Text)
+                Dim theText As String = Dictionary.Formatting.RemoveWordBreaks(parentTextBox.Text)
 
                 Dim LetterIndex = FromChar
                 Dim LeftSide = Left(theText, FromChar)
@@ -207,7 +111,7 @@ Partial Class SpellCheckTextBox
                         If words(iWord) <> "" Then
                             Dim P1 = parentTextBox.GetPositionFromCharIndex(LetterIndex)
                             Dim P1OffsetPlus As Integer = 0
-                            If iWord = 0 AndAlso P1.X >= TextBox.ClientSize.Width Then
+                            If iWord = 0 AndAlso P1.X >= parentTextBox.ClientSize.Width Then
                                 P1OffsetPlus = 1
                                 P1.X = 0
                             End If
@@ -218,11 +122,6 @@ Partial Class SpellCheckTextBox
                                     WordState = dictCache(words(iWord))
                                 Else
                                     ''item is not in the dict cache
-                                    'WordState = SpellCheckWord(words(iWord))
-                                    'If dictCache.ContainsKey(words(iWord)) = False Then
-                                    '    dictCache.Add(words(iWord), WordState)
-                                    'End If
-                                    'assume ok for now and add word to be processed
                                     If NewWords.ContainsKey(words(iWord)) = False Then
                                         NewWords.Add(words(iWord), Dictionary.SpellCheckWordError.OK)
                                     End If
@@ -233,11 +132,7 @@ Partial Class SpellCheckTextBox
 
                                 Else
                                     If WordState = Dictionary.SpellCheckWordError.Ignore Then
-                                        If Settings.ShowIgnored = SpellCheckSettings.ShowIgnoreState.OnKeyDown AndAlso My.Computer.Keyboard.CtrlKeyDown = False Then
-                                            GoTo ContinueFor
-                                        ElseIf Settings.ShowIgnored = SpellCheckSettings.ShowIgnoreState.AlwaysHide Then
-                                            GoTo ContinueFor
-                                        End If
+                                        If DrawIgnored() = False Then GoTo ContinueFor
                                     End If
 
                                     Dim P2 = parentTextBox.GetPositionFromCharIndex(LetterIndex + Len(words(iWord)))
@@ -257,7 +152,7 @@ Partial Class SpellCheckTextBox
                                     'P2.Y = P1.Y
 
                                     Dim e = New SpellCheckCustomPaintEventArgs With {.Graphics = g, .Word = words(iWord), .Bounds = New Rectangle(P1.X, P1.Y, P2.X - P1.X, P2.Y - P1.Y), .WordState = WordState}
-                                    RaiseEvent SpellCheckErrorPaint(Me, e)
+                                    OnSpellCheckErrorPaint(e)
                                     If e.DrawDefault Then
                                         Select Case WordState
                                             Case Dictionary.SpellCheckWordError.Ignore
@@ -265,9 +160,9 @@ Partial Class SpellCheckTextBox
                                                     g.DrawLine(p, P1.X, P2.Y + 1, P2.X, P2.Y + 1)
                                                 End Using
                                             Case Dictionary.SpellCheckWordError.CaseError
-                                                DrawWave(g, P1, P2, Settings.CaseMistakeColor)
+                                                DrawingFunctions.DrawWave(g, P1, P2, Settings.CaseMistakeColor)
                                             Case Dictionary.SpellCheckWordError.SpellError
-                                                DrawWave(g, P1, P2, Settings.MistakeColor)
+                                                DrawingFunctions.DrawWave(g, P1, P2, Settings.MistakeColor)
                                         End Select
                                     End If
                                 End If
@@ -297,32 +192,7 @@ Draw:
 
     End Sub
 
-    Private Sub DrawWave(ByVal g As Graphics, ByVal startPoint As Point, ByVal endPoint As Point, ByVal Color As Color)
-        If endPoint.X - startPoint.X < 4 Then
-            endPoint.X = startPoint.X + 4
-        End If
-        Dim points() As PointF = Nothing  'New List(Of PointF)
-        For i = startPoint.X To endPoint.X Step 2
-            If points Is Nothing Then
-                ReDim Preserve points(0)
-            Else
-                ReDim Preserve points(UBound(points) + 1)
-            End If
-            If (i - startPoint.X) Mod 4 = 0 Then
-                points(UBound(points)) = New PointF(i, endPoint.Y + 2)
-                'points.Add(New PointF(i, startPoint.Y))
-            Else
-                points(UBound(points)) = New PointF(i, endPoint.Y)
-                'points.Add(New PointF(i, startPoint.Y + 2))
-            End If
-        Next
-        Using p As New System.Drawing.Drawing2D.GraphicsPath
-            p.AddCurve(points)
-            Using pen As Pen = New Pen(Color)
-                g.DrawPath(pen, p)
-            End Using
-        End Using
-    End Sub
+#End Region
 
 #End Region
 
@@ -389,32 +259,32 @@ Draw:
         End If
     End Sub
 
-    Private Sub parentTextBox_ForOverlay_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.Disposed
+    Private Sub parentTextBox_ForOverlay_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.Disposed
         CloseOverlay()
     End Sub
 
 #End Region
 
-#Region "Events for overlay"
+#Region "Stuff for overlay"
 
-    Private Sub parentTextBox_ForOverlay_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.SizeChanged
+    Private Sub parentTextBox_ForOverlay_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.SizeChanged
         If DrawOverlayForm IsNot Nothing Then
             SetOverlayBounds()
-            RepaintTextBox()
+            RepaintControl()
         End If
     End Sub
 
-    Private Sub mc_parentTextBox_LocationChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.LocationChanged
+    Private Sub mc_parentTextBox_LocationChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.LocationChanged
         SetOverlayBounds()
     End Sub
 
-    Private Sub mc_parentTextBox_VisibleChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.VisibleChanged
+    Private Sub mc_parentTextBox_VisibleChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.VisibleChanged
         If DrawOverlayForm IsNot Nothing AndAlso DrawOverlayForm.IsDisposed = False Then
-            If DrawOverlayForm.Visible <> mc_parentTextBox.Visible Then
-                DrawOverlayForm.Visible = mc_parentTextBox.Visible
-                If mc_parentTextBox.Visible Then
+            If DrawOverlayFormVisible <> parentTextBox.Visible Then
+                DrawOverlayFormVisible = parentTextBox.Visible
+                If parentTextBox.Visible Then
                     SetOverlayBounds()
-                    RepaintTextBox()
+                    RepaintControl()
                 End If
             End If
         End If
@@ -424,27 +294,58 @@ Draw:
         For Each item In OverlayHandlerControls
             RemoveHandler item.LocationChanged, AddressOf mc_parentTextBox_LocationChanged
             RemoveHandler item.VisibleChanged, AddressOf mc_parentTextBox_VisibleChanged
+            RemoveHandler item.ControlRemoved, AddressOf parents_ControlRemoved
         Next
+        OverlayHandlerControls = New List(Of Control)
     End Sub
 
     Public OverlayHandlerControls As New List(Of Control)
 
-    Private Sub mc_parentTextBox_ParentChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_parentTextBox.ParentChanged
+    Private Sub parents_ControlRemoved(ByVal sender As Object, ByVal e As System.Windows.Forms.ControlEventArgs)
+        If OverlayHandlerControls.Contains(e.Control) Then
+            mc_parentTextBox_ParentChanged(Me.parentTextBox, EventArgs.Empty)
+        End If
+    End Sub
+
+    Private Property DrawOverlayFormVisible() As Boolean
+        Get
+            Return DrawOverlayForm IsNot Nothing AndAlso DrawOverlayForm.Visible
+        End Get
+        Set(ByVal value As Boolean)
+            'need to do it this way as the control may be visible with no parent
+            If DrawOverlayForm IsNot Nothing Then
+                If value = True Then
+                    If TypeOf parentTextBox.TopLevelControl Is Form Then
+                        DrawOverlayForm.Visible = True
+                    Else
+                        DrawOverlayForm.Visible = False
+                    End If
+                Else
+                    DrawOverlayForm.Visible = False
+                End If
+            End If
+        End Set
+    End Property
+
+    Private Sub mc_parentTextBox_ParentChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.ParentChanged
         If DrawOverlayForm IsNot Nothing Then
             SetOverlayBounds()
-            Try
-                DrawOverlayForm.Visible = mc_parentTextBox.Visible
-            Catch ex As ObjectDisposedException
 
-            End Try
+            'have to 
             Dim parentControl As Control = Me.parentTextBox.Parent
             RemoveAllOverlayHandlers()
             Do Until parentControl Is Nothing
                 OverlayHandlerControls.Add(parentControl)
                 AddHandler parentControl.LocationChanged, AddressOf mc_parentTextBox_LocationChanged
                 AddHandler parentControl.VisibleChanged, AddressOf mc_parentTextBox_VisibleChanged
+                AddHandler parentControl.ControlRemoved, AddressOf parents_ControlRemoved
                 parentControl = parentControl.Parent
             Loop
+            Try
+                DrawOverlayFormVisible = parentTextBox.Visible
+            Catch ex As ObjectDisposedException
+
+            End Try
         End If
     End Sub
 

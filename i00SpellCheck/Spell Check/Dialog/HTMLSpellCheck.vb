@@ -139,12 +139,12 @@ Public Class HTMLSpellCheck
         End Set
     End Property
 
-    Dim mc_Dictionary As SpellCheckTextBox.Dictionary = Nothing
-    Public Property Dictionary() As SpellCheckTextBox.Dictionary
+    Dim mc_Dictionary As Dictionary = Nothing
+    Public Property Dictionary() As Dictionary
         Get
             Return mc_Dictionary
         End Get
-        Set(ByVal value As SpellCheckTextBox.Dictionary)
+        Set(ByVal value As Dictionary)
             mc_Dictionary = value
         End Set
     End Property
@@ -208,7 +208,7 @@ Public Class HTMLSpellCheck
             RemoveHandler item.UpdateWordEvent, AddressOf UpdateWordEvent
         Next
         mc_Words.Clear()
-        For Each item In SpellCheckTextBox.RemoveWordBreaks(mc_Text).Split(" "c)
+        For Each item In Dictionary.Formatting.RemoveWordBreaks(mc_Text).Split(" "c)
             Dim ThisWordItem = New SpellCheckDialogWords(item) With {.StartIndex = UpTo}
             AddHandler ThisWordItem.UpdateClassEvent, AddressOf UpdateClassEvent
             AddHandler ThisWordItem.SelectionChangedEvent, AddressOf WordSelectionChangedEvent
@@ -373,13 +373,13 @@ Public Class HTMLSpellCheck
         For Each item In (From xItem In mc_Words Where xItem.SpellCheckState = SpellCheckDialogWords.SpellCheckStates.Pending).ToArray
             Dim className As String = ""
             Select Case mc_Dictionary.SpellCheckWord(item.NewWord)
-                Case SpellCheckTextBox.Dictionary.SpellCheckWordError.OK
+                Case Dictionary.SpellCheckWordError.OK
                     item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.OK
-                Case SpellCheckTextBox.Dictionary.SpellCheckWordError.SpellError
+                Case Dictionary.SpellCheckWordError.SpellError
                     item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.Error
-                Case SpellCheckTextBox.Dictionary.SpellCheckWordError.CaseError
+                Case Dictionary.SpellCheckWordError.CaseError
                     item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.Case
-                Case SpellCheckTextBox.Dictionary.SpellCheckWordError.Ignore
+                Case Dictionary.SpellCheckWordError.Ignore
                     item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.OK
             End Select
 

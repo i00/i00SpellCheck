@@ -78,29 +78,9 @@ Public Class SpellCheckDialog
     End Sub
 
     Private Sub SpellMenuItems_WordRemoved(ByVal sender As Object, ByVal e As SpellCheckTextBox.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordRemoved
-        Dim NoApoS = SpellCheckTextBox.RemoveApoS(e.Word)
+        Dim NoApoS = Dictionary.Formatting.RemoveApoS(e.Word)
         Try
-            For Each item In (From xItem In SpellCheckTextBox.CurrentDictionary Where LCase(xItem.Entry) = LCase(e.Word) OrElse LCase(xItem.Entry) = LCase(NoApoS))
-                item.ItemState = i00SpellCheck.SpellCheckTextBox.Dictionary.DictionaryItem.eItemState.Delete
-            Next
-
-            'for all items with the same dict
-            For Each iSellClassWithSameDict In SpellCheckTextBox.AllSameDicCache()
-                'remove item from cache
-                For Each item In (From xItem In iSellClassWithSameDict.dictCache Where LCase(xItem.Key) = LCase(e.Word) OrElse LCase(xItem.Key) = LCase(NoApoS)).ToArray
-                    SpellCheckTextBox.dictCache.Remove(item.Key)
-                    SpellCheckTextBox.dictCache.Add(item.Key, i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.SpellError)
-                Next
-                iSellClassWithSameDict.TextBox.Invalidate()
-            Next
-
-            If SpellCheckTextBox.CurrentDictionary.Filename <> "" Then
-                Try
-                    SpellCheckTextBox.CurrentDictionary.Save()
-                Catch ex As Exception
-                    MsgBox("The following error occured saving the dictionary:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
-                End Try
-            End If
+            SpellCheckTextBox.DictionaryRemoveWord(e.Word)
         Catch ex As Exception
             MsgBox("The following error occured removing """ & e.Word & """ from the dictionary:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
         End Try
@@ -143,7 +123,7 @@ Public Class SpellCheckDialog
     End Sub
 
     Private Sub UpdateMenuItems()
-        If Replace(SpellCheckTextBox.RemoveWordBreaks(MenuCurrentWord.NewWord), " ", "") = MenuCurrentWord.NewWord Then
+        If Replace(Dictionary.Formatting.RemoveWordBreaks(MenuCurrentWord.NewWord), " ", "") = MenuCurrentWord.NewWord Then
             SpellMenuItems.ContextMenuStrip = cmsHTMLSpellCheck
             SpellMenuItems.RemoveSpellMenuItems()
             SpellMenuItems.AddItems(MenuCurrentWord.NewWord, SpellCheckTextBox.CurrentDictionary, SpellCheckTextBox.CurrentDefinitions, SpellCheckTextBox.CurrentSynonyms, SpellCheckTextBox.Settings)
@@ -188,7 +168,7 @@ Public Class SpellCheckDialog
     Public Overloads Function ShowDialog(ByVal owner As IWin32Window, ByVal Textbox As SpellCheckTextBox) As DialogResult
         SpellCheckTextBox = Textbox
         HtmlSpellCheck1.Dictionary = SpellCheckTextBox.CurrentDictionary
-        HtmlSpellCheck1.SetText(SpellCheckTextBox.TextBox.Text)
+        HtmlSpellCheck1.SetText(SpellCheckTextBox.parentTextBox.Text)
         pbChangeAll.Maximum = HtmlSpellCheck1.Words.Count - 1
         MyBase.StartPosition = FormStartPosition.CenterParent
         MyBase.ShowDialog(owner)
@@ -267,7 +247,7 @@ Public Class SpellCheckDialog
         If Suggestions.Count = 0 Then
             Return New List(Of String)
         End If
-        Dim TopCloseness = Suggestions.Max(Function(x As i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckSuggestionInfo) x.Closness)
+        Dim TopCloseness = Suggestions.Max(Function(x As i00SpellCheck.Dictionary.SpellCheckSuggestionInfo) x.Closness)
         Dim FilteredSuggestions = (From xItem In Suggestions Order By xItem.Closness Descending, xItem.Word Ascending Where xItem.Closness >= TopCloseness * 0.75 Select xItem.Word).ToArray
         FilteredSuggestions = (From xItem In FilteredSuggestions Where Array.IndexOf(FilteredSuggestions, xItem) < 15).ToArray
         Dim lstSuggestions As New List(Of String)
@@ -290,7 +270,7 @@ Public Class SpellCheckDialog
         Dim theSelectedWord = SelectedWord()
         If theSelectedWord IsNot Nothing Then
             txtChangeTo.Text = theSelectedWord.NewWord
-            If Replace(SpellCheckTextBox.RemoveWordBreaks(theSelectedWord.NewWord), " ", "") = theSelectedWord.NewWord Then
+            If Replace(Dictionary.Formatting.RemoveWordBreaks(theSelectedWord.NewWord), " ", "") = theSelectedWord.NewWord Then
                 'we have a revert button so removed this from the list
                 'If theSelectedWord.NewWord <> theSelectedWord.OrigWord Then
                 '    Dim RevertGroup = New ListViewGroup("Revert", "Revert")
@@ -298,7 +278,7 @@ Public Class SpellCheckDialog
                 '    lvSuggestions.Items.Add(theSelectedWord.OrigWord).Group = RevertGroup
                 'End If
                 Select Case SpellCheckTextBox.CurrentDictionary.SpellCheckWord(theSelectedWord.NewWord)
-                    Case i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.SpellError, i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.CaseError
+                    Case i00SpellCheck.Dictionary.SpellCheckWordError.SpellError, i00SpellCheck.Dictionary.SpellCheckWordError.CaseError
                         'add Suggestions...
                         If theSelectedWord.Changed = False Then
                             Dim KeepAsGroup = New ListViewGroup("Keep", "Keep as:")
@@ -315,14 +295,14 @@ Public Class SpellCheckDialog
                             'selecting the item with the line above also does :):
                             'txtChangeTo.Text = FilteredSuggestions(0)
                         End If
-                    Case i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.OK
+                    Case i00SpellCheck.Dictionary.SpellCheckWordError.OK
                         'add synonyms
                         If SpellCheckTextBox.Settings.AllowChangeTo Then
                             Dim MatchedSynonyms = SpellCheckTextBox.CurrentSynonyms.FindWord(theSelectedWord.NewWord)
                             If MatchedSynonyms IsNot Nothing Then
                                 'Add change to...
                                 For Each item In MatchedSynonyms
-                                    Dim GroupName = item.TypeDescription & If(item.WordType <> i00SpellCheck.SpellCheckTextBox.Synonyms.FindWordReturn.WordTypes.Other, " (" & item.WordType.ToString & ")", "")
+                                    Dim GroupName = item.TypeDescription & If(item.WordType <> i00SpellCheck.Synonyms.FindWordReturn.WordTypes.Other, " (" & item.WordType.ToString & ")", "")
                                     Dim Group = New ListViewGroup(MatchedSynonyms.IndexOf(item).ToString, GroupName)
                                     lvSuggestions.Groups.Add(Group)
                                     lvSuggestions.Items.AddRange((From xItem In item Select New ListViewItem(xItem) With {.Group = Group}).ToArray)
@@ -524,28 +504,28 @@ ReCheck:
 
     Private Sub CommitChangesToTextBox()
         'lock window from updating
-        SpellCheckTextBox.LockWindowUpdate(SpellCheckTextBox.TextBox.Handle)
-        SpellCheckTextBox.TextBox.SuspendLayout()
-        Dim SelStart = SpellCheckTextBox.TextBox.SelectionStart
-        Dim SellLength = SpellCheckTextBox.TextBox.SelectionLength
+        SpellCheckTextBox.LockWindowUpdate(SpellCheckTextBox.Control.Handle)
+        SpellCheckTextBox.Control.SuspendLayout()
+        Dim SelStart = SpellCheckTextBox.parentTextBox.SelectionStart
+        Dim SellLength = SpellCheckTextBox.parentTextBox.SelectionLength
 
 
-        Dim mc_parentRichTextBox = TryCast(SpellCheckTextBox.TextBox, RichTextBox)
-        If mc_parentRichTextBox IsNot Nothing Then
+        'Dim mc_parentRichTextBox = TryCast(SpellCheckTextBox.parentTextBox, RichTextBox)
+        If SpellCheckTextBox.parentRichTextBox IsNot Nothing Then
             'rich text box :(... use alternate method ... this will ensure that the formatting isn't lost
             'qwertyuiop - would be nicer if this did this in one undo move...
             For Each word In (From xItem In HtmlSpellCheck1.Words Where xItem.Changed = True AndAlso xItem.NewWord <> xItem.OrigWord).ToArray.Reverse
-                mc_parentRichTextBox.Select(word.StartIndex, word.OrigWord.Length)
-                mc_parentRichTextBox.SelectedText = word.NewWord
+                SpellCheckTextBox.parentRichTextBox.Select(word.StartIndex, word.OrigWord.Length)
+                SpellCheckTextBox.parentRichTextBox.SelectedText = word.NewWord
             Next
-            CType(mc_parentRichTextBox, TextBoxBase).ClearUndo()
+            CType(SpellCheckTextBox.parentRichTextBox, TextBoxBase).ClearUndo()
         Else
             'standard text box .. can just replace all of the text
 
             'Get old scroll bar position
-            Dim OldVertPos = SpellCheckTextBox.GetScrollPos(SpellCheckTextBox.TextBox.Handle, SpellCheckTextBox.SB_VERT)
+            Dim OldVertPos = SpellCheckTextBox.GetScrollPos(SpellCheckTextBox.Control.Handle, SpellCheckTextBox.SB_VERT)
 
-            Dim NewText As String = SpellCheckTextBox.TextBox.Text
+            Dim NewText As String = SpellCheckTextBox.parentTextBox.Text
             For Each word In (From xItem In HtmlSpellCheck1.Words Where xItem.Changed = True AndAlso xItem.NewWord <> xItem.OrigWord).ToArray.Reverse
                 NewText = Strings.Left(NewText, word.StartIndex) & _
                           word.NewWord & _
@@ -553,18 +533,18 @@ ReCheck:
             Next
 
             'replace the text
-            SpellCheckTextBox.TextBox.Text = NewText
+            SpellCheckTextBox.parentTextBox.Text = NewText
 
             'Set scroll bars to what they were
-            SpellCheckTextBox.SendMessage(SpellCheckTextBox.TextBox.Handle, SpellCheckTextBox.EM_SCROLL, SpellCheckTextBox.SB_TOP, 0) ' reset Vscroll to top
-            SpellCheckTextBox.SendMessage(SpellCheckTextBox.TextBox.Handle, SpellCheckTextBox.EM_LINESCROLL, 0, OldVertPos) ' set Vscroll to last saved pos.
+            SpellCheckTextBox.SendMessage(SpellCheckTextBox.Control.Handle, SpellCheckTextBox.EM_SCROLL, SpellCheckTextBox.SB_TOP, 0) ' reset Vscroll to top
+            SpellCheckTextBox.SendMessage(SpellCheckTextBox.Control.Handle, SpellCheckTextBox.EM_LINESCROLL, 0, OldVertPos) ' set Vscroll to last saved pos.
         End If
 
-        SpellCheckTextBox.TextBox.SelectionStart = SelStart
-        SpellCheckTextBox.TextBox.SelectionLength = SellLength
+        SpellCheckTextBox.parentTextBox.SelectionStart = SelStart
+        SpellCheckTextBox.parentTextBox.SelectionLength = SellLength
 
         'unlock window updates
-        SpellCheckTextBox.TextBox.ResumeLayout()
+        SpellCheckTextBox.Control.ResumeLayout()
         SpellCheckTextBox.LockWindowUpdate(IntPtr.Zero)
     End Sub
 
@@ -715,17 +695,7 @@ ReCheck:
     Private Sub IgnoreWord(ByVal theSelectedWord As HTMLSpellCheck.SpellCheckDialogWords)
         If theSelectedWord IsNot Nothing Then
             Dim theWord = theSelectedWord.OrigWord
-            SpellCheckTextBox.CurrentDictionary.Add(theWord, True)
-
-            'for all items with the same dict
-            For Each iSellClassWithSameDict In SpellCheckTextBox.AllSameDicCache()
-                'remove item from cache
-                For Each item In (From xItem In iSellClassWithSameDict.dictCache Where LCase(xItem.Key) = LCase(theWord) OrElse LCase(xItem.Key) = LCase(theWord) & "'s" OrElse LCase(xItem.Key) = LCase(theWord) & Chr(146) & "s").ToArray
-                    iSellClassWithSameDict.dictCache.Remove(item.Key)
-                    iSellClassWithSameDict.dictCache.Add(item.Key, i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.Ignore)
-                Next
-                iSellClassWithSameDict.TextBox.Invalidate()
-            Next
+            SpellCheckTextBox.DictionaryIgnoreWord(theWord)
 
             theSelectedWord.Changed = True
             theSelectedWord.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.OK
@@ -750,7 +720,7 @@ ReCheck:
             Else
                 theSelectedWord.NewWord = Word
             End If
-            If SpellCheckTextBox.CurrentDictionary.SpellCheckWord(Word) <> i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.OK Then
+            If SpellCheckTextBox.CurrentDictionary.SpellCheckWord(Word) <> i00SpellCheck.Dictionary.SpellCheckWordError.OK Then
                 If CaseSensitive = False Then
                     Word = LCase(Word)
                 End If
@@ -788,23 +758,11 @@ ReCheck:
     End Sub
 
     Private Sub AddWordToDict(ByVal theWord As String, ByVal WordObject As HTMLSpellCheck.SpellCheckDialogWords)
-        SpellCheckTextBox.CurrentDictionary.Add(theWord)
-        For Each iSellClassWithSameDict In SpellCheckTextBox.AllSameDicCache()
-            'remove item from cache
-            For Each item In (From xItem In iSellClassWithSameDict.dictCache Where LCase(xItem.Key) = LCase(theWord) OrElse LCase(xItem.Key) = LCase(theWord) & "'s" OrElse LCase(xItem.Key) = LCase(theWord) & Chr(146) & "s").ToArray
-                iSellClassWithSameDict.dictCache.Remove(item.Key)
-            Next
-            iSellClassWithSameDict.TextBox.Invalidate()
-        Next
-        WordObject.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.OK
-
-        If SpellCheckTextBox.CurrentDictionary.Filename <> "" Then
-            Try
-                SpellCheckTextBox.CurrentDictionary.Save()
-            Catch ex As Exception
-                MsgBox("The following error occured saving the dictionary:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
-            End Try
-        End If
+        Try
+            SpellCheckTextBox.DictionaryAddWord(theWord)
+        Catch ex As Exception
+            MsgBox("The following error occured saving the dictionary:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
+        End Try
 
         'mark all of the other matching words as ok :)
         For Each item In (From xItem In HtmlSpellCheck1.Words Where xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Error)
@@ -884,7 +842,7 @@ ReCheck:
                 Word = theSelectedWord.NewWord
                 ChangeToUseOldWord = False
             End If
-            btnAdd.Enabled = txtChangeTo.Visible AndAlso txtChangeTo.Text <> "" AndAlso txtChangeTo.Text.Contains(" ") = False AndAlso SpellCheckTextBox.CurrentDictionary.SpellCheckWord(Word) <> i00SpellCheck.SpellCheckTextBox.Dictionary.SpellCheckWordError.OK
+            btnAdd.Enabled = txtChangeTo.Visible AndAlso txtChangeTo.Text <> "" AndAlso txtChangeTo.Text.Contains(" ") = False AndAlso SpellCheckTextBox.CurrentDictionary.SpellCheckWord(Word) <> i00SpellCheck.Dictionary.SpellCheckWordError.OK
         End If
         ChangeToChanged = True
     End Sub

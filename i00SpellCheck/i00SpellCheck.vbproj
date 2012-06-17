@@ -94,6 +94,8 @@
     <Compile Include="Controls\SplitButton.vb">
     </Compile>
     <Compile Include="Misc\CollectionToStringConverter.vb" />
+    <Compile Include="Spell Check\Controls\DataGridView\DataGridView.vb" />
+    <Compile Include="Spell Check\SpellCheckControlBase.vb" />
     <Compile Include="Spell Check\Dialog\DictionaryEditor.Designer.vb">
       <DependentUpon>DictionaryEditor.vb</DependentUpon>
     </Compile>
@@ -145,21 +147,22 @@
     <Compile Include="Spell Check\Dialog\HTMLSpellCheck.vb">
     </Compile>
     <Compile Include="Spell Check\Dictionary.vb" />
-    <Compile Include="Spell Check\Drawing.vb" />
+    <Compile Include="Spell Check\Controls\TextBox\Drawing.vb" />
     <Compile Include="Spell Check\Extension.vb">
     </Compile>
-    <Compile Include="Spell Check\Menu.vb">
+    <Compile Include="Spell Check\Controls\TextBox\Menu.vb">
     </Compile>
-    <Compile Include="Spell Check\Properties.vb" />
+    <Compile Include="Spell Check\Settings.vb" />
     <Compile Include="Spell Check\SpellCheck.vb" />
-    <Compile Include="Spell Check\Dialog\SpellCheckDialog.Designer.vb">
+    <Compile Include="Spell Check\Controls\TextBox\Dialog\SpellCheckDialog.Designer.vb">
       <DependentUpon>SpellCheckDialog.vb</DependentUpon>
     </Compile>
-    <Compile Include="Spell Check\Dialog\SpellCheckDialog.vb">
+    <Compile Include="Spell Check\Controls\TextBox\Dialog\SpellCheckDialog.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Spell Check\Synonyms.vb" />
-    <Compile Include="Spell Check\TextBox.vb" />
+    <Compile Include="Spell Check\Controls\TextBox\Misc.vb" />
+    <Compile Include="Spell Check\Controls\TextBox\TextBox.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="About\AboutScreen.resx">
@@ -180,7 +183,7 @@
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Spell Check\Dialog\SpellCheckDialog.resx">
+    <EmbeddedResource Include="Spell Check\Controls\TextBox\Dialog\SpellCheckDialog.resx">
       <DependentUpon>SpellCheckDialog.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>

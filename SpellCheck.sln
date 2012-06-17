@@ -3,11 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "i00SpellCheck", "i00SpellCheck\i00SpellCheck.vbproj", "{27D0D9B3-719C-46B7-9F03-3F91E82E7436}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Test", "Test\Test.vbproj", "{6ECCAF00-D965-4402-984D-284735FAFF2E}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Test", "Tests\Test\Test.vbproj", "{6ECCAF00-D965-4402-984D-284735FAFF2E}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "BasicTest", "BasicTest\BasicTest.vbproj", "{00282E00-2860-455F-873B-8EFA07F42AD5}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "BasicTest", "Tests\BasicTest\BasicTest.vbproj", "{00282E00-2860-455F-873B-8EFA07F42AD5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{F0614080-164C-432D-A632-6175FA27B1E5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{83172D06-C380-4A35-A7D2-AB5528EABF82}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "LabelPlugin", "Plugins\LabelPlugin\LabelPlugin.vbproj", "{0812402A-DBD8-4DC2-9886-2AF9075E9F1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,12 +31,17 @@ Global
 		{00282E00-2860-455F-873B-8EFA07F42AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00282E00-2860-455F-873B-8EFA07F42AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00282E00-2860-455F-873B-8EFA07F42AD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0812402A-DBD8-4DC2-9886-2AF9075E9F1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0812402A-DBD8-4DC2-9886-2AF9075E9F1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0812402A-DBD8-4DC2-9886-2AF9075E9F1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0812402A-DBD8-4DC2-9886-2AF9075E9F1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{6ECCAF00-D965-4402-984D-284735FAFF2E} = {F0614080-164C-432D-A632-6175FA27B1E5}
 		{00282E00-2860-455F-873B-8EFA07F42AD5} = {F0614080-164C-432D-A632-6175FA27B1E5}
+		{6ECCAF00-D965-4402-984D-284735FAFF2E} = {F0614080-164C-432D-A632-6175FA27B1E5}
+		{0812402A-DBD8-4DC2-9886-2AF9075E9F1D} = {83172D06-C380-4A35-A7D2-AB5528EABF82}
 	EndGlobalSection
 EndGlobal

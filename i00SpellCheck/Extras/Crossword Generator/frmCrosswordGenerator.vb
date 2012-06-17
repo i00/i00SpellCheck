@@ -116,22 +116,22 @@ Public Class frmCrosswordGenerator
     Dim MT_GenerateXWord As Threading.Thread
 
     Private Sub btnGenerate_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnGenerate.Click
-        Dim dict As SpellCheckTextBox.Dictionary
+        Dim dict As Dictionary
         Select Case cboDict.SelectedItem.ToString
             Case "Default (definitions only)"
-                dict = New SpellCheckTextBox.Dictionary
-                dict.AddRange((From xItem In SpellCheckTextBox.Definitions.DefaultDefinitions.GetWordList Select New SpellCheckTextBox.Dictionary.DictionaryItem With {.Entry = xItem, .ItemState = SpellCheckTextBox.Dictionary.DictionaryItem.eItemState.AddNew}).ToArray)
+                dict = New Dictionary
+                dict.AddRange((From xItem In Definitions.DefaultDefinitions.GetWordList Select New Dictionary.DictionaryItem With {.Entry = xItem, .ItemState = Dictionary.DictionaryItem.eItemState.AddNew}).ToArray)
             Case "Default"
-                dict = SpellCheckTextBox.DefaultDictionary
+                dict = Dictionary.DefaultDictionary
             Case Else 'custom
-                dict = New SpellCheckTextBox.Dictionary
-                dict.AddRange(From xItem In System.Text.RegularExpressions.Regex.Matches(txtCustomDict.Text, "(?<=\b)\w+?(?=\b)").OfType(Of System.Text.RegularExpressions.Match)() Where xItem.Value <> "" Select New SpellCheckTextBox.Dictionary.DictionaryItem(xItem.Value, SpellCheckTextBox.Dictionary.DictionaryItem.eItemState.AddNew))
+                dict = New Dictionary
+                dict.AddRange(From xItem In System.Text.RegularExpressions.Regex.Matches(txtCustomDict.Text, "(?<=\b)\w+?(?=\b)").OfType(Of System.Text.RegularExpressions.Match)() Where xItem.Value <> "" Select New Dictionary.DictionaryItem(xItem.Value, Dictionary.DictionaryItem.eItemState.AddNew))
         End Select
 
         If dict Is Nothing Then
             'dict not loaded yet
-            SpellCheckTextBox.LoadDefaultDictionary()
-            dict = SpellCheckTextBox.DefaultDictionary
+            Dictionary.LoadDefaultDictionary()
+            dict = Dictionary.DefaultDictionary
         End If
 
         If MT_GenerateXWord IsNot Nothing AndAlso MT_GenerateXWord.IsAlive Then
@@ -151,7 +151,7 @@ Public Class frmCrosswordGenerator
 
     Public Sub GenerateXWord(ByVal dict As Object)
         EnableDisableControls(True)
-        CrossWordGenerator.Generate(DirectCast(dict, SpellCheckTextBox.Dictionary))
+        CrossWordGenerator.Generate(DirectCast(dict, Dictionary))
         EnableDisableControls(False)
         RefreshHighlights()
         ResizeColumns()
@@ -200,7 +200,7 @@ Public Class frmCrosswordGenerator
             'find the definition
             Dim WordDefs As New List(Of String)
             'qwertyuiop - thread this?
-            For Each item In SpellCheckTextBox.Definitions.DefaultDefinitions.FindWord(e.Word)
+            For Each item In Definitions.DefaultDefinitions.FindWord(e.Word)
                 WordDefs.AddRange(item.GetDefs)
             Next
             If WordDefs.Count > 0 Then
@@ -326,7 +326,7 @@ Public Class frmCrosswordGenerator
                     LVComboBox.SelectAll()
                     Dim ThisWord = ListViewItem.SubItems(colWord.Index).Text
                     Dim WordDefs As New List(Of String)
-                    For Each iDef In SpellCheckTextBox.Definitions.DefaultDefinitions.FindWord(ThisWord)
+                    For Each iDef In Definitions.DefaultDefinitions.FindWord(ThisWord)
                         WordDefs.AddRange(iDef.GetDefs)
                     Next
                     LVComboBox.Items.AddRange((From xItem In WordDefs Select ReplaceDefWordWithLine(xItem.Split(arrSplitString, 2, StringSplitOptions.None)(0), ThisWord)).ToArray)
