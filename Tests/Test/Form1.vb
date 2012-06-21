@@ -71,6 +71,7 @@ Public Class Form1
         '    'Refresh all of the controls that use the same dictionary...
         '    TextBox1.SpellCheck.InvalidateAllControlsWithSameDict()
         'End Using
+
     End Sub
 
     Private Sub DictionaryLoaded(ByVal sender As Object, ByVal e As EventArgs)

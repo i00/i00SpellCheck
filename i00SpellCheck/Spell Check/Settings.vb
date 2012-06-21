@@ -66,22 +66,6 @@ Public Class SpellCheckSettings
         End Set
     End Property
 
-    Private mc_RenderCompatibility As Boolean = False
-    <System.ComponentModel.DefaultValue(False)> _
-    <System.ComponentModel.DisplayName("Compatible Rendering")> _
-    <System.ComponentModel.Description("Compatible rendering increases drawing compatibility but also adds flickering upon redraw, only enable if there are redraw/layering problems")> _
-    Public Property RenderCompatibility() As Boolean
-        Get
-            Return mc_RenderCompatibility
-        End Get
-        Set(ByVal value As Boolean)
-            If mc_RenderCompatibility <> value Then
-                mc_RenderCompatibility = value
-                OnRedraw()
-            End If
-        End Set
-    End Property
-
     Private mc_AllowInMenuDefs As Boolean = True
     <System.ComponentModel.DefaultValue(True)> _
     <System.ComponentModel.DisplayName("Allow In Menu Definitions")> _

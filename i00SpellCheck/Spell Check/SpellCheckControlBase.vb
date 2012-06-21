@@ -112,6 +112,23 @@ Public MustInherit Class SpellCheckControlBase
         RaiseEvent SettingsChanged(Me, EventArgs.Empty)
     End Sub
 
+    Protected ReadOnly Property OKToSpellCheck() As Boolean
+        Get
+            If Control.IsSpellCheckEnabled = False Then Return False
+            If CurrentDictionary Is Nothing Then Return False
+            If CurrentDictionary IsNot Nothing AndAlso (CurrentDictionary.Loading = True OrElse CurrentDictionary.Count = 0) Then Return False
+            Return True
+        End Get
+    End Property
+
+    Protected ReadOnly Property OKToDraw() As Boolean
+        Get
+            If OKToSpellCheck = False Then Return False
+            If Settings.ShowMistakes = False Then Return False
+            Return True
+        End Get
+    End Property
+
     Public Event SettingsChanged(ByVal sender As Object, ByVal e As EventArgs)
     Private WithEvents mc_Settings As SpellCheckSettings = New SpellCheckSettings
     Public Property Settings() As SpellCheckSettings
@@ -173,11 +190,15 @@ Public MustInherit Class SpellCheckControlBase
         End Set
     End Property
 
-
+    <System.ComponentModel.Category("Control")> _
+    <System.ComponentModel.Description("The type of control that will be automatically spellchecked by this class")> _
+    <System.ComponentModel.DisplayName("Control Type")> _
     Public MustOverride ReadOnly Property ControlType() As Type
 
     Protected Friend WithEvents mc_Control As Control
-    '<System.ComponentModel.Category("Control")> _
+    <System.ComponentModel.Category("Control")> _
+    <System.ComponentModel.Description("The Control associated with the SpellCheckControlBase object")> _
+    <System.ComponentModel.DisplayName("Control")> _
     Public Overridable ReadOnly Property Control() As Control
         Get
             Return mc_Control
@@ -293,10 +314,10 @@ Public MustInherit Class SpellCheckControlBase
         End SyncLock
     End Sub
 
-    Public Sub AddWordsToCache(ByVal Dictionary As Dictionary(Of String, Dictionary.SpellCheckWordError))
+    Public Sub AddWordsToCache(ByVal Dictionary As Dictionary(Of String, Dictionary.SpellCheckWordError), Optional ByVal Thread As Boolean = True)
         'use DirectCast so that error is thrown if wrong object is passed in
-        If mc_Control.InvokeRequired = False Then
-            'open in another thread to the textbox
+        If mc_Control.InvokeRequired = False AndAlso Thread = True Then
+            'open in another thread to the control
             Dim mtSpellCheck As New Threading.Thread(AddressOf mtAddWordsToCache)
             mtSpellCheck.Name = "Spell check"
             mtSpellCheck.IsBackground = True 'make it abort when the app is killed

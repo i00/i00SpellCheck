@@ -16,7 +16,7 @@ Public Class SpellCheckDialog
 
 #Region "Menu"
 
-    Private WithEvents SpellMenuItems As New SpellCheckTextBox.AddSpellItemsToMenu()
+    Private WithEvents SpellMenuItems As New Menu.AddSpellItemsToMenu()
 
     Private Sub cmsHTMLSpellCheck_Closed(ByVal sender As Object, ByVal e As System.Windows.Forms.ToolStripDropDownClosedEventArgs) Handles cmsHTMLSpellCheck.Closed
         SpellMenuItems.RemoveSpellMenuItems()
@@ -69,15 +69,15 @@ Public Class SpellCheckDialog
         End If
     End Sub
 
-    Private Sub SpellMenuItems_WordAdded(ByVal sender As Object, ByVal e As SpellCheckTextBox.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordAdded
+    Private Sub SpellMenuItems_WordAdded(ByVal sender As Object, ByVal e As Menu.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordAdded
         AddWordToDict(e.Word, MenuCurrentWord)
     End Sub
 
-    Private Sub SpellMenuItems_WordIgnored(ByVal sender As Object, ByVal e As SpellCheckTextBox.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordIgnored
+    Private Sub SpellMenuItems_WordIgnored(ByVal sender As Object, ByVal e As Menu.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordIgnored
         IgnoreWord(MenuCurrentWord)
     End Sub
 
-    Private Sub SpellMenuItems_WordRemoved(ByVal sender As Object, ByVal e As SpellCheckTextBox.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordRemoved
+    Private Sub SpellMenuItems_WordRemoved(ByVal sender As Object, ByVal e As Menu.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordRemoved
         Dim NoApoS = Dictionary.Formatting.RemoveApoS(e.Word)
         Try
             SpellCheckTextBox.DictionaryRemoveWord(e.Word)
@@ -92,7 +92,7 @@ Public Class SpellCheckDialog
         HtmlSpellCheck1.StartSpellCheck()
     End Sub
 
-    Private Sub SpellMenuItems_WordChanged(ByVal sender As Object, ByVal e As SpellCheckTextBox.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordChanged
+    Private Sub SpellMenuItems_WordChanged(ByVal sender As Object, ByVal e As Menu.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordChanged
         MenuCurrentWord.NewWord = e.Word
         MenuCurrentWord.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.OK
         WordUpdatedFromMenu()

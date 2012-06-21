@@ -95,6 +95,7 @@
     </Compile>
     <Compile Include="Misc\CollectionToStringConverter.vb" />
     <Compile Include="Spell Check\Controls\DataGridView\DataGridView.vb" />
+    <Compile Include="Spell Check\Menu.vb" />
     <Compile Include="Spell Check\SpellCheckControlBase.vb" />
     <Compile Include="Spell Check\Dialog\DictionaryEditor.Designer.vb">
       <DependentUpon>DictionaryEditor.vb</DependentUpon>

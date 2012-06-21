@@ -253,6 +253,27 @@ Public Class SpellCheckTextBox
 
 #End Region
 
+#Region "Custom Settings"
+
+    Private mc_RenderCompatibility As Boolean = False
+    <System.ComponentModel.DefaultValue(False)> _
+    <System.ComponentModel.DisplayName("Compatible Rendering")> _
+    <System.ComponentModel.Description("Compatible rendering increases drawing compatibility but also adds flickering upon redraw, only enable if there are redraw/layering problems")> _
+    Public Property RenderCompatibility() As Boolean
+        Get
+            Return mc_RenderCompatibility
+        End Get
+        Set(ByVal value As Boolean)
+            If mc_RenderCompatibility <> value Then
+                mc_RenderCompatibility = value
+                parentTextBox.Invalidate() 'OnRedraw()
+            End If
+        End Set
+    End Property
+
+
+#End Region
+
     Private Sub parentTextBox_TextChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.TextChanged
         'Standard TextBoxes do not fire the WM_PAINT event when adding text so need to do it this way
         If TypeOf parentTextBox Is TextBox Then
@@ -279,8 +300,8 @@ Public Class SpellCheckTextBox
     Protected Overrides Sub WndProc(ByRef m As Message)
         Select Case m.Msg
             Case WM_PAINT
-                If Settings.ShowMistakes AndAlso Me.parentTextBox.IsSpellCheckEnabled Then
-                    If Me.Settings.RenderCompatibility Then
+                If OKToDraw Then
+                    If Me.RenderCompatibility Then
                         'old draw method...
                         parentTextBox.Invalidate()
                         CloseOverlay()

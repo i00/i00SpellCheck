@@ -33,8 +33,8 @@ Partial Class SpellCheckTextBox
 #Region "Repaint"
 
     Public Overrides Sub RepaintControl()
-        If Me.Settings.RenderCompatibility Then
-            If Me.Settings.ShowMistakes AndAlso Me.parentTextBox.IsSpellCheckEnabled Then
+        If Me.RenderCompatibility Then
+            If OKToDraw Then
                 parentTextBox.Invalidate()
             End If
         Else
@@ -42,10 +42,10 @@ Partial Class SpellCheckTextBox
             If DrawOverlayForm Is Nothing Then
                 OpenOverlay()
             End If
-            If Me.Settings.ShowMistakes = False OrElse Me.parentTextBox.IsSpellCheckEnabled = False Then
-                DrawOverlayFormVisible = False
-            Else
+            If OKToDraw Then
                 DrawOverlayFormVisible = parentTextBox.Visible
+            Else
+                DrawOverlayFormVisible = False
             End If
             If DrawOverlayFormVisible Then
                 Me.CustomPaint()
@@ -64,7 +64,7 @@ Partial Class SpellCheckTextBox
     End Sub
 
     Private Sub CustomPaint()
-        If CurrentDictionary IsNot Nothing AndAlso (CurrentDictionary.Loading = True OrElse CurrentDictionary.Count = 0) Then Exit Sub
+        If OKToDraw = False Then Exit Sub
 
         Dim TextHeight As Integer = System.Windows.Forms.TextRenderer.MeasureText("Ag", parentTextBox.Font).Height
         Dim BufferWidth As Integer = System.Windows.Forms.TextRenderer.MeasureText("--", parentTextBox.Font).Width
