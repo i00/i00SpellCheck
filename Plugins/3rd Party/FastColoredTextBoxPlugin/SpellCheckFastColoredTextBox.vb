@@ -19,6 +19,7 @@ Imports FastColoredTextBoxNS
 
 Public Class SpellCheckFastColoredTextBox
     Inherits i00SpellCheck.SpellCheckControlBase
+    Implements iTestHarness
 
 #Region "Setup"
 
@@ -30,6 +31,7 @@ Public Class SpellCheckFastColoredTextBox
             AddHandler FastColoredTextBox.TextChanged, AddressOf FastColoredTextBox_TextChanged
             AddHandler FastColoredTextBox.VisibleRangeChanged, AddressOf FastColoredTextBox_VisibleRangeChanged
             AddHandler FastColoredTextBox.VisualMarkerClick, AddressOf FastColoredTextBox_VisualMarkerClick
+            AddHandler FastColoredTextBox.Disposed, AddressOf FastColoredTextBox_Disposed
 
             SpellErrorStyle.FastColoredTextBox = FastColoredTextBox
             CaseErrorStyle.FastColoredTextBox = FastColoredTextBox
@@ -110,13 +112,13 @@ Public Class SpellCheckFastColoredTextBox
 
     'Error click
     Private Sub FastColoredTextBox_VisualMarkerClick(ByVal sender As Object, ByVal e As FastColoredTextBoxNS.VisualMarkerEventArgs)
+        If parentFastColoredTextBox.ReadOnly Then Exit Sub
         Dim ErrorStyleMarker = TryCast(e.Marker, ErrorStyle.ErrorStyleMarker)
         If ErrorStyleMarker IsNot Nothing Then
             parentFastColoredTextBox.Selection = ErrorStyleMarker.Range
 
             SpellMenuItems.AddItems(ErrorStyleMarker.Range.Text, CurrentDictionary, CurrentDefinitions, CurrentSynonyms, Settings)
             ErrorMenu.Show(parentFastColoredTextBox, New Point(ErrorStyleMarker.rectangle.X, ErrorStyleMarker.rectangle.Bottom))
-            'MsgBox(ErrorStyleMarker.Range.Text)
         End If
     End Sub
 
@@ -214,18 +216,20 @@ Public Class SpellCheckFastColoredTextBox
 
             Dim eArgs = New SpellCheckCustomPaintEventArgs With {.Graphics = gr, .Word = range.Text, .Bounds = rect, .WordState = WordState}
             OnSpellCheckErrorPaint(eArgs)
-            If eArgs.DrawDefault Then
                 Select Case WordState
-                    Case Dictionary.SpellCheckWordError.CaseError, Dictionary.SpellCheckWordError.SpellError
+                Case Dictionary.SpellCheckWordError.CaseError, Dictionary.SpellCheckWordError.SpellError
+                    If eArgs.DrawDefault Then
                         DrawingFunctions.DrawWave(gr, New Point(rect.Left, rect.Bottom), New Point(rect.Right, rect.Bottom), Color)
-                        AddVisualMarker(FastColoredTextBox, New ErrorStyleMarker(range, rect, Me))
-                    Case Dictionary.SpellCheckWordError.Ignore
+                    End If
+                    AddVisualMarker(FastColoredTextBox, New ErrorStyleMarker(range, rect, Me))
+                Case Dictionary.SpellCheckWordError.Ignore
+                    If eArgs.DrawDefault Then
                         Using p As New Pen(Color)
                             gr.DrawLine(p, New Point(rect.Left, rect.Bottom), New Point(rect.Right, rect.Bottom))
                         End Using
-                        AddVisualMarker(FastColoredTextBox, New ErrorStyleMarker(range, rect, Me))
-                End Select
-            End If
+                    End If
+                    AddVisualMarker(FastColoredTextBox, New ErrorStyleMarker(range, rect, Me))
+            End Select
         End Sub
 
         Public Color As Color
@@ -235,14 +239,28 @@ Public Class SpellCheckFastColoredTextBox
 
 #End Region
 
+    Private WithEvents tmrRepaint As New Timer With {.Interval = 1, .Enabled = False}
     Public Overrides Sub RepaintControl()
         'qwertyuiop - will probably look at a way to pass back new errors eventually so we can just paint those as this would be able to SetStyle on those new errors ...
         'this has not been an issue before... as most controls repaint as a whole...
         UpdateErrors(parentFastColoredTextBox.VisibleRange)
     End Sub
 
-    Private Sub FastColoredTextBox_VisibleRangeChanged(ByVal sender As Object, ByVal e As System.EventArgs)
+    Private Sub tmrRepaint_Tick(ByVal sender As Object, ByVal e As System.EventArgs) Handles tmrRepaint.Tick
         UpdateErrors(parentFastColoredTextBox.VisibleRange)
+        tmrRepaint.Enabled = False
+    End Sub
+
+    Private Sub FastColoredTextBox_Disposed(ByVal sender As Object, ByVal e As System.EventArgs)
+        tmrRepaint.Dispose()
+        SpellErrorStyle.Dispose()
+        IgnoreErrorStyle.Dispose()
+        CaseErrorStyle.Dispose()
+    End Sub
+
+    Private Sub FastColoredTextBox_VisibleRangeChanged(ByVal sender As Object, ByVal e As System.EventArgs)
+        tmrRepaint.Stop()
+        tmrRepaint.Start()
     End Sub
 
     Private Sub FastColoredTextBox_TextChanged(ByVal sender As System.Object, ByVal e As FastColoredTextBoxNS.TextChangedEventArgs)
@@ -301,6 +319,108 @@ Public Class SpellCheckFastColoredTextBox
         If NewWords.Count > 0 Then
             AddWordsToCache(NewWords)
         End If
+    End Sub
+
+#End Region
+
+#Region "Test Harness"
+
+    Public Function SetupControl(ByVal Control As System.Windows.Forms.Control) As Control Implements i00SpellCheck.iTestHarness.SetupControl
+        Dim FastColoredTextBox = TryCast(Control, FastColoredTextBox)
+        If FastColoredTextBox IsNot Nothing Then
+            FastColoredTextBox.LeftBracket = "("
+            FastColoredTextBox.RightBracket = ")"
+
+            DirectCast(FastColoredTextBox.SpellCheck(), SpellCheckFastColoredTextBox).SpellCheckMatch = "('.*$|"".*?"")"
+
+            AddHandler FastColoredTextBox.TextChanged, AddressOf TestHarness_TextChanged
+
+            FastColoredTextBox.Text = "'Simple test to check spelling with 3rd party controls" & vbCrLf & _
+                   "'This test is done on the FastColoredTextBox (open source control) that is hosted on CodeProject" & vbCrLf & _
+                   "'The article can be found at: http://www.codeproject.com/Articles/161871/Fast-Colored-TextBox-for-syntax-highlighting" & vbCrLf & _
+                   "" & vbCrLf & _
+                   "'i00 Does not take credit for any work in the FastColoredTextBox.dll" & vbCrLf & _
+                   "'i00 is however solely responsible for the spellcheck plugin to interface with FastColoredTextBox" & vbCrLf & _
+                   "" & vbCrLf & _
+                   "'As you can see only comments and string blocks are corrected" & vbCrLf & _
+                   "'This is due to the SpellCheckMatch property being set" & vbCrLf & _
+                   "" & vbCrLf & _
+                   "'Click on a missspelled word to correct..." & vbCrLf & _
+                   "" & vbCrLf & _
+                   "Dim test = ""Test with some bad spellling!""" & vbCrLf & _
+                   "" & vbCrLf & _
+                   "#Region ""Char""" & vbCrLf & _
+                   "   " & vbCrLf & _
+                   "   ''' <summary>" & vbCrLf & _
+                   "   ''' Char and style" & vbCrLf & _
+                   "   ''' </summary>" & vbCrLf & _
+                   "   Public Structure CharStyle" & vbCrLf & _
+                   "       Public c As Char" & vbCrLf & _
+                   "       Public style As StyleIndex" & vbCrLf & _
+                   "   " & vbCrLf & _
+                   "       Public Sub CharStyle(ByVal ch As Char)" & vbCrLf & _
+                   "           c = ch" & vbCrLf & _
+                   "           Style = StyleIndex.None" & vbCrLf & _
+                   "       End Sub" & vbCrLf & _
+                   "   " & vbCrLf & _
+                   "   End Structure" & vbCrLf & _
+                   "   " & vbCrLf & _
+                   "#End Region"
+            Return FastColoredTextBox
+        Else
+            Return Nothing
+        End If
+
+    End Function
+
+    Dim KeywordStyle As TextStyle = New TextStyle(Brushes.Blue, Nothing, FontStyle.Regular)
+    Dim CommentStyle As TextStyle = New TextStyle(Brushes.Green, Nothing, FontStyle.Regular)
+    Dim StringStyle As TextStyle = New TextStyle(Brushes.Brown, Nothing, FontStyle.Regular)
+
+    Private Sub TestHarness_TextChanged(ByVal sender As System.Object, ByVal e As FastColoredTextBoxNS.TextChangedEventArgs)
+        'clear style of changed range
+        e.ChangedRange.ClearStyle(KeywordStyle, CommentStyle, StringStyle)
+
+        e.ChangedRange.SetStyle(StringStyle, """.*?""")
+        e.ChangedRange.SetStyle(CommentStyle, "'.*$|(\s|^)rem\s.*$", System.Text.RegularExpressions.RegexOptions.Multiline Or System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+
+        'DataTypes
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(Boolean|Byte|Char|Date|Decimal|Double|Integer|Long|Object|SByte|Short|Single|String|UInteger|ULong|UShort|Variant)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'Operators
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(AddressOf|And|AndAlso|Is|IsNot|Like|Mod|New|Not|Or|OrElse|Xor)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'Constants
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(False|Me|MyBase|MyClass|Nothing|True)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'CommonKeywords
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(As|Of|New|End)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'CommonKeywords
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(As|Of|New|End)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'FunctionKeywords
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(CBool|CByte|CChar|CDate|CDec|CDbl|CInt|CLng|CObj|CSByte|CShort|CSng|CStr|CType|CUInt|CULng|CUShort|DirectCast|GetType|TryCast|TypeOf)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'ParamModifiers
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(ByRef|ByVal|Optional|ParamArray)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'AccessModifiers
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(Friend|Private|Protected|Public)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'OtherModifiers
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(Const|Custom|Default|Global|MustInherit|MustOverride|Narrowing|NotInheritable|NotOverridable|Overloads|Overridable|Overrides|Partial|ReadOnly|Shadows|Shared|Static|Widening|WithEvents|WriteOnly)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'Statements
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(Throw|Stop|Return|Resume|AddHandler|RemoveHandler|RaiseEvent|Option|Let|GoTo|GoSub|Call|Continue|Dim|ReDim|Erase|On|Error|Exit)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'GlobalConstructs
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(Namespace|Class|Imports|Implements|Inherits|Interface|Delegate|Module|Structure|Enum)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'TypeLevelConstructs
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(Sub|Function|Handles|Declare|Lib|Alias|Get|Set|Property|Operator|Event)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'Constructs
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(SyncLock|Using|With|Do|While|Loop|Wend|Try|Catch|When|Finally|If|Then|Else|For|To|Step|Each|In|Next|Select|Case)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        'ContextKeywords
+        e.ChangedRange.SetStyle(KeywordStyle, "\b(Ansi|Auto|Unicode|Preserve|Until)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+
+        'Region
+        e.ChangedRange.SetStyle(KeywordStyle, "^\s{0,}#region\b|^\s{0,}#end\s{1,}region\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase Or System.Text.RegularExpressions.RegexOptions.Multiline)
+
+        'clear folding markers
+        e.ChangedRange.ClearFoldingMarkers()
+        'set folding markers
+        e.ChangedRange.SetFoldingMarkers("^\s{0,}#region\b", "^\s{0,}#end\s{1,}region\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase Or System.Text.RegularExpressions.RegexOptions.Singleline) 'allow to collapse #region blocks
+
     End Sub
 
 #End Region

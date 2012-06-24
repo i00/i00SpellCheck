@@ -16,6 +16,7 @@
 
 Partial Public Class SpellCheckDataGridView
     Inherits SpellCheckControlBase
+    Implements iTestHarness
 
 #Region "Setup"
 
@@ -215,6 +216,70 @@ Partial Public Class SpellCheckDataGridView
             AddWordsToCache(NewWords)
         End If
 
+    End Sub
+
+#End Region
+
+#Region "Test Harness"
+
+    Private Class GridViewData
+        Dim mc_GridViewExample As String
+        <System.ComponentModel.DisplayName("Data Grid View Example")> _
+        Public Property GridViewExample() As String
+            Get
+                Return mc_GridViewExample
+            End Get
+            Set(ByVal value As String)
+                mc_GridViewExample = value
+            End Set
+        End Property
+        Public Sub New(ByVal GridViewExample As String)
+            Me.mc_GridViewExample = GridViewExample
+        End Sub
+        Public Sub New()
+
+        End Sub
+    End Class
+
+    Public Function SetupControl(ByVal Control As System.Windows.Forms.Control) As Control Implements iTestHarness.SetupControl
+        Dim DataGridView = TryCast(Control, DataGridView)
+        If DataGridView IsNot Nothing Then
+
+            Dim pnlHolder As New Panel
+            Dim BindingNavigator As New BindingNavigator
+
+            Dim GridData As New System.ComponentModel.BindingList(Of GridViewData)
+            GridData.Add(New GridViewData("This is a grid view example to demonistrate that i00 Spell Check can be used in grids!"))
+            GridData.Add(New GridViewData("So comeon and edit a cell!"))
+            DataGridView.DefaultCellStyle.WrapMode = DataGridViewTriState.True
+            DataGridView.Dock = DockStyle.Fill
+            DataGridView.BorderStyle = BorderStyle.None
+
+            AddHandler DataGridView.VisibleChanged, AddressOf TestHarness_VisibleChanged
+
+            BindingNavigator.Dock = DockStyle.Bottom
+            BindingNavigator.AddStandardItems()
+
+            Dim bs As New BindingSource
+            bs.DataSource = GridData
+            bs.AllowNew = True
+            DataGridView.DataSource = bs
+            BindingNavigator.BindingSource = bs
+
+            pnlHolder.Controls.Add(DataGridView)
+            pnlHolder.Controls.Add(BindingNavigator)
+
+            Return pnlHolder
+        Else
+            Return Nothing
+        End If
+    End Function
+
+    Private Sub TestHarness_VisibleChanged(ByVal sender As System.Object, ByVal e As EventArgs)
+        Dim DataGridView = TryCast(Control, DataGridView)
+        If DataGridView IsNot Nothing AndAlso DataGridView.Visible = True Then
+            DataGridView.AutoResizeColumns()
+        End If
     End Sub
 
 #End Region

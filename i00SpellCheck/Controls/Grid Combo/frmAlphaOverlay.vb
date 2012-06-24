@@ -24,9 +24,17 @@ Public Class PerPixelAlphaForm
     Private mc_ShowWithoutActivation As Boolean = False
 
     Public Sub ShowNoFocus(ByVal owner As System.Windows.Forms.IWin32Window)
+        mc_Owner = owner
         mc_ShowWithoutActivation = True
         MyBase.Show(owner)
     End Sub
+
+    Dim mc_Owner As IWin32Window
+    Overloads ReadOnly Property Owner() As IWin32Window
+        Get
+            Return mc_Owner
+        End Get
+    End Property
 
 #End Region
 
@@ -56,6 +64,12 @@ Public Class PerPixelAlphaForm
     End Sub
 
     Public Overridable Sub SetBitmap(ByVal bitmap As Bitmap, ByVal opacity As Byte)
+        'Using g = Graphics.FromImage(bitmap)
+        '    Using sb As New System.Drawing.SolidBrush(Color.FromArgb(127, 255, 0, 255))
+        '        g.FillRectangle(sb, New Rectangle(0, 0, bitmap.Width, bitmap.Height))
+        '    End Using
+        'End Using
+
         If Not (bitmap.PixelFormat = PixelFormat.Format32bppArgb) Then
             Throw New ApplicationException("The bitmap must be 32ppp with alpha-channel.")
         End If

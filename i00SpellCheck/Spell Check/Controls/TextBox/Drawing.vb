@@ -329,23 +329,27 @@ Draw:
 
     Private Sub mc_parentTextBox_ParentChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.ParentChanged
         If DrawOverlayForm IsNot Nothing Then
-            SetOverlayBounds()
+            If DrawOverlayForm.Owner IsNot Me.parentTextBox.Parent Then
+                CloseOverlay()
+                OpenOverlay()
+            Else
+                SetOverlayBounds()
 
-            'have to 
-            Dim parentControl As Control = Me.parentTextBox.Parent
-            RemoveAllOverlayHandlers()
-            Do Until parentControl Is Nothing
-                OverlayHandlerControls.Add(parentControl)
-                AddHandler parentControl.LocationChanged, AddressOf mc_parentTextBox_LocationChanged
-                AddHandler parentControl.VisibleChanged, AddressOf mc_parentTextBox_VisibleChanged
-                AddHandler parentControl.ControlRemoved, AddressOf parents_ControlRemoved
-                parentControl = parentControl.Parent
-            Loop
-            Try
-                DrawOverlayFormVisible = parentTextBox.Visible
-            Catch ex As ObjectDisposedException
+                Dim parentControl As Control = Me.parentTextBox.Parent
+                RemoveAllOverlayHandlers()
+                Do Until parentControl Is Nothing
+                    OverlayHandlerControls.Add(parentControl)
+                    AddHandler parentControl.LocationChanged, AddressOf mc_parentTextBox_LocationChanged
+                    AddHandler parentControl.VisibleChanged, AddressOf mc_parentTextBox_VisibleChanged
+                    AddHandler parentControl.ControlRemoved, AddressOf parents_ControlRemoved
+                    parentControl = parentControl.Parent
+                Loop
+                Try
+                    DrawOverlayFormVisible = parentTextBox.Visible
+                Catch ex As ObjectDisposedException
 
-            End Try
+                End Try
+            End If
         End If
     End Sub
 

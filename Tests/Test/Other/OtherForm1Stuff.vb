@@ -35,44 +35,25 @@ Partial Class Form1
     End Sub
 
     Private Sub Form1_Load_2(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
-        ''do not select the text
-        TextBox1.SelectionStart = 0
-        TextBox1.SelectionLength = 0
 
-        Dim ThisProjectReferences = System.Reflection.Assembly.GetExecutingAssembly.GetReferencedAssemblies
-        'find spell check
-        Dim SpellCheckAssemblyName = (From xItem In ThisProjectReferences Where xItem.Name.ToLower = "i00spellcheck").FirstOrDefault
-        If SpellCheckAssemblyName IsNot Nothing Then
+        Dim SpellCheckAssembly = System.Reflection.Assembly.Load("i00SpellCheck")
+        If SpellCheckAssembly IsNot Nothing Then
             'qwertyuiop - should use something like: ... but it doesn't work for UNC's
             '... = System.Drawing.Icon.ExtractAssociatedIcon(Assembly)
-            tsbAbout.ToolTipText = "About " & SpellCheckAssemblyName.Name & " " & SpellCheckAssemblyName.Version.ToString
-            Dim a = System.Reflection.Assembly.Load(SpellCheckAssemblyName.FullName)
-            tsbAbout.Image = IconExtraction.GetDefaultIcon(a.Location, IconExtraction.IconSize.SmallIcon).ToBitmap
+            tsbAbout.ToolTipText = "About " & SpellCheckAssembly.GetName.Name & " " & SpellCheckAssembly.GetName.Version.ToString
+            
+            tsbAbout.Image = IconExtraction.GetDefaultIcon(SpellCheckAssembly.Location, IconExtraction.IconSize.SmallIcon).ToBitmap
             tsbSpellCheck.Image = tsbAbout.Image
-            Me.Icon = IconExtraction.GetDefaultIcon(a.Location, IconExtraction.IconSize.LargeIcon)
+            Me.Icon = IconExtraction.GetDefaultIcon(SpellCheckAssembly.Location, IconExtraction.IconSize.LargeIcon)
         End If
 
-        Dim propToolBoxIcon As New ToolboxBitmapAttribute(GetType(PropertyGrid))
-        tsbProperties.Image = propToolBoxIcon.GetImage(GetType(PropertyGrid), False)
+        Dim ToolBoxIcon As New ToolboxBitmapAttribute(GetType(PropertyGrid))
+        tsbProperties.Image = ToolBoxIcon.GetImage(GetType(PropertyGrid), False)
 
         Dim URLIcon = IconExtraction.GetDefaultIcon(".url", IconExtraction.IconSize.SmallIcon).ToBitmap
         tsbi00Productions.Image = URLIcon
         tsbVBForums.Image = URLIcon
         tsbCodeProject.Image = URLIcon
-
-        'format rich text
-        RichTextBox1.Select(RichTextBox1.Text.IndexOf("i00 .Net Spell Check"), Len("i00 .Net Spell Check"))
-        RichTextBox1.SelectionFont = New Font(RichTextBox1.Font, FontStyle.Bold)
-        RichTextBox1.Select(RichTextBox1.Text.IndexOf("RichTextBoxes!"), Len("RichTextBoxes!"))
-        RichTextBox1.SelectionFont = New Font(RichTextBox1.Font.Name, CSng(RichTextBox1.Font.Size * 1.5), FontStyle.Bold)
-        RichTextBox1.Select(RichTextBox1.Text.IndexOf("Rich"), Len("Rich"))
-        RichTextBox1.SelectionColor = Color.Red
-        RichTextBox1.Select(RichTextBox1.Text.IndexOf("Text"), Len("Text"))
-        RichTextBox1.SelectionColor = Color.Green
-        RichTextBox1.Select(RichTextBox1.Text.IndexOf("Boxes"), Len("Boxes"))
-        RichTextBox1.SelectionColor = Color.Blue
-        RichTextBox1.Select(0, 0)
-        RichTextBox1.ClearUndo()
 
         LoadFavicon("http://www.paypal.com/favicon.ico", tsbDonate)
         LoadFavicon("http://vbforums.com/favicon.ico", tsbVBForums)
@@ -85,44 +66,50 @@ Partial Class Form1
 
         tsiDrawStyle.SelectedIndex = 0
 
-        propRichTextBox.SelectedObject = RichTextBox1.SpellCheck
-        propTextBox.SelectedObject = TextBox1.SpellCheck
-        propDataGridView.SelectedObject = DataGridView1.SpellCheck
+        'add any extra plugins as extra tabs...
+        Dim SpellControls = LoadSpellCheckPlugins.Controls()
+
+        For Each item In (From xItem In SpellControls Order By xItem.GetType.Name).ToList
+            Dim InsertControl = item
+            Dim iTestHarness = TryCast(item.SpellCheck, iTestHarness)
+            If iTestHarness IsNot Nothing Then
+                InsertControl = iTestHarness.SetupControl(item)
+                If InsertControl Is Nothing Then Continue For
+            End If
+
+            Dim TabPage = New TabPage(item.GetType.Name)
+            ToolBoxIcon = New ToolboxBitmapAttribute(item.GetType)
+            ilTabSpellControls.Images.Add(item.GetType.FullName, ToolBoxIcon.GetImage(item.GetType, False))
+            TabPage.ImageIndex = ilTabSpellControls.Images.IndexOfKey(item.GetType.FullName)
+            tabSpellControls.TabPages.Add(TabPage)
+
+
+            InsertControl.Dock = DockStyle.Fill
+            Dim prop As New PropertyGrid
+            prop.Width = 250
+            prop.SelectedObject = item.SpellCheck
+            prop.Dock = DockStyle.Right
+            prop.Visible = False
+            'If item IsNot Nothing Then
+            TabPage.Controls.Add(InsertControl)
+            TabPage.Controls.Add(prop)
+            'End If
+        Next
+
+        If tabSpellControls.TabCount = 0 Then
+            Dim TabPage = New TabPage("")
+            tabSpellControls.TabPages.Add(TabPage)
+            Dim lblNoPlugins As New Label
+            lblNoPlugins.Text = "No plugins could be loaded"
+            lblNoPlugins.AutoSize = False
+            lblNoPlugins.Dock = DockStyle.Fill
+            lblNoPlugins.TextAlign = ContentAlignment.MiddleCenter
+            TabPage.Controls.Add(lblNoPlugins)
+        End If
 
         UpdateEnabledCheck()
 
-        Dim GridData As New System.ComponentModel.BindingList(Of GridViewData)
-        GridData.Add(New GridViewData("This is a grid view example to demonistrate that i00 Spell Check can be used in grids!"))
-        GridData.Add(New GridViewData("So comeon and edit a cell!"))
-
-        DataGridView1.DefaultCellStyle.WrapMode = DataGridViewTriState.True
-
-        Dim bs As New BindingSource
-        bs.DataSource = GridData
-        bs.AllowNew = True
-        DataGridView1.DataSource = bs
-        BindingNavigator1.BindingSource = bs
-
     End Sub
-
-    Private Class GridViewData
-        Dim mc_GridViewExample As String
-        <System.ComponentModel.DisplayName("Data Grid View Example")> _
-        Public Property GridViewExample() As String
-            Get
-                Return mc_GridViewExample
-            End Get
-            Set(ByVal value As String)
-                mc_GridViewExample = value
-            End Set
-        End Property
-        Public Sub New(ByVal GridViewExample As String)
-            Me.mc_GridViewExample = GridViewExample
-        End Sub
-        Public Sub New()
-
-        End Sub
-    End Class
 
     Private Class FavIconData
         Public URL As String
@@ -215,13 +202,13 @@ Partial Class Form1
         End Using
     End Sub
 
-    Private Sub prop_PropertyValueChanged(ByVal s As Object, ByVal e As System.Windows.Forms.PropertyValueChangedEventArgs) Handles propRichTextBox.PropertyValueChanged, propTextBox.PropertyValueChanged
-        'If e.ChangedItem.Parent IsNot Nothing AndAlso TypeOf e.ChangedItem.Parent.Value Is TextBoxBase Then
-        '    Dim UnSupportedDynamicPropertyNames As String() = {}
-        '    If UnSupportedDynamicPropertyNames.Contains(e.ChangedItem.PropertyDescriptor.Name) Then
-        '        MsgBox("i00 .Net Spell Check does not (currently) support DYNAMIC changing of the following properties:" & vbCrLf & vbCrLf & Join((From xItem In UnSupportedDynamicPropertyNames Select xItem Order By xItem).ToArray, ", ") & vbCrLf & vbCrLf & "These properties can however be set prior to initializing the spellcheck.", MsgBoxStyle.Exclamation)
-        '    End If
-        'End If
-    End Sub
+    'Private Sub prop_PropertyValueChanged(ByVal s As Object, ByVal e As System.Windows.Forms.PropertyValueChangedEventArgs) Handles propRichTextBox.PropertyValueChanged, propTextBox.PropertyValueChanged
+    '    'If e.ChangedItem.Parent IsNot Nothing AndAlso TypeOf e.ChangedItem.Parent.Value Is TextBoxBase Then
+    '    '    Dim UnSupportedDynamicPropertyNames As String() = {}
+    '    '    If UnSupportedDynamicPropertyNames.Contains(e.ChangedItem.PropertyDescriptor.Name) Then
+    '    '        MsgBox("i00 .Net Spell Check does not (currently) support DYNAMIC changing of the following properties:" & vbCrLf & vbCrLf & Join((From xItem In UnSupportedDynamicPropertyNames Select xItem Order By xItem).ToArray, ", ") & vbCrLf & vbCrLf & "These properties can however be set prior to initializing the spellcheck.", MsgBoxStyle.Exclamation)
+    '    '    End If
+    '    'End If
+    'End Sub
 
 End Class

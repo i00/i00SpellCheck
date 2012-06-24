@@ -31,11 +31,9 @@ Public Module SpellCheckControlExtension
 
     Private Class BaseClassesInfo
         Public SpellCheckControlBase As SpellCheckControlBase
-        Public [Class] As Type
-        Public Assembly As System.Reflection.Assembly
+        Public Type As Type
         Public Function CreateObject() As Object
-            Dim CreateType = Assembly.GetType([Class].FullName)
-            Return System.Activator.CreateInstance(CreateType)
+            Return System.Activator.CreateInstance(Type)
         End Function
     End Class
 
@@ -57,7 +55,7 @@ Public Module SpellCheckControlExtension
                                 Dim CreateObject = System.Activator.CreateInstance(CreateType)
                                 Dim SpellCheckControlBase = TryCast(CreateObject, SpellCheckControlBase)
                                 If SpellCheckControlBase IsNot Nothing Then
-                                    AcceptedClasses.Add(New BaseClassesInfo() With {.SpellCheckControlBase = SpellCheckControlBase, .[Class] = item, .Assembly = a})
+                                    AcceptedClasses.Add(New BaseClassesInfo() With {.SpellCheckControlBase = SpellCheckControlBase, .Type = item})
                                 End If
                             Catch ex As Exception
 

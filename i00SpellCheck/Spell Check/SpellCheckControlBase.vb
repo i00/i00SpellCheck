@@ -305,62 +305,57 @@ Public MustInherit Class SpellCheckControlBase
     Protected dictCache As New Dictionary(Of String, Dictionary.SpellCheckWordError)
 
     Private Sub AbortSpellCheckThreads()
-        SyncLock AddWordThreads
-            For Each item In AddWordThreads
-                If item.IsAlive Then
-                    item.Abort()
-                End If
-            Next
-        End SyncLock
+        If AddWordsThread IsNot Nothing AndAlso AddWordsThread.IsAlive Then
+            AddWordsThread.Abort()
+        End If
     End Sub
 
     Public Sub AddWordsToCache(ByVal Dictionary As Dictionary(Of String, Dictionary.SpellCheckWordError), Optional ByVal Thread As Boolean = True)
-        'use DirectCast so that error is thrown if wrong object is passed in
-        If mc_Control.InvokeRequired = False AndAlso Thread = True Then
-            'open in another thread to the control
-            Dim mtSpellCheck As New Threading.Thread(AddressOf mtAddWordsToCache)
-            mtSpellCheck.Name = "Spell check"
-            mtSpellCheck.IsBackground = True 'make it abort when the app is killed
-            SyncLock AddWordThreads
-                AddWordThreads.Add(mtSpellCheck)
-            End SyncLock
-            mtSpellCheck.Start(Dictionary)
-        Else
-            mtAddWordsToCache(Dictionary)
-        End If
-    End Sub
-
-    Dim AddWordThreads As New List(Of Threading.Thread)
-    Private Sub mtAddWordsToCache(ByVal oDictionary_String_SpellCheckWordError As Object)
-        'use DirectCast so that error is thrown if wrong object is passed in
-        Dim NewItems = DirectCast(oDictionary_String_SpellCheckWordError, Dictionary(Of String, Dictionary.SpellCheckWordError))
-        'we are on another thread
-        SyncLock dictCache
-            For Each item In NewItems
-                'Debug.Print("Spell checking: " & item.Key)
-                If dictCache.ContainsKey(item.Key) = False Then
-                    dictCache.Add(item.Key, CurrentDictionary.SpellCheckWord(item.Key))
+        SyncLock WordsToCheck
+            For Each item In Dictionary
+                If WordsToCheck.ContainsKey(item.Key) = False Then
+                    WordsToCheck.Add(item.Key, item.Value)
                 End If
             Next
         End SyncLock
-        'all words added
-        Dim AddWordThreadsCount As Integer
-        SyncLock AddWordThreads
-            AddWordThreads.Remove(Threading.Thread.CurrentThread)
-            AddWordThreadsCount = AddWordThreads.Count
-        End SyncLock
-        If AddWordThreadsCount = 0 Then
-            InvokeRepaint()
+        If AddWordsThread Is Nothing Then
+            AddWordsThread = New Threading.Thread(AddressOf mtAddWordsToCache)
+            AddWordsThread.IsBackground = True
+            AddWordsThread.Name = "Spell checking " & Me.Control.Name & "(" & Me.GetType.Name & ")"
+            AddWordsThread.Start()
         End If
+    End Sub
+
+    Dim WordsToCheck As New Dictionary(Of String, Dictionary.SpellCheckWordError)
+    Dim AddWordsThread As Threading.Thread
+
+    Private Sub mtAddWordsToCache(ByVal oDictionary_String_SpellCheckWordError As Object)
+
+        Do Until WordsToCheck.Count = 0
+            For Each item In WordsToCheck.ToArray
+                If dictCache.ContainsKey(item.Key) = False Then
+                    dictCache.Add(item.Key, CurrentDictionary.SpellCheckWord(item.Key))
+                End If
+                WordsToCheck.Remove(item.Key)
+            Next
+        Loop
+
+        AddWordsThread = Nothing
+
+        InvokeRepaint()
     End Sub
 
     Private Delegate Sub cb_InvokeRepaint()
     Public Sub InvokeRepaint()
         If Control.InvokeRequired Then
-            If Control.Visible Then
+            'If Control.Visible Then
+            Try
                 Dim cb As New cb_InvokeRepaint(AddressOf InvokeRepaint)
                 Control.Invoke(cb)
-            End If
+            Catch ex As ObjectDisposedException
+                'control was disposed
+            End Try
+            'End If
         Else
             RepaintControl()
         End If

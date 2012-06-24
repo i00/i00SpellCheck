@@ -18,6 +18,7 @@ Imports i00SpellCheck
 
 Partial Public Class SpellCheckLabel
     Inherits i00SpellCheck.SpellCheckControlBase
+    Implements iTestHarness
 
 #Region "Setup"
 
@@ -227,6 +228,21 @@ Partial Public Class SpellCheckLabel
         End If
 
     End Sub
+
+#End Region
+
+#Region "Test Harness"
+
+    Public Function SetupControl(ByVal Control As System.Windows.Forms.Control) As Control Implements i00SpellCheck.iTestHarness.SetupControl
+        Control.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Control.Text = "This is a label plugin for i00 Spell Check ..." & vbCrLf & _
+                       "As you can see it underliines misspelled words in labels" & vbCrLf & _
+                       "" & vbCrLf & _
+                       "To use this plugin in your project (that uses i00 Spell Check) just put this file in your application directory and it will automatically spell check labels!" & vbCrLf & _
+                       "" & vbCrLf & _
+                       "You can make your own plugins by Inheritting SpellCheckControlBase in your own *.dll or *.exe files and putting them in the same path as your application!"
+        Return Control
+    End Function
 
 #End Region
 

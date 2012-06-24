@@ -142,7 +142,12 @@ Public Class Form1
                             If Points.Count > 1 Then
                                 gp.AddCurve(Points.ToArray)
                                 Using p As New Pen(Color, 3)
-                                    e.Graphics.DrawPath(p, gp)
+                                    Try
+                                        e.Graphics.DrawPath(p, gp)
+                                    Catch ex As Exception
+                                        ' path produces an out of memory exception if all of the points are in the same spot ...
+                                        'this happens sometimes since generating alot of random numbers in quick succession duplicates sometimes!
+                                    End Try
                                 End Using
                             End If
                             e.DrawDefault = False
@@ -280,9 +285,6 @@ Public Class Form1
 
     Private Sub tabSpellControls_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tabSpellControls.SelectedIndexChanged
         UpdateEnabledCheck()
-        If tabSpellControls.SelectedTab Is tabDataGridView Then
-            DataGridView1.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells)
-        End If
         Dim selectedTabSpellCheckControl = (From xItem In tabSpellControls.SelectedTab.Controls.OfType(Of Control)() Where xItem.SpellCheck IsNot Nothing).FirstOrDefault
         If selectedTabSpellCheckControl IsNot Nothing Then
             tsbSpellCheck.Visible = TypeOf selectedTabSpellCheckControl.SpellCheck Is i00SpellCheck.SpellCheckControlBase.iSpellCheckDialog

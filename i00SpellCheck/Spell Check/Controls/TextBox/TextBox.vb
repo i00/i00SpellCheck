@@ -19,6 +19,7 @@
 Public Class SpellCheckTextBox
     Inherits SpellCheckControlBase
     Implements iSpellCheckDialog
+    Implements iTestHarness
 
 #Region "Text Box"
 
@@ -343,6 +344,56 @@ Public Class SpellCheckTextBox
             'parentTextBox.Invalidate()
         End If
     End Sub
+
+#End Region
+
+#Region "Test Harness"
+
+    Public Function SetupControl(ByVal Control As System.Windows.Forms.Control) As Control Implements iTestHarness.SetupControl
+        If Control.GetType Is GetType(TextBox) Then
+            Dim TextBox = DirectCast(Control, TextBox)
+
+            TextBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!)
+            TextBox.Multiline = True
+            TextBox.Text = "Ths is a standrd text field that uses a dictionary to spel check the its contents ...  as you can se errors are underlnied in red!"
+
+            TextBox.SelectionStart = 0
+            TextBox.SelectionLength = 0
+
+            Return TextBox
+        ElseIf Control.GetType Is GetType(RichTextBox) Then
+            Dim RichTextBox = DirectCast(Control, RichTextBox)
+
+            RichTextBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!)
+
+            RichTextBox.Text = "i00 .Net Spell Check has built in support for RichTextBoxes!" & vbCrLf & _
+                               "" & vbCrLf & _
+                               "The quic brown fox junped ovr the lazy dog!" & vbCrLf & _
+                               "" & vbCrLf & _
+                               "You can right click to see spelling sugguestions for words and to add/ignore/remove words from the dictionary." & vbCrLf & _
+                               "" & vbCrLf & _
+                               "If you ignre a word you can hold ctrl down to underlne all ignored words!" & vbCrLf & _
+                               "" & vbCrLf & _
+                               "The initial dictionary may take a little while to load ... it holds more than 150 000 words!"
+
+            RichTextBox.Select(RichTextBox.Text.IndexOf("i00 .Net Spell Check"), Len("i00 .Net Spell Check"))
+            RichTextBox.SelectionFont = New Font(RichTextBox.Font, FontStyle.Bold)
+            RichTextBox.Select(RichTextBox.Text.IndexOf("RichTextBoxes!"), Len("RichTextBoxes!"))
+            RichTextBox.SelectionFont = New Font(RichTextBox.Font.Name, CSng(RichTextBox.Font.Size * 1.5), FontStyle.Bold)
+            RichTextBox.Select(RichTextBox.Text.IndexOf("Rich"), Len("Rich"))
+            RichTextBox.SelectionColor = Color.Red
+            RichTextBox.Select(RichTextBox.Text.IndexOf("Text"), Len("Text"))
+            RichTextBox.SelectionColor = Color.Green
+            RichTextBox.Select(RichTextBox.Text.IndexOf("Boxes"), Len("Boxes"))
+            RichTextBox.SelectionColor = Color.Blue
+            RichTextBox.Select(0, 0)
+            RichTextBox.ClearUndo()
+
+            Return RichTextBox
+        Else
+            Return Nothing
+        End If
+    End Function
 
 #End Region
 

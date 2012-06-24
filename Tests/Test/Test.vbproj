@@ -82,6 +82,7 @@
     <Compile Include="frmSplash.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Other\LoadSpellCheckPlugins.vb" />
     <Compile Include="Other\OtherForm1Stuff.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -140,6 +141,14 @@
     <ProjectReference Include="..\..\i00SpellCheck\i00SpellCheck.vbproj">
       <Project>{27D0D9B3-719C-46B7-9F03-3F91E82E7436}</Project>
       <Name>i00SpellCheck</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\3rd Party\FastColoredTextBoxPlugin\FastColoredTextBoxPlugin.vbproj">
+      <Project>{D640FBFD-A239-4E43-9818-ECBB9F7A09F3}</Project>
+      <Name>FastColoredTextBoxPlugin</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\LabelPlugin\LabelPlugin.vbproj">
+      <Project>{0812402A-DBD8-4DC2-9886-2AF9075E9F1D}</Project>
+      <Name>LabelPlugin</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
