@@ -5,6 +5,10 @@
 'All property in this file is and remains the property of i00 Productions, regardless of its usage,
 'unless stated otherwise in writing from i00 Productions.
 '
+'Anyone wishing to use this code in their projects may do so, however are required to leave a post on
+'VBForums (under: http://www.vbforums.com/showthread.php?p=4075093) stating that they are doing so.
+'A simple "I am using i00 Spell check in my project" will surffice.
+'
 'i00 is not and shall not be held accountable for any damages directly or indirectly caused by the
 'use or miss-use of this product.  This product is only a component and thus is intended to be used 
 'as part of other software, it is not a complete software package, thus i00 Productions is not 
@@ -655,7 +659,8 @@ ReCheck:
         mt_ChangeAll.Start()
     End Sub
     Private Sub ChangeAll()
-        For Each item In (From xItem In HtmlSpellCheck1.Words Where (xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Case OrElse xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Error)).ToArray
+        Dim WordErrors = (From xItem In HtmlSpellCheck1.Words Where (xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Case OrElse xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Error))
+        For Each item In WordErrors.ToArray
             Dim Suggestions = GetSuggestions(item.NewWord)
             If Suggestions.Count > 0 Then
                 'change to first
@@ -682,6 +687,7 @@ ReCheck:
                 CompleteSpellCheck()
             End If
         End If
+
     End Sub
 
     Private Sub btnChangeAll_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnChangeAll.Click
@@ -851,7 +857,4 @@ ReCheck:
         txtChangeTo_TextChanged(txtChangeTo, EventArgs.Empty)
     End Sub
 
-    Private Sub btnClose_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnClose.Click
-
-    End Sub
 End Class

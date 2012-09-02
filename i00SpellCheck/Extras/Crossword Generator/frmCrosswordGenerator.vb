@@ -116,22 +116,22 @@ Public Class frmCrosswordGenerator
     Dim MT_GenerateXWord As Threading.Thread
 
     Private Sub btnGenerate_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnGenerate.Click
-        Dim dict As Dictionary
+        Dim dict As FlatFileDictionary
         Select Case cboDict.SelectedItem.ToString
             Case "Default (definitions only)"
-                dict = New Dictionary
-                dict.AddRange((From xItem In Definitions.DefaultDefinitions.GetWordList Select New Dictionary.DictionaryItem With {.Entry = xItem, .ItemState = Dictionary.DictionaryItem.eItemState.AddNew}).ToArray)
+                dict = New FlatFileDictionary
+                dict.WordList.AddRange((From xItem In Definitions.DefaultDefinitions.GetWordList Select New FlatFileDictionary.DictionaryItem With {.Entry = xItem, .ItemState = FlatFileDictionary.DictionaryItem.eItemState.Correct}).ToArray)
             Case "Default"
-                dict = Dictionary.DefaultDictionary
+                dict = TryCast(Dictionary.DefaultDictionary, FlatFileDictionary)
             Case Else 'custom
-                dict = New Dictionary
-                dict.AddRange(From xItem In System.Text.RegularExpressions.Regex.Matches(txtCustomDict.Text, "(?<=\b)\w+?(?=\b)").OfType(Of System.Text.RegularExpressions.Match)() Where xItem.Value <> "" Select New Dictionary.DictionaryItem(xItem.Value, Dictionary.DictionaryItem.eItemState.AddNew))
+                dict = New FlatFileDictionary
+                dict.WordList.AddRange(From xItem In System.Text.RegularExpressions.Regex.Matches(txtCustomDict.Text, "(?<=\b)\w+?(?=\b)").OfType(Of System.Text.RegularExpressions.Match)() Where xItem.Value <> "" Select New FlatFileDictionary.DictionaryItem(xItem.Value, FlatFileDictionary.DictionaryItem.eItemState.Correct))
         End Select
 
         If dict Is Nothing Then
             'dict not loaded yet
-            Dictionary.LoadDefaultDictionary()
-            dict = Dictionary.DefaultDictionary
+            FlatFileDictionary.LoadDefaultDictionary()
+            dict = DirectCast(Dictionary.DefaultDictionary, FlatFileDictionary)
         End If
 
         If MT_GenerateXWord IsNot Nothing AndAlso MT_GenerateXWord.IsAlive Then
@@ -151,7 +151,7 @@ Public Class frmCrosswordGenerator
 
     Public Sub GenerateXWord(ByVal dict As Object)
         EnableDisableControls(True)
-        CrossWordGenerator.Generate(DirectCast(dict, Dictionary))
+        CrossWordGenerator.Generate(DirectCast(dict, FlatFileDictionary))
         EnableDisableControls(False)
         RefreshHighlights()
         ResizeColumns()

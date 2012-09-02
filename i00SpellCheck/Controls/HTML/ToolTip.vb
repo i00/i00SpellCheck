@@ -14,6 +14,11 @@
 Public Class HTMLToolTip
     Inherits ToolTip
 
+    Public Class TipClickEventArgs
+        Public mouse As MouseEventArgs
+        Public handled As Boolean
+    End Class
+
     
     Private WithEvents MasterForm As Form
 
@@ -56,12 +61,12 @@ Public Class HTMLToolTip
 
     Public Overloads Sub Hide()
         ToolTipWindow.hide(MyBase.UseAnimation OrElse MyBase.UseFading)
-        MyBase.Hide(window)
+        'MyBase.Hide(window)
     End Sub
 
     Public Overloads Sub Hide(ByVal win As IWin32Window)
         ToolTipWindow.hide(MyBase.UseAnimation OrElse MyBase.UseFading)
-        MyBase.Hide(win)
+        'MyBase.Hide(win)
     End Sub
 
     Private Sub MasterForm_Move_ResizeBegin(ByVal sender As Object, ByVal e As System.EventArgs) Handles MasterForm.Move, MasterForm.ResizeBegin
@@ -71,7 +76,20 @@ Public Class HTMLToolTip
 
     Dim ThisPopupOrientation As ToolTipOrientations
 
+    Dim mc_LastText As String
+    Public ReadOnly Property LastText() As String
+        Get
+            Return mc_LastText
+        End Get
+    End Property
+
     Public Sub ShowHTML(ByVal text As String, ByVal window As IWin32Window, ByVal point As Point, Optional ByVal Duration As Integer = Integer.MaxValue)
+        mc_LastText = text
+        If ToolTipWindow.TipImage IsNot Nothing Then
+            Dim TipImage = ToolTipWindow.TipImage
+            ToolTipWindow.TipImage = Nothing
+            TipImage.Dispose()
+        End If
 
         If ToolTipTitle <> "" Then
             text = "<font face='" & System.Drawing.SystemFonts.StatusFont.Name & "' size='" & CInt(System.Drawing.SystemFonts.StatusFont.Size * 1.2) & "' color='" & System.Drawing.ColorTranslator.ToHtml(DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.Highlight), Color.FromKnownColor(KnownColor.ControlText))) & "'>" & ToolTipTitle & "</font>" & vbCrLf & text
@@ -114,12 +132,12 @@ Public Class HTMLToolTip
 
         Dim TipSize As Size
 
-        If IsBalloon Then
-            'no max width
-            TipSize = SetTipSize(Nothing, text, point)
-        Else
-            TipSize = SetTipSize(ctl, text, point)
-        End If
+        'If IsBalloon Then
+        '    'no max width
+        '    TipSize = SetTipSize(Nothing, text, point)
+        'Else
+        TipSize = SetTipSize(ctl, text, point)
+        'End If
 
 
         If IsBalloon Then
@@ -160,8 +178,21 @@ Public Class HTMLToolTip
     'qwertyuiop - cannot set ToolTipWindow with topmost or the ShowNoFocus doesn't work :(
     Public WithEvents ToolTipWindow As New ToolTipPopup With {.ShowInTaskbar = False, .StartPosition = FormStartPosition.Manual}
 
+    Public Event TipClosed(ByVal sender As Object, ByVal e As EventArgs)
+    Public Event TipClick(ByVal sender As Object, ByVal e As TipClickEventArgs)
+
+    Private Sub ToolTipWindow_TipClick(ByVal sender As Object, ByVal e As TipClickEventArgs) Handles ToolTipWindow.TipClick
+        RaiseEvent TipClick(Me, e)
+    End Sub
+    Private Sub ToolTipWindow_TipClosed(ByVal sender As Object, ByVal e As System.EventArgs) Handles ToolTipWindow.TipClosed
+        RaiseEvent TipClosed(Me, EventArgs.Empty)
+    End Sub
+
     Public Class ToolTipPopup
         Inherits PerPixelAlphaForm
+
+        Public Event TipClosed(ByVal sender As Object, ByVal e As EventArgs)
+        Public Event TipClick(ByVal sender As Object, ByVal e As TipClickEventArgs)
 
         Public Const WM_MOUSEACTIVATE As Integer = &H21
         Public Const MA_NOACTIVATE As Integer = 3
@@ -179,7 +210,7 @@ Public Class HTMLToolTip
 
         Private WithEvents TimerClose As New Timer
 
-        Private TipImage As Bitmap
+        Public TipImage As Bitmap
 
         Private Sub ResetCloseTimer(ByVal Duration As Integer)
             If Duration = -1 Then
@@ -252,11 +283,8 @@ Public Class HTMLToolTip
                 FadeTimer.Enabled = True
             Else
                 MyBase.Hide()
+                RaiseEvent TipClosed(Me, EventArgs.Empty)
             End If
-        End Sub
-
-        Private Sub ToolTipPopup_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Click
-            Me.hide(DoFadeOut)
         End Sub
 
         Private Sub Timer_Tick(ByVal sender As Object, ByVal e As System.EventArgs) Handles TimerClose.Tick
@@ -270,6 +298,7 @@ Public Class HTMLToolTip
                 If ThisTime - StartFadeTime > FadeTime Then
                     If FadeTo = 0 Then
                         MyBase.Hide()
+                        RaiseEvent TipClosed(Me, EventArgs.Empty)
                     Else
                         SetBitmap(TipImage, FadeTo)
                     End If
@@ -280,7 +309,7 @@ Public Class HTMLToolTip
                     FadeAmount = CByte((FadeFrom + ((CInt(FadeTo) - CInt(FadeFrom)) * AnimationPercent)))
                     SetBitmap(TipImage, FadeAmount)
                 End If
-                End If
+            End If
         End Sub
 
         Private Sub ToolTipPopup_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Disposed
@@ -289,8 +318,23 @@ Public Class HTMLToolTip
             End If
             TimerClose.Dispose()
             FadeTimer.Dispose()
+
+            If TipImage IsNot Nothing Then
+                TipImage.Dispose()
+            End If
+
+        End Sub
+
+        Private Sub ToolTipPopup_MouseClick(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles Me.MouseClick
+            Dim theE = New TipClickEventArgs() With {.mouse = e}
+            RaiseEvent TipClick(sender, theE)
+            If theE.handled = False Then
+                Me.hide(DoFadeOut)
+            End If
         End Sub
     End Class
+
+    Dim LastMaxTipWidth As Integer
 
     Private Function SetTipSize(ByVal control As Control, ByVal TipText As String, ByVal ToolTipPoint As Point) As Size
         If control Is Nothing Then
@@ -303,7 +347,16 @@ Public Class HTMLToolTip
 
             Dim Onscreen = Screen.FromPoint(RealTipPoint)
 
-            Dim MaxTipWidth = Onscreen.Bounds.Right - RealTipPoint.X - If(Me.ToolTipIcon <> Windows.Forms.ToolTipIcon.None, 22, 0)
+            Dim MaxTipWidth = RealTipPoint.X
+            If IsBalloon And (ThisPopupOrientation = ToolTipOrientations.LowRight OrElse ThisPopupOrientation = ToolTipOrientations.TopRight) Then
+            Else
+                MaxTipWidth = Onscreen.Bounds.Right - MaxTipWidth
+                If IsBalloon Then MaxTipWidth -= (BalloonBorderMargin * 2)
+            End If
+            MaxTipWidth -= If(Me.ToolTipIcon <> Windows.Forms.ToolTipIcon.None, 22, 0)
+
+
+            LastMaxTipWidth = MaxTipWidth
 
             Dim TipSizeF = HTMLParser.PaintHTML(TipText, Nothing, MaxTipWidth, HTMLRenderStatus)
             SetTipSize = New Size(CInt(TipSizeF.Width) + 1, CInt(TipSizeF.Height) + 1)
@@ -388,6 +441,16 @@ Public Class HTMLToolTip
         End Set
     End Property
 
+    Dim mc_Image As Bitmap
+    Public Property Image() As Bitmap
+        Get
+            Return mc_Image
+        End Get
+        Set(ByVal value As Bitmap)
+            mc_Image = value
+        End Set
+    End Property
+
     Dim mc_ShadowBaseColor As Color = Color.Black
     Public Property ShadowBaseColor() As Color
         Get
@@ -405,15 +468,17 @@ Public Class HTMLToolTip
 
         Dim DataOffsetPoint = New Point(0, 0)
 
-        Dim IconImage As Bitmap = Nothing
-        Select Case MyBase.ToolTipIcon
-            Case Windows.Forms.ToolTipIcon.Error
-                IconImage = My.Resources._error
-            Case Windows.Forms.ToolTipIcon.Info
-                IconImage = My.Resources.info
-            Case Windows.Forms.ToolTipIcon.Warning
-                IconImage = My.Resources.Warning
-        End Select
+        Dim IconImage As Bitmap = mc_Image
+        If IconImage Is Nothing Then
+            Select Case MyBase.ToolTipIcon
+                Case Windows.Forms.ToolTipIcon.Error
+                    IconImage = My.Resources._error
+                Case Windows.Forms.ToolTipIcon.Info
+                    IconImage = My.Resources.info
+                Case Windows.Forms.ToolTipIcon.Warning
+                    IconImage = My.Resources.Warning
+            End Select
+        End If
 
         Dim BalloonRect = New Rectangle(Rect.X, Rect.Y, Rect.Width - BalloonShadowDepth - CInt(BalloonShadowBlur / 2), Rect.Height - BalloonShadowDepth - CInt(BalloonShadowBlur / 2))
 
@@ -444,7 +509,7 @@ Public Class HTMLToolTip
                         DataOffsetPoint.Y += BalloonPointerHeight
                 End Select
 
-                Select ShadowMode
+                Select Case ShadowMode
                     Case ShadowModes.Basic
                         For i = 0 To BalloonShadowDepth
                             g.TranslateTransform(1, 1)
@@ -493,7 +558,7 @@ Public Class HTMLToolTip
                 End If
 
                 g.TranslateTransform(DataOffsetPoint.X, DataOffsetPoint.Y)
-                HTMLParser.PaintHTML(TipText, g, TipSize.Width - RightPadding, HTMLRenderStatus)
+                HTMLParser.PaintHTML(TipText, g, LastMaxTipWidth, HTMLRenderStatus)
                 g.ResetTransform()
                 'end same as below
 

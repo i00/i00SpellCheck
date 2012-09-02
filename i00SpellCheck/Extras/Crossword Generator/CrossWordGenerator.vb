@@ -118,13 +118,13 @@ Public Class CrossWordGenerator
     <NonSerialized()> _
     Dim UsedWords As HashSet(Of String)
 
-    Public Sub Generate(ByVal Dictionary As Dictionary)
+    Public Sub Generate(ByVal Dictionary As FlatFileDictionary)
         Randomize()
         CrossWordCells.Clear()
         UsedWords = New HashSet(Of String)
         'initial word:
         'Put a random word on the board
-        Dim Word = (From xItem In Dictionary Where xItem.ItemState <> Dictionary.DictionaryItem.eItemState.Delete AndAlso xItem.Entry.Length <= Math.Max(CrossWordSize.Width, CrossWordSize.Height) And xItem.Entry.Length > 1 Order By Rnd() Select xItem.Entry).FirstOrDefault
+        Dim Word = (From xItem In Dictionary.WordList Where xItem.ItemState <> FlatFileDictionary.DictionaryItem.eItemState.Delete AndAlso xItem.Entry.Length <= Math.Max(CrossWordSize.Width, CrossWordSize.Height) And xItem.Entry.Length > 1 Order By Rnd() Select xItem.Entry).FirstOrDefault
         'pick a point for this word on the grid
         If Word Is Nothing Then Exit Sub ' no words fit in the grid or dict empty...
         Dim across As Boolean
@@ -166,7 +166,7 @@ Public Class CrossWordGenerator
 
     Public Event Progress(ByVal sender As Object, ByVal e As ProgressEventArgs)
 
-    Private Sub AddAllWordsToGrid(ByVal Dictionary As i00SpellCheck.Dictionary)
+    Private Sub AddAllWordsToGrid(ByVal Dictionary As i00SpellCheck.FlatFileDictionary)
         Randomize()
 
         Dim WordsAdded As Boolean
@@ -196,7 +196,7 @@ TryAgain:
         End If
     End Sub
 
-    Private Function AddSingleWordAt(ByVal Dictionary As i00SpellCheck.Dictionary, ByVal Cell As CrossWordCell, ByVal ExtendDirection As ExtendDirections) As Boolean
+    Private Function AddSingleWordAt(ByVal Dictionary As i00SpellCheck.FlatFileDictionary, ByVal Cell As CrossWordCell, ByVal ExtendDirection As ExtendDirections) As Boolean
         'find the word bounds...
         If ExtendDirection = ExtendDirections.None Then Exit Function
 
@@ -361,7 +361,7 @@ NextPositionX:
         End If
     End Sub
 
-    Private Function GetAllMatchingWords(ByVal Dictionary As i00SpellCheck.Dictionary, ByVal WordStartCell As Point, ByVal WordEndCell As Point, ByVal RequiredCell As CrossWordCell, Optional ByRef Pattern As String = "") As IEnumerable(Of String)
+    Private Function GetAllMatchingWords(ByVal Dictionary As i00SpellCheck.FlatFileDictionary, ByVal WordStartCell As Point, ByVal WordEndCell As Point, ByVal RequiredCell As CrossWordCell, Optional ByRef Pattern As String = "") As IEnumerable(Of String)
         Randomize()
 
         Dim IsX As Boolean
@@ -383,7 +383,7 @@ NextPositionX:
         End If
 
         'trim the dictionary down to the length that we want...
-        Dim Dict = (From xItem In Dictionary Where xItem.ItemState <> Dictionary.DictionaryItem.eItemState.Delete AndAlso InStr(xItem.Entry, RequiredCell.Value, CompareMethod.Text) > 0 AndAlso xItem.Entry.Length < ((EndCellVariable - StartCellVariable) + 1) AndAlso xItem.Entry.Length > 1 AndAlso UsedWords.Contains(LCase(xItem.Entry)) = False Select xItem.Entry Order By Rnd()).ToArray
+        Dim Dict = (From xItem In Dictionary.WordList Where xItem.ItemState <> FlatFileDictionary.DictionaryItem.eItemState.Delete AndAlso InStr(xItem.Entry, RequiredCell.Value, CompareMethod.Text) > 0 AndAlso xItem.Entry.Length < ((EndCellVariable - StartCellVariable) + 1) AndAlso xItem.Entry.Length > 1 AndAlso UsedWords.Contains(LCase(xItem.Entry)) = False Select xItem.Entry Order By Rnd()).ToArray
         Pattern = "^"
         For x = StartCellVariable To EndCellVariable
             Dim cell = CellAtPoint(x, CellConstent, False, Not IsX)

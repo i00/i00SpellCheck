@@ -211,13 +211,15 @@ Public Class tsiColorPicker
 
 #End Region
 
+    Public Shared DefaultColors() As Color = New Color() {Color.Black, Color.FromArgb(153, 51, 0), Color.FromArgb(51, 51, 0), Color.FromArgb(0, 51, 0), Color.FromArgb(0, 51, 102), Color.Navy, Color.FromArgb(51, 51, 153), Color.FromArgb(51, 51, 51), _
+                                             Color.Maroon, Color.FromArgb(255, 102, 0), Color.Olive, Color.Green, Color.Teal, Color.Blue, Color.FromArgb(102, 102, 153), Color.Gray, _
+                                             Color.Red, Color.FromArgb(255, 153, 0), Color.FromArgb(153, 204, 0), Color.FromArgb(51, 153, 102), Color.FromArgb(51, 204, 204), Color.FromArgb(51, 102, 255), Color.Purple, Color.FromArgb(153, 153, 153), _
+                                             Color.Fuchsia, Color.FromArgb(255, 204, 0), Color.Yellow, Color.Lime, Color.Aqua, Color.FromArgb(0, 204, 255), Color.FromArgb(153, 51, 102), Color.Silver, _
+                                             Color.FromArgb(255, 153, 204), Color.FromArgb(255, 204, 153), Color.FromArgb(255, 255, 153), Color.FromArgb(204, 255, 204), Color.FromArgb(204, 255, 255), Color.FromArgb(153, 204, 255), Color.FromArgb(204, 153, 255), Color.White}
+
     Private Sub FillWithDefaultColors()
         mc_Colors = New List(Of Color)
-        mc_Colors.AddRange(New Color() {Color.Black, Color.FromArgb(153, 51, 0), Color.FromArgb(51, 51, 0), Color.FromArgb(0, 51, 0), Color.FromArgb(0, 51, 102), Color.Navy, Color.FromArgb(51, 51, 153), Color.FromArgb(51, 51, 51), _
-                                        Color.Maroon, Color.FromArgb(255, 102, 0), Color.Olive, Color.Green, Color.Teal, Color.Blue, Color.FromArgb(102, 102, 153), Color.Gray, _
-                                        Color.Red, Color.FromArgb(255, 153, 0), Color.FromArgb(153, 204, 0), Color.FromArgb(51, 153, 102), Color.FromArgb(51, 204, 204), Color.FromArgb(51, 102, 255), Color.Purple, Color.FromArgb(153, 153, 153), _
-                                        Color.Fuchsia, Color.FromArgb(255, 204, 0), Color.Yellow, Color.Lime, Color.Aqua, Color.FromArgb(0, 204, 255), Color.FromArgb(153, 51, 102), Color.Silver, _
-                                        Color.FromArgb(255, 153, 204), Color.FromArgb(255, 204, 153), Color.FromArgb(255, 255, 153), Color.FromArgb(204, 255, 204), Color.FromArgb(204, 255, 255), Color.FromArgb(153, 204, 255), Color.FromArgb(204, 153, 255), Color.White}.ToList)
+        mc_Colors.AddRange(DefaultColors)
     End Sub
 
     Dim Tooltip As New ToolTip

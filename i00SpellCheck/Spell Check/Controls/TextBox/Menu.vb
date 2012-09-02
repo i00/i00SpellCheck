@@ -291,8 +291,7 @@ Partial Class SpellCheckTextBox
                 Dim AddX = txtBoxScreenPos.X
                 Dim AddY = txtBoxScreenPos.Y
 
-                'scroll the caret into view
-                SendMessage(Me.parentTextBox.Handle, EM_SCROLLCARET, 0, 0)
+                ScrollToCaret()
 
                 Dim ChrPos = Me.parentTextBox.GetPositionFromCharIndex(parentTextBox.SelectionStart)
                 Dim LineHeight As Integer = GetLineHeightFromCharPosition(parentTextBox.SelectionStart)
@@ -304,6 +303,11 @@ Partial Class SpellCheckTextBox
 
         CheckContextMenuLocation()
         LocationChanging = False
+    End Sub
+
+    'scroll the caret into view
+    Protected Sub ScrollToCaret()
+        SendMessage(Me.parentTextBox.Handle, EM_SCROLLCARET, 0, 0)
     End Sub
 
     Private Sub ContextMenuStrip_ItemAdded(ByVal sender As Object, ByVal e As System.Windows.Forms.ToolStripItemEventArgs) Handles ContextMenuStrip.ItemAdded

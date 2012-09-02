@@ -10,7 +10,6 @@
         End If
         Dim font As Font = status.Font.GetRealFont()
         Dim values As IList(Of Element) = Nothing
-        Dim lastSpaceSize As Double = 0
         Dim _totalHeight As Single = 0
         Dim _labelsPositions As New Dictionary(Of String, Element)
         Dim _totalWidth As Single = 0
@@ -80,10 +79,6 @@ SizeElement:
                         currWdth = values(i).Size.Width
                         currHgth = values(i).Size.Height
                     Else
-                        Dim spaceSize As Single = 0
-                        If spaceSize < 0 Then
-                            spaceSize = CSng(values(i).SpaceSize + lastSpaceSize) / 2
-                        End If
 
                         If ((status.WordWrap) AndAlso (currWdth + values(i).Size.Width >= MaxWidth)) Then
                             newLine = False
@@ -93,15 +88,11 @@ SizeElement:
                             If currWdth > _totalWidth Then _totalWidth = currWdth
                             currHgth = values(i).Size.Height
                         Else
-                            If currWdth > 0 Then
-                                currWdth += spaceSize
-                            End If
                             currWdth += values(i).Size.Width
                             If currWdth > _totalWidth Then _totalWidth = currWdth
                             currHgth = Math.Max(currHgth, values(i).Size.Height)
                         End If
                     End If
-                    lastSpaceSize = values(i).SpaceSize
                 End If
             Next
             _textLines.Add(New TextLine(currWdth, currHgth, values.Count - 1))
@@ -150,19 +141,13 @@ SizeElement:
                     Exit Select
             End Select
 
-            lastSpaceSize = 0
             While currElement <= line.LastElement
                 If values(currElement).Type = ElementType.Status Then
                     If values(currElement).Status.Image IsNot Nothing AndAlso values(currElement).Status.Image.Image IsNot Nothing Then
                         Dim irect As New Rectangle(CInt(Math.Truncate(left)), CInt(Math.Truncate(top + line.Height - values(currElement).Size.Height)), CInt(Math.Truncate(values(currElement).Size.Width)), CInt(Math.Truncate(values(currElement).Size.Height)))
                         values(currElement).DisplayedRect = irect
                         g.DrawImage(values(currElement).Status.Image.Image, values(currElement).DisplayedRect)
-                        If lastSpaceSize = 0 Then
-                            lastSpaceSize = values(currElement).SpaceSize
-                        End If
-                        Dim spaceSize As Single = 0
-                        left += values(currElement).Size.Width + spaceSize
-                        lastSpaceSize = values(currElement).SpaceSize
+                        left += values(currElement).Size.Width
                     Else
                         status = values(currElement).Status
                         brush = status.Brush.GetRealBrush()
@@ -184,13 +169,7 @@ SizeElement:
                         _labelsPositions.Add(label.ID, values(currElement))
                     End If
 
-                    If lastSpaceSize = 0 Then
-                        lastSpaceSize = values(currElement).SpaceSize
-                    End If
-
-                    Dim spaceSize As Single = 0
-                    left += values(currElement).Size.Width + spaceSize
-                    lastSpaceSize = values(currElement).SpaceSize
+                    left += values(currElement).Size.Width
                 End If
                 currElement += 1
             End While

@@ -1,7 +1,5 @@
 ﻿Imports System.ComponentModel
-Imports System.Windows.Forms.Design
 Imports System.Drawing.Design  'Must reference System.Design.Dll
-Imports System.Globalization
 
 <System.ComponentModel.DesignerCategory("")> _
 Public Class AutoGrowLabel

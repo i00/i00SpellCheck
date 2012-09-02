@@ -12,7 +12,7 @@ Partial Class Form1
                 Select Case m.WParam.ToInt32
                     Case SC_KEYMENU
                         Static LastControl As Control
-                        If ToolStripDropDownButton1.GetCurrentParent.Focused() Then
+                        If tsbExamples.GetCurrentParent.Focused() Then
                             If LastControl IsNot Nothing Then
                                 Try
                                     LastControl.Focus()
@@ -22,8 +22,8 @@ Partial Class Form1
                             End If
                         Else
                             LastControl = Me.ActiveControl
-                            ToolStripDropDownButton1.GetCurrentParent.Focus()
-                            ToolStripDropDownButton1.Select()
+                            tsbExamples.GetCurrentParent.Focus()
+                            tsbExamples.Select()
                         End If
                     Case Else
                         MyBase.WndProc(m)
@@ -67,7 +67,24 @@ Partial Class Form1
         tsiDrawStyle.SelectedIndex = 0
 
         'add any extra plugins as extra tabs...
-        Dim SpellControls = LoadSpellCheckPlugins.Controls()
+        Dim SpellCheckControlBases = i00SpellCheck.PluginManager(Of i00SpellCheck.SpellCheckControlBase).GetPlugins
+        Dim SpellControls As New List(Of Control) ' LoadSpellCheckPlugins.Controls()
+        For Each item In SpellCheckControlBases
+            Try
+                If item.ControlType.IsAbstract Then
+                    'cannot create instance for eg TextBoxBase... lets go through everything and try to create a control that comes from this
+                    SpellControls.AddRange(i00SpellCheck.PluginManager(Of Control).GetAllPluginsInReferencedAssemblies(item.GetType.Assembly, item.ControlType))
+                Else
+                    Dim ctl = TryCast(item.ControlType.Module.Assembly.CreateInstance(item.ControlType.FullName), Control)
+                    SpellControls.Add(ctl)
+                End If
+            Catch ex As Exception
+
+            End Try
+        Next
+
+        'remove the duplicate controls...
+        SpellControls = (From xItem In (From xItem In SpellControls Group xItem By ControlType = xItem.GetType Into Group) Select xItem.Group.First).ToList
 
         For Each item In (From xItem In SpellControls Order By xItem.GetType.Name).ToList
             Dim InsertControl = item

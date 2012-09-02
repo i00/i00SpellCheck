@@ -30,13 +30,13 @@ Partial Class SpellCheckTextBox
 
 #Region "Ease of access"
 
-    Friend ReadOnly Property parentTextBox() As TextBoxBase
+    Protected Friend ReadOnly Property parentTextBox() As TextBoxBase
         Get
             Return TryCast(MyBase.Control, TextBoxBase)
         End Get
     End Property
 
-    Friend ReadOnly Property parentRichTextBox() As RichTextBox
+    Protected Friend ReadOnly Property parentRichTextBox() As RichTextBox
         Get
             Return TryCast(MyBase.Control, RichTextBox)
         End Get

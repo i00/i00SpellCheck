@@ -93,17 +93,44 @@
     <Compile Include="Controls\MenuTextSeperator.vb" />
     <Compile Include="Controls\SplitButton.vb">
     </Compile>
-    <Compile Include="Misc\CollectionToStringConverter.vb" />
-    <Compile Include="Spell Check\Controls\DataGridView\DataGridView.vb" />
-    <Compile Include="Spell Check\iTestHarness.vb" />
-    <Compile Include="Spell Check\Menu.vb" />
-    <Compile Include="Spell Check\SpellCheckControlBase.vb" />
-    <Compile Include="Spell Check\Dialog\DictionaryEditor.Designer.vb">
-      <DependentUpon>DictionaryEditor.vb</DependentUpon>
+    <Compile Include="Extras\Crossword Generator\CrossWordGenerator.vb" />
+    <Compile Include="Extras\Crossword Generator\frmCrosswordGenerator.Designer.vb">
+      <DependentUpon>frmCrosswordGenerator.vb</DependentUpon>
     </Compile>
-    <Compile Include="Spell Check\Dialog\DictionaryEditor.vb">
+    <Compile Include="Extras\Crossword Generator\frmCrosswordGenerator.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Extras\Crossword Generator\TransparentToolStrip.vb" />
+    <Compile Include="Misc\CollectionToStringConverter.vb" />
+    <Compile Include="Spell Check\Controls\DataGridView\DataGridView.vb" />
+    <Compile Include="Misc\PluginManager.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\Interfaces\iAnagram.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\Formatting.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\DictionaryEditor.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\Interfaces\iScrabble.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Flat File\Editor\DictionaryEditor.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Spell Check\Engine\Dictionary\Flat File\Editor\frmDictionaryEditor.Designer.vb">
+      <DependentUpon>frmDictionaryEditor.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Spell Check\Engine\Dictionary\Flat File\Editor\frmDictionaryEditor.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Spell Check\Engine\Dictionary\Flat File\Interfaces\iAnagram.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Flat File\Interfaces\iScrabble.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Flat File\Interfaces\iWordBase.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Flat File\FlatFileDictionary.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Spell Check\Engine\Dictionary\Base\iDictionary.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\Interfaces\iWordBase.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Flat File\FlatFileSpellCheck.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Spell Check\Engine\iTestHarness.vb" />
+    <Compile Include="Spell Check\Engine\Menu.vb" />
+    <Compile Include="Spell Check\Engine\SpellCheckControlBase.vb" />
     <Compile Include="Misc\clsImageFilters.vb" />
     <Compile Include="Misc\DrawingFunctions.vb" />
     <Compile Include="Controls\BufferedPanel.vb" />
@@ -118,15 +145,6 @@
     </Compile>
     <Compile Include="Controls\HTML\Components\Parser.vb" />
     <Compile Include="Controls\tsiColorPicker.vb" />
-    <Compile Include="Extras\Crossword Generator\CrossWordGenerator.vb" />
-    <Compile Include="Extras\Crossword Generator\frmCrosswordGenerator.Designer.vb">
-      <DependentUpon>frmCrosswordGenerator.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Extras\Crossword Generator\frmCrosswordGenerator.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Extras\Crossword Generator\TransparentToolStrip.vb">
-    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -142,27 +160,25 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Serialization\Compress.vb" />
-    <Compile Include="Serialization\Encrypt.vb" />
-    <Compile Include="Serialization\Serialize.vb" />
-    <Compile Include="Spell Check\Definitions.vb" />
-    <Compile Include="Spell Check\Dialog\HTMLSpellCheck.vb">
+    <Compile Include="Misc\Serialization\Compress.vb" />
+    <Compile Include="Misc\Serialization\Encrypt.vb" />
+    <Compile Include="Misc\Serialization\Serialize.vb" />
+    <Compile Include="Spell Check\Engine\Definitions.vb" />
+    <Compile Include="Spell Check\Engine\Controls\HTMLSpellCheck.vb">
     </Compile>
-    <Compile Include="Spell Check\Dictionary.vb" />
     <Compile Include="Spell Check\Controls\TextBox\Drawing.vb" />
-    <Compile Include="Spell Check\Extension.vb">
+    <Compile Include="Spell Check\Engine\Extension.vb">
     </Compile>
     <Compile Include="Spell Check\Controls\TextBox\Menu.vb">
     </Compile>
-    <Compile Include="Spell Check\Settings.vb" />
-    <Compile Include="Spell Check\SpellCheck.vb" />
+    <Compile Include="Spell Check\Engine\Settings.vb" />
     <Compile Include="Spell Check\Controls\TextBox\Dialog\SpellCheckDialog.Designer.vb">
       <DependentUpon>SpellCheckDialog.vb</DependentUpon>
     </Compile>
     <Compile Include="Spell Check\Controls\TextBox\Dialog\SpellCheckDialog.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Spell Check\Synonyms.vb" />
+    <Compile Include="Spell Check\Engine\Synonyms.vb" />
     <Compile Include="Spell Check\Controls\TextBox\Misc.vb" />
     <Compile Include="Spell Check\Controls\TextBox\TextBox.vb" />
   </ItemGroup>
@@ -175,10 +191,6 @@
       <DependentUpon>frmCrosswordGenerator.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Spell Check\Dialog\DictionaryEditor.resx">
-      <DependentUpon>DictionaryEditor.vb</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
@@ -187,6 +199,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Spell Check\Controls\TextBox\Dialog\SpellCheckDialog.resx">
       <DependentUpon>SpellCheckDialog.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Spell Check\Engine\Dictionary\Flat File\Editor\frmDictionaryEditor.resx">
+      <DependentUpon>frmDictionaryEditor.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
@@ -944,9 +960,16 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Icon.ico" />
+    <None Include="Resources\Filter.png" />
     <None Include="Resources\info.png" />
     <None Include="Resources\error.png" />
     <None Include="Resources\Warning.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Components\i00BindingList\i00BindingList.vbproj">
+      <Project>{1A3066D9-B48C-4EC1-AC93-4B0BBE5AA812}</Project>
+      <Name>i00BindingList</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

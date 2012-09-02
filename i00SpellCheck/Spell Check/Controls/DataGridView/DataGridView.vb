@@ -78,7 +78,7 @@ Partial Public Class SpellCheckDataGridView
         Dim oSender = TryCast(sender, DataGridView)
         If e.RowIndex >= 0 AndAlso e.ColumnIndex >= 0 AndAlso oSender IsNot Nothing Then
 
-            If TypeOf oSender.Columns(e.ColumnIndex) Is DataGridViewTextBoxColumn AndAlso oSender.Columns(e.ColumnIndex).ReadOnly = False AndAlso e.Value IsNot Nothing Then
+            If TypeOf oSender.Columns(e.ColumnIndex) Is DataGridViewTextBoxColumn AndAlso oSender.Columns(e.ColumnIndex).ReadOnly = False AndAlso e.FormattedValue IsNot Nothing Then
 
                 Dim CellBounds = New Rectangle(e.CellBounds.X, e.CellBounds.Y, e.CellBounds.Width - 1, e.CellBounds.Height - 1)
                 e.Handled = True
@@ -91,59 +91,28 @@ Partial Public Class SpellCheckDataGridView
 
                 If (e.PaintParts And DataGridViewPaintParts.ContentForeground) = DataGridViewPaintParts.ContentForeground Then
 
-                    Dim Flags As TextFormatFlags
-                    Flags = TextFormatFlags.NoPrefix
-
-                    Dim FalseFlags = Flags
-                    Flags = Flags Or TextFormatFlags.Top
-                    Flags = Flags Or TextFormatFlags.Left
-
-                    Select Case e.CellStyle.Alignment
-                        Case DataGridViewContentAlignment.BottomCenter
-                            Flags = Flags Or TextFormatFlags.Bottom
-                            Flags = Flags Or TextFormatFlags.HorizontalCenter
-                        Case DataGridViewContentAlignment.BottomLeft
-                            Flags = Flags Or TextFormatFlags.Bottom
-                            Flags = Flags Or TextFormatFlags.Left
-                        Case DataGridViewContentAlignment.BottomRight
-                            Flags = Flags Or TextFormatFlags.Bottom
-                            Flags = Flags Or TextFormatFlags.Right
-                        Case DataGridViewContentAlignment.MiddleCenter
-                            Flags = Flags Or TextFormatFlags.VerticalCenter
-                            Flags = Flags Or TextFormatFlags.HorizontalCenter
-                        Case DataGridViewContentAlignment.MiddleLeft
-                            Flags = Flags Or TextFormatFlags.VerticalCenter
-                            Flags = Flags Or TextFormatFlags.Left
-                        Case DataGridViewContentAlignment.MiddleRight
-                            Flags = Flags Or TextFormatFlags.VerticalCenter
-                            Flags = Flags Or TextFormatFlags.Right
-                        Case DataGridViewContentAlignment.TopCenter
-                            Flags = Flags Or TextFormatFlags.Top
-                            Flags = Flags Or TextFormatFlags.HorizontalCenter
-                        Case DataGridViewContentAlignment.TopLeft
-                            Flags = Flags Or TextFormatFlags.Top
-                            Flags = Flags Or TextFormatFlags.Left
-                        Case DataGridViewContentAlignment.TopRight
-                            Flags = Flags Or TextFormatFlags.Top
-                            Flags = Flags Or TextFormatFlags.Right
-                    End Select
-
-                    If e.CellStyle.WrapMode = DataGridViewTriState.True Then
-                        Flags = Flags Or TextFormatFlags.WordBreak
-                    Else
-                        Flags = Flags Or TextFormatFlags.WordEllipsis
-                    End If
+                  
 
                     e.Graphics.TranslateTransform(CellBounds.Left, CellBounds.Top)
 
                     'spell check bit :D
                     'changed words makes words like "kris'" > "kris'"
-                    Dim ChangedWordText = Replace(e.Value.ToString, vbCrLf, vbCr)
+                    Dim ChangedWordText = Replace(e.FormattedValue.ToString, vbCrLf, vbCr)
                     ChangedWordText = Replace(ChangedWordText, vbLf, vbCr)
                     Dim ChangedWords = Dictionary.Formatting.RemoveWordBreaks(ChangedWordText)
 
-                    Dim WordBounds = DrawingFunctions.Text.TextRendererMeasure.Measure(e.Value.ToString, e.CellStyle.Font, CellBounds.Size, Flags)
+                    Dim Flags = DrawingFunctions.Text.TextRendererMeasure.TextFlagsFrom(e.CellStyle)
+
+                    Dim WordBounds = DrawingFunctions.Text.TextRendererMeasure.Measure(e.FormattedValue.ToString, e.CellStyle.Font, CellBounds.Size, Flags)
                     Dim NewWordBounds As New DrawingFunctions.Text.TextRendererMeasure.WordBounds With {.TextMargin = WordBounds.TextMargin}
+
+                    Dim FalseFlags = Flags
+                    Dim RemoveFlags() As TextFormatFlags = {TextFormatFlags.Top, TextFormatFlags.Left, TextFormatFlags.Bottom, TextFormatFlags.Right, TextFormatFlags.HorizontalCenter, TextFormatFlags.VerticalCenter}
+                    For Each item In RemoveFlags
+                        If (FalseFlags And item) = item Then
+                            FalseFlags = FalseFlags Xor item
+                        End If
+                    Next
 
                     For Each item In WordBounds
                         'use the changed word instead :)
@@ -205,7 +174,7 @@ Partial Public Class SpellCheckDataGridView
                     If (e.State And DataGridViewElementStates.Selected) = DataGridViewElementStates.Selected Then
                         CellForeColor = e.CellStyle.SelectionForeColor
                     End If
-                    TextRenderer.DrawText(e.Graphics, e.Value.ToString, e.CellStyle.Font, CellBounds, CellForeColor, Flags)
+                    TextRenderer.DrawText(e.Graphics, e.FormattedValue.ToString, e.CellStyle.Font, CellBounds, CellForeColor, Flags)
                 End If
 
                 e.Graphics.ResetClip()

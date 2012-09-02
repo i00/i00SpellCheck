@@ -216,6 +216,50 @@ Public Class DrawingFunctions
 
         Partial Public Class TextRendererMeasure
 
+            Public Shared Function TextFlagsFrom(ByVal CellStyle As DataGridViewCellStyle) As TextFormatFlags
+
+                Dim Flags As TextFormatFlags
+                Flags = TextFormatFlags.NoPrefix
+
+                Select Case CellStyle.Alignment
+                    Case DataGridViewContentAlignment.BottomCenter
+                        Flags = Flags Or TextFormatFlags.Bottom
+                        Flags = Flags Or TextFormatFlags.HorizontalCenter
+                    Case DataGridViewContentAlignment.BottomLeft
+                        Flags = Flags Or TextFormatFlags.Bottom
+                        Flags = Flags Or TextFormatFlags.Left
+                    Case DataGridViewContentAlignment.BottomRight
+                        Flags = Flags Or TextFormatFlags.Bottom
+                        Flags = Flags Or TextFormatFlags.Right
+                    Case DataGridViewContentAlignment.MiddleCenter
+                        Flags = Flags Or TextFormatFlags.VerticalCenter
+                        Flags = Flags Or TextFormatFlags.HorizontalCenter
+                    Case DataGridViewContentAlignment.MiddleLeft
+                        Flags = Flags Or TextFormatFlags.VerticalCenter
+                        Flags = Flags Or TextFormatFlags.Left
+                    Case DataGridViewContentAlignment.MiddleRight
+                        Flags = Flags Or TextFormatFlags.VerticalCenter
+                        Flags = Flags Or TextFormatFlags.Right
+                    Case DataGridViewContentAlignment.TopCenter
+                        Flags = Flags Or TextFormatFlags.Top
+                        Flags = Flags Or TextFormatFlags.HorizontalCenter
+                    Case DataGridViewContentAlignment.TopLeft
+                        Flags = Flags Or TextFormatFlags.Top
+                        Flags = Flags Or TextFormatFlags.Left
+                    Case DataGridViewContentAlignment.TopRight
+                        Flags = Flags Or TextFormatFlags.Top
+                        Flags = Flags Or TextFormatFlags.Right
+                End Select
+
+                If CellStyle.WrapMode = DataGridViewTriState.True Then
+                    Flags = Flags Or TextFormatFlags.WordBreak
+                Else
+                    Flags = Flags Or TextFormatFlags.WordEllipsis
+                End If
+
+                Return Flags
+            End Function
+
             Public Class WordBounds
                 Inherits List(Of WordBound)
                 Public TextMargin As Integer
@@ -227,7 +271,7 @@ Public Class DrawingFunctions
                 End Class
             End Class
 
-            Public Shared Function Measure(ByVal text As String, ByVal font As Font, ByVal proposedSize As Size, ByVal flags As TextFormatFlags, Optional ByVal OnlyReturnRenderedWords As Boolean = True) As WordBounds
+            Public Shared Function Measure(ByVal text As String, ByVal font As Font, ByVal proposedSize As Size, ByVal flags As TextFormatFlags, Optional ByVal OnlyReturnRenderedWords As Boolean = True, Optional ByVal PerWord As Boolean = True) As WordBounds
                 Measure = New WordBounds
                 If text = "" Then Exit Function
                 text = Replace(text, vbCrLf, vbCr)
@@ -235,7 +279,15 @@ Public Class DrawingFunctions
 
                 Dim textSize = TextRenderer.MeasureText(text, font, proposedSize, flags)
 
-                Dim Words = text.Split(" "c, CChar(vbCr))
+                Dim Words() As String
+                If PerWord Then
+                    Words = text.Split(" "c, CChar(vbCr))
+                Else
+                    'split every char...
+                    Words = (From xItem In text.OfType(Of Char)() Select CStr(xItem)).ToArray
+                End If
+
+
 
                 Dim SlashWidth = TextRenderer.MeasureText("--", font, proposedSize, flags).Width
                 Dim SpaceWidth = TextRenderer.MeasureText("- -", font, proposedSize, flags).Width
@@ -275,15 +327,15 @@ Public Class DrawingFunctions
                     If BreakCharIndex >= 0 Then
                         LineBreakChr = text(BreakCharIndex) = vbCr
                     End If
-                    ThisIndex += Len(Words(i)) + 1
+                    ThisIndex += Len(Words(i)) + If(PerWord, 1, 0)
 
-                    PreText &= Words(i) & " "
+                    PreText &= Words(i) & If(PerWord, " ", "")
                     If LineBreakChr Then PreText &= vbCr
                     Dim PreTextSize = TextRenderer.MeasureText(If(PreText = "", " ", PreText), font, proposedSize, FalseFlags)
                     If LastPreTextHeight = -1 OrElse PreTextSize.Height <> LastPreTextHeight Then
                         If LastPreTextHeight <> -1 Then
                             Lines += 1
-                            PreText = Replace(New String(" "c, Lines), " ", vbCrLf) & Words(i) & " "
+                            PreText = Replace(New String(" "c, Lines), " ", vbCrLf) & Words(i) & If(PerWord, " ", "")
                             PreTextSize = TextRenderer.MeasureText(If(PreText = "", " ", PreText), font, proposedSize, FalseFlags)
                         End If
                         TextX = 0
@@ -316,9 +368,9 @@ Public Class DrawingFunctions
                         End If
                     End If
 
-                    NextLeft += WordSize.Width + SpaceWidth
-                    TextX += Len(Words(i)) + 1
-                    LetterIndex += Len(Words(i)) + 1
+                    NextLeft += WordSize.Width + If(PerWord, SpaceWidth, 0)
+                    TextX += Len(Words(i)) + If(PerWord, 1, 0)
+                    LetterIndex += Len(Words(i)) + If(PerWord, 1, 0)
                 Next
 
 Finish:

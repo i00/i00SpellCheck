@@ -55,7 +55,7 @@ Public Class SpellCheckTextBox
 
     'call GetLineHeightFromCharPosition(TextBox.GetFirstCharIndexFromLine(LineIndex))
     'to do this by line
-    Private Function GetLineHeightFromCharPosition(ByVal LetterIndex As Integer) As Integer
+    Protected Function GetLineHeightFromCharPosition(ByVal LetterIndex As Integer) As Integer
         Dim TextHeight As Integer = System.Windows.Forms.TextRenderer.MeasureText("Ag", parentTextBox.Font).Height
         If parentRichTextBox IsNot Nothing Then
             'rich text box :(... need to get the height for each bit...
@@ -349,7 +349,7 @@ Public Class SpellCheckTextBox
 
 #Region "Test Harness"
 
-    Public Function SetupControl(ByVal Control As System.Windows.Forms.Control) As Control Implements iTestHarness.SetupControl
+    Public Overridable Function SetupControl(ByVal Control As System.Windows.Forms.Control) As Control Implements iTestHarness.SetupControl
         If Control.GetType Is GetType(TextBox) Then
             Dim TextBox = DirectCast(Control, TextBox)
 

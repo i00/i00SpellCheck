@@ -186,7 +186,6 @@ Public Class HTMLParser
         Private _status As Status
         Private _html As HTMLParser.SimplePart
         Private _size As SizeF
-        Private _spaceSize As Single
         Private _dispRect As Rectangle
 
         Public Property DisplayedRect() As Rectangle
@@ -231,31 +230,19 @@ Public Class HTMLParser
             End Get
             Set(ByVal value As SizeF)
                 _size = value
-                _spaceSize = 0
-                If HTML IsNot Nothing Then
-                    _spaceSize = CSng(If((_html.Value.Length > 0), (value.Width / _html.Value.Length), 0.0))
-                End If
             End Set
-        End Property
-
-        Public ReadOnly Property SpaceSize() As Single
-            Get
-                Return _spaceSize
-            End Get
         End Property
 
         Public Sub New(ByVal status As Status)
             _type = ElementType.Status
             _status = New Status(status)
             _size = New SizeF(0, 0)
-            _spaceSize = 0
             _html = Nothing
         End Sub
 
         Public Sub New(ByVal html As HTMLParser.SimplePart)
             _type = ElementType.HTML
             _status = Nothing
-            _spaceSize = 0
             _html = html
 
             If TypeOf html Is HTMLParser.Text Then
@@ -275,9 +262,9 @@ Public Class HTMLParser
         Public Overrides Function ToString() As String
             Select Case _type
                 Case ElementType.Status
-                    Return String.Format("STAT Element: stat={0};sz={1};ss={2}", _status, _size.ToString(), _spaceSize)
+                    Return String.Format("STAT Element: stat={0};sz={1}", _status, _size.ToString())
                 Case ElementType.HTML
-                    Return String.Format("HTML Element: type={0};sz={1};ss={2}", _html.Type.ToString(), _size.ToString(), _spaceSize)
+                    Return String.Format("HTML Element: type={0};sz={1}", _html.Type.ToString(), _size.ToString())
             End Select
 
             Return "NULL Element"

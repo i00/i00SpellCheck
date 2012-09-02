@@ -52,10 +52,10 @@ Public Class Form1
         'End If
 
         ''To load a custom dictionary from a saved file:
-        'Dim Dictionary = New i00SpellCheck.Dictionary("c:\Custom.dic")
+        'Dim Dictionary = New i00SpellCheck.FlatFileDictionary("c:\Custom.dic")
 
         ''To create a new blank dictionary and save it as a file
-        'Dim Dictionary = New i00SpellCheck.Dictionary("c:\Custom.dic", True)
+        'Dim Dictionary = New i00SpellCheck.FlatFileDictionary("c:\Custom.dic", True)
         'Dictionary.Add("CustomWord1")
         'Dictionary.Add("CustomWord2")
         'Dictionary.Add("CustomWord3")
@@ -66,12 +66,10 @@ Public Class Form1
 
         ''To Open the dictionary editor for a dictionary associated with a Control:
         ''NOTE: this should only be done after the dictionary has loaded (Control.SpellCheck.CurrentDictionary.Loading = False)
-        'Using DictionaryEditor As New DictionaryEditor
-        '    TextBox1.SpellCheck.CurrentDictionary = DictionaryEditor.ShowDialog(TextBox1.SpellCheck.CurrentDictionary)
-        '    'Refresh all of the controls that use the same dictionary...
-        '    TextBox1.SpellCheck.InvalidateAllControlsWithSameDict()
-        'End Using
+        'TextBox1.SpellCheck.CurrentDictionary.ShowUIEditor()
 
+        ''Repaint all of the controls that use the same dictionary...
+        'TextBox1.SpellCheck.InvalidateAllControlsWithSameDict()
     End Sub
 
     Private Sub DictionaryLoaded(ByVal sender As Object, ByVal e As EventArgs)
@@ -161,14 +159,18 @@ Public Class Form1
 
     Private Sub tstbAnagramLookup_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles tstbAnagramLookup.KeyPress
         If e.KeyChar = vbCr Then
-            Dim Anagrams = i00SpellCheck.Dictionary.DefaultDictionary.AnagramLookup(tstbAnagramLookup.Text).ToArray
-            MsgBox("Found " & Anagrams.Count & " anogram" & If(Anagrams.Count = 1, "", "s") & If(Anagrams.Count = 0, "", ":" & vbCrLf & Join(Anagrams, vbCrLf)))
+            Dim iAnagram = TryCast(i00SpellCheck.Dictionary.DefaultDictionary, i00SpellCheck.Dictionary.Interfaces.iAnagram)
+            If iAnagram IsNot Nothing Then
+                Dim Anagrams = iAnagram.AnagramLookup(tstbAnagramLookup.Text).ToArray
+                MsgBox("Found " & Anagrams.Count & " anogram" & If(Anagrams.Count = 1, "", "s") & If(Anagrams.Count = 0, "", ":" & vbCrLf & Join(Anagrams, vbCrLf)))
+            End If
         End If
     End Sub
 
     Private Sub tstbScrabbleHelper_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles tstbScrabbleHelper.KeyPress
         If e.KeyChar = vbCr Then
-            Dim Scrabble = i00SpellCheck.Dictionary.DefaultDictionary.ScrabbleLookup(tstbScrabbleHelper.Text).ToArray
+            Dim iScrabble = TryCast(i00SpellCheck.Dictionary.DefaultDictionary, i00SpellCheck.Dictionary.Interfaces.iScrabble)
+            Dim Scrabble = iScrabble.ScrabbleLookup(tstbScrabbleHelper.Text).ToArray
             MsgBox("Found " & Scrabble.Count & " scrabble combination" & If(Scrabble.Count = 1, "", "s") & If(Scrabble.Count = 0, "", ":" & vbCrLf & Join((From xItem In Scrabble Order By xItem.Score Descending, xItem.Word Ascending Select xItem.Word & " (" & xItem.Score & ")").ToArray, ",")), , "Scrabble combinations for " & tstbScrabbleHelper.Text)
         End If
     End Sub
@@ -179,7 +181,7 @@ Public Class Form1
             If i00SpellCheck.Dictionary.DefaultDictionary.SpellCheckWord(tsbSuggestionLookup.Text) = Dictionary.SpellCheckWordError.OK Then
                 'Correct spelling
                 'look up the meaning of the word :)
-                Dim WordDefs = Join(Definitions.DefaultDefinitions.FindWord(tsbSuggestionLookup.Text, i00SpellCheck.Dictionary.DefaultDictionary).ToArray, vbCrLf)
+                Dim WordDefs = Join((From xItem In Definitions.DefaultDefinitions.FindWord(tsbSuggestionLookup.Text, i00SpellCheck.Dictionary.DefaultDictionary) Select Replace(Replace(xItem.Line, ";", "; "), "|", " - ")).ToArray, vbCrLf & vbCrLf)
                 If WordDefs <> "" Then
                     MsgBox(tsbSuggestionLookup.Text & vbCrLf & vbCrLf & WordDefs)
                     Return
@@ -188,6 +190,10 @@ Public Class Form1
             Else
                 'Incorrect - Offer suggestions
                 Dim Suggestions = i00SpellCheck.Dictionary.DefaultDictionary.SpellCheckSuggestions(tsbSuggestionLookup.Text)
+                If Suggestions.Count = 0 Then
+                    MsgBox("Your word was not in the dictionary and no sugguestions could be made")
+                    Return
+                End If
                 Dim TopCloseness = Suggestions.Max(Function(x As i00SpellCheck.Dictionary.SpellCheckSuggestionInfo) x.Closness)
                 Dim FilteredSuggestions = (From xItem In Suggestions Order By xItem.Closness Descending, xItem.Word Ascending Where xItem.Closness >= TopCloseness * 0.75 Select xItem.Word).ToArray
                 FilteredSuggestions = (From xItem In FilteredSuggestions Where Array.IndexOf(FilteredSuggestions, xItem) < 15).ToArray
@@ -341,6 +347,21 @@ Public Class Form1
             End If
         End If
         UpdateEnabledCheck()
+    End Sub
+
+
+    Private Sub tsbExamples_DropDownOpening(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsbExamples.DropDownOpening
+        Dim iAnagram = TryCast(i00SpellCheck.Dictionary.DefaultDictionary, i00SpellCheck.Dictionary.Interfaces.iAnagram)
+        If iAnagram Is Nothing Then
+            tstbAnagramLookup.Text = "Not Supported"
+            tstbAnagramLookup.Enabled = False
+        End If
+
+        Dim iScrabble = TryCast(i00SpellCheck.Dictionary.DefaultDictionary, i00SpellCheck.Dictionary.Interfaces.iScrabble)
+        If iScrabble Is Nothing Then
+            tstbScrabbleHelper.Text = "Not Supported"
+            tstbScrabbleHelper.Enabled = False
+        End If
     End Sub
 
 End Class
