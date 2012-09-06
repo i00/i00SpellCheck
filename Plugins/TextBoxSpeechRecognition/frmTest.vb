@@ -10,6 +10,7 @@ Public Class frmTest
         Using b As Bitmap = DirectCast(propToolBoxIcon.GetImage(GetType(Label), True), Bitmap)
             Me.Icon = Icon.FromHandle(b.GetHicon)
         End Using
+
     End Sub
 
 End Class

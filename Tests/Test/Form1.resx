@@ -237,4 +237,19 @@
   <metadata name="ToolStrip3.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>231, 17</value>
   </metadata>
+  <data name="tsbEditDictionary.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAH/SURBVDhPldJfSFNxFAfwAwWFCkolFUQPkhSMsqDBHIuy
+        u/Al8kGS8ML2IITQHx3U1sOFTFkJ0mW0uYqQHzq3FZutWEKyoWDdSkxsSwezQMoxYkRppd624tvdeunt
+        3s7T4XD4wPdwiJRCr7kyP9AaWW6vZ19adHXF2X/V55NbZgs3OBRibrzuPo8zxwxWzYBnB10dqyWM8wZI
+        kgRZliGKIvR6vTakZystirpqOJ1OOBwOpFKpEhIIBOC+flEdEbZRh2XvLtjt9hIiCAKyH2fwu5BHJqxD
+        9k61OsJxHDMajSUkHruLyUcVSI/XY3nejdzwQaw8OKGO8DzPLBYLvO6jmIgSpsOEBX85VqZ68D1qxc/Y
+        FXXkQudZVmciDHn24dVjwlyQkBncjrVZL2SpF79eiOpIQzMxvm0DRocO480I4d0gIeurwVryHlbjl/Ej
+        yqsjnV3E+m6WYTJkwlslynsFyfh249tMH3IRTulr1BHXALF+TzmejRxB4uHfOGl/FXLTdiz4NiN9v0r9
+        Y4uI61YF4mETJOUmLyOEKSXWfCKE/FKIafrWLhcxwVmGJyEDxkYJ/d5GrCa6sb4U/KoJKC61Kzex2jbi
+        2nEzkh178Ml/Cuvp25A/BJs0I6fPkXX4wKbIU3MlkrZazIUvwdbWvKgZ+HfxeevOpgbT/omWxkP4A/3f
+        HAtDKk1EAAAAAElFTkSuQmCC
+</value>
+  </data>
 </root>

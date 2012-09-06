@@ -355,6 +355,7 @@ Public Class SpellCheckTextBox
 
             TextBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!)
             TextBox.Multiline = True
+            TextBox.ScrollBars = ScrollBars.Vertical
             TextBox.Text = "Ths is a standrd text field that uses a dictionary to spel check the its contents ...  as you can se errors are underlnied in red!"
 
             TextBox.SelectionStart = 0

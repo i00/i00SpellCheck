@@ -71,13 +71,17 @@ Public Class SpellCheckTextBoxSpeechRecognition
                     Dim lineHeight = GetLineHeightFromCharPosition(parentTextBox.SelectionStart)
                     ToolTipLocation.Y += lineHeight
 
+                    'dictate
+                    tmpText = ""
+                    ExistingText = ""
                     Dim [Error] As Exception = Nothing
                     Try
-                        'dictate
-                        tmpText = ""
-                        ExistingText = ""
                         Recogniser = New Speech.Recognition.SpeechRecognitionEngine
-                        Recogniser.SetInputToDefaultAudioDevice()
+                        Try
+                            Recogniser.SetInputToDefaultAudioDevice()
+                        Catch ex As InvalidOperationException
+                            Throw New Exception("Could not set the default audio device" & vbCrLf & "Please make sure your soundcard and microphone are working correctly")
+                        End Try
                         Recogniser.LoadGrammar(New System.Speech.Recognition.DictationGrammar)
                         Recogniser.RecognizeAsync(Speech.Recognition.RecognizeMode.Multiple)
                     Catch ex As Exception
@@ -99,7 +103,7 @@ Public Class SpellCheckTextBoxSpeechRecognition
                         DictateToolTip = New i00SpellCheck.HTMLToolTip With {.IsBalloon = True, .ToolTipTitle = "Error starting dictate", .ToolTipIcon = ToolTipIcon.Error}
                         DictateToolTip.ToolTipOrientation = i00SpellCheck.HTMLToolTip.ToolTipOrientations.TopLeft
                         DictateToolTip.Image = Nothing
-                        DictateToolTip.ShowHTML("Please make sure your soundcard is working correctly", parentTextBox, ToolTipLocation, 5000)
+                        DictateToolTip.ShowHTML("<b>Error: </b>" & [Error].Message, parentTextBox, ToolTipLocation, 5000)
                     End If
 
                 End If

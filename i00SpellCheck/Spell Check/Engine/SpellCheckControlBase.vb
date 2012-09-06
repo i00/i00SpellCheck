@@ -173,7 +173,7 @@ Public MustInherit Class SpellCheckControlBase
         Next
     End Sub
 
-    Friend Function AllControlsWithSameDict() As IEnumerable(Of SpellCheckControlBase)
+    Public Function AllControlsWithSameDict() As IEnumerable(Of SpellCheckControlBase)
         Return (From xItem In SpellCheckControls Where xItem.Value.CurrentDictionary Is CurrentDictionary Select xItem.Value)
     End Function
 
@@ -243,6 +243,26 @@ Public MustInherit Class SpellCheckControlBase
             MyBase.New(ex.Message, ex.InnerException)
         End Sub
     End Class
+
+    Public Sub DictionaryUnIgnoreWord(ByVal Word As String)
+        CurrentDictionary.UnIgnore(Word)
+        'for all items with the same dict
+        For Each iSellClassWithSameDict In AllControlsWithSameDict()
+            'remove item from cache
+            For Each item In (From xItem In iSellClassWithSameDict.dictCache Where LCase(xItem.Key) = LCase(Word) OrElse LCase(xItem.Key) = LCase(Word) & "'s" OrElse LCase(xItem.Key) = LCase(Word) & Chr(146) & "s").ToArray
+                iSellClassWithSameDict.dictCache.Remove(item.Key)
+                iSellClassWithSameDict.dictCache.Add(item.Key, Dictionary.SpellCheckWordError.SpellError)
+            Next
+            iSellClassWithSameDict.RepaintControl()
+        Next
+        If CurrentDictionary.Filename <> "" Then
+            Try
+                CurrentDictionary.Save()
+            Catch ex As Exception
+                Throw New DictionarySaveException(ex)
+            End Try
+        End If
+    End Sub
 
     Public Sub DictionaryIgnoreWord(ByVal Word As String)
         CurrentDictionary.Ignore(Word)
@@ -341,17 +361,19 @@ Public MustInherit Class SpellCheckControlBase
     Private Sub mtAddWordsToCache(ByVal oDictionary_String_SpellCheckWordError As Object)
 
         Do Until WordsToCheck.Count = 0
+            Dim arrToCheck() As KeyValuePair(Of String, Dictionary.SpellCheckWordError)
             Try
-                For Each item In WordsToCheck.ToArray
-                    'Dim item = WordsToCheck.First
-                    If dictCache.ContainsKey(item.Key) = False Then
-                        dictCache.Add(item.Key, CurrentDictionary.SpellCheckWord(item.Key))
-                    End If
-                    WordsToCheck.Remove(item.Key)
-                Next
+                arrToCheck = WordsToCheck.ToArray
             Catch ex As ArgumentException
-
+                Continue Do
             End Try
+            For Each item In arrToCheck
+                'Dim item = WordsToCheck.First
+                If dictCache.ContainsKey(item.Key) = False Then
+                    dictCache.Add(item.Key, CurrentDictionary.SpellCheckWord(item.Key))
+                End If
+                WordsToCheck.Remove(item.Key)
+            Next
         Loop
 
         AddWordsThread = Nothing
@@ -378,4 +400,8 @@ Public MustInherit Class SpellCheckControlBase
 
 #End Region
 
+    Private Sub SpellCheckControlBase_DictionaryChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.DictionaryChanged
+        dictCache.Clear()
+        InvokeRepaint()
+    End Sub
 End Class

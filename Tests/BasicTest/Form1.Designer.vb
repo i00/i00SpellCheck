@@ -33,6 +33,7 @@ Partial Class Form1
         'TextBox1
         '
         Me.TextBox1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.TextBox1.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!)
         Me.TextBox1.Location = New System.Drawing.Point(0, 25)
         Me.TextBox1.Multiline = True
         Me.TextBox1.Name = "TextBox1"

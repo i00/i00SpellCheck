@@ -1,4 +1,13 @@
-﻿Imports System.Text
+﻿'©i00 Productions All rights reserved
+'This article is derived from http://www.codeproject.com/Articles/33842/HTMLLabel-An-HTML-Label-for-the-NET-CF
+'----------------------------------------------------------------------------------------------------
+'
+'i00 is not and shall not be held accountable for any damages directly or indirectly caused by the
+'use or miss-use of this product.  This product is only a component and thus is intended to be used 
+'as part of other software, it is not a complete software package, thus i00 Productions is not 
+'responsible for any legal ramifications that software using this product breaches.
+
+Imports System.Text
 Imports System.Collections
 Imports System.Collections.Generic
 

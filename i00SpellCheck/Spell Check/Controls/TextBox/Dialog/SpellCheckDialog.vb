@@ -77,6 +77,27 @@ Public Class SpellCheckDialog
         AddWordToDict(e.Word, MenuCurrentWord)
     End Sub
 
+    Private Sub SpellMenuItems_WordUnIgnored(ByVal sender As Object, ByVal e As Menu.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordUnIgnored
+        UnIgnoreWord(MenuCurrentWord)
+    End Sub
+
+    Private Sub UnIgnoreWord(ByVal theSelectedWord As HTMLSpellCheck.SpellCheckDialogWords)
+        If theSelectedWord IsNot Nothing Then
+            Dim theWord = theSelectedWord.OrigWord
+            SpellCheckTextBox.DictionaryUnIgnoreWord(theWord)
+
+            theSelectedWord.Changed = True
+            theSelectedWord.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.OK
+
+            For Each item In (From xItem In HtmlSpellCheck1.Words Where xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Error OrElse xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Case).ToArray
+                item.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Pending
+            Next
+            HtmlSpellCheck1.StartSpellCheck()
+
+            btnSkip_Click(btnSkip, EventArgs.Empty)
+        End If
+    End Sub
+
     Private Sub SpellMenuItems_WordIgnored(ByVal sender As Object, ByVal e As Menu.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordIgnored
         IgnoreWord(MenuCurrentWord)
     End Sub
@@ -248,7 +269,7 @@ Public Class SpellCheckDialog
             Ucase1stLetter = True
         End If
         Dim Suggestions = SpellCheckTextBox.CurrentDictionary.SpellCheckSuggestions(theWord)
-        If Suggestions.Count = 0 Then
+        If Suggestions Is Nothing OrElse Suggestions.Count = 0 Then
             Return New List(Of String)
         End If
         Dim TopCloseness = Suggestions.Max(Function(x As i00SpellCheck.Dictionary.SpellCheckSuggestionInfo) x.Closness)
@@ -659,6 +680,9 @@ ReCheck:
         mt_ChangeAll.Start()
     End Sub
     Private Sub ChangeAll()
+
+        'Dim st = Now
+
         Dim WordErrors = (From xItem In HtmlSpellCheck1.Words Where (xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Case OrElse xItem.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.Error))
         For Each item In WordErrors.ToArray
             Dim Suggestions = GetSuggestions(item.NewWord)
@@ -687,6 +711,8 @@ ReCheck:
                 CompleteSpellCheck()
             End If
         End If
+
+        'MsgBox(Now.Subtract(st).TotalMilliseconds)
 
     End Sub
 

@@ -16,64 +16,200 @@
 
 Public Class frmDictionaryEditor
 
-    Dim mc_Dictionary As FlatFileDictionary
-    Private Property Dictionary() As FlatFileDictionary
-        Get
-            Return mc_Dictionary
-        End Get
-        Set(ByVal value As FlatFileDictionary)
-            mc_Dictionary = value
-            UpdateLV()
-        End Set
-    End Property
+#Region "Custom dictionary for binding"
 
-    Public Overloads Function ShowDialog(ByVal dict As FlatFileDictionary) As Dictionary
-        If dict Is Nothing Then dict = New FlatFileDictionary
-        If dict.Filename <> "" Then
-            Me.Text = "Dictionary Editor " & " - " & dict.Filename
-        End If
-        Me.Dictionary = dict
-        Me.StartPosition = FormStartPosition.CenterParent
-        MyBase.ShowDialog()
-        'rebuild the dictionary from the new data
-        ReBuildDictionary()
-        Return dict
-    End Function
+    Public Class BoundFlatFileDictionary
+        Public WithEvents BindingList As New i00BindingList.BindingListView(Of BoundFlatFileDictionaryEntry)
+        Public Shared Function FromFlatFileDictionary(ByVal FlatFileDictionary As FlatFileDictionary) As BoundFlatFileDictionary
+            FromFlatFileDictionary = New BoundFlatFileDictionary
+            'inbuilt dict
+            FromFlatFileDictionary.BindingList.AddRange(From xItem In FlatFileDictionary.IndexedDictionary.GetFullList Order By xItem Select New BoundFlatFileDictionaryEntry With {.ItemState = Dictionary.SpellCheckWordError.OK, .Word = xItem, .User = False})
+            'deleted user items
+            Dim DeletedItems = (From xItem In FlatFileDictionary.UserWordList Where xItem.State = Dictionary.SpellCheckWordError.SpellError Group Join xItem2 In FromFlatFileDictionary.BindingList.OfType(Of BoundFlatFileDictionaryEntry)() On LCase(xItem.Word) Equals LCase(xItem2.Word) Into Group)
+            For Each DeletedItem In DeletedItems
+                For Each DeletedGroupItem In DeletedItem.Group
+                    DeletedGroupItem.ItemState = Dictionary.SpellCheckWordError.SpellError
+                Next
+            Next
+            'add the user items...
+            FromFlatFileDictionary.BindingList.AddRange(From xItem In FlatFileDictionary.UserWordList Where xItem.State <> Dictionary.SpellCheckWordError.SpellError Order By xItem.Word Select New BoundFlatFileDictionaryEntry With {.ItemState = xItem.State, .Word = xItem.Word, .User = True})
 
-    Private Sub ReBuildDictionary()
-        mc_Dictionary.WordList.Clear()
+        End Function
 
-        'non-user
-        mc_Dictionary.WordList.AddRange((From xItem In blDictItems.FullList Where xItem.User = False))
+        Public Function ToFlatFileDictionary() As FlatFileDictionary
+            ToFlatFileDictionary = New FlatFileDictionary
+            'add the non-user items... (and user removed words)
+            Dim WordList = (From xItem In BindingList.FullList Where xItem.Word <> "" AndAlso xItem.User = False Order By xItem.Word Group xItem By xItem.Word Into Group Select Group(0)).ToArray
+            For Each item In WordList
+                ToFlatFileDictionary.IndexedDictionary.Add(item.Word)
+                If item.ItemState = Dictionary.SpellCheckWordError.SpellError Then
+                    ToFlatFileDictionary.UserWordList.Add(New UserDictionaryBase.UserDictItem() With {.State = Dictionary.SpellCheckWordError.SpellError, .Word = item.Word})
+                End If
+            Next
 
-        'user-deleted
-        mc_Dictionary.WordList.AddRange((From xItem In blDictItems.FullList Where xItem.User = False AndAlso xItem.ItemState = FlatFileDictionary.DictionaryItem.eItemState.Delete Select New FlatFileDictionary.DictionaryItem(xItem.Entry, FlatFileDictionary.DictionaryItem.eItemState.Delete) With {.User = True}))
+            Dim WordListUser = (From xItem In BindingList.FullList Where xItem.Word <> "" AndAlso xItem.User = True Order By xItem.Word Group xItem By xItem.Word Into Group Select Group(0)).ToArray
+            For Each item In WordListUser
+                If item.ItemState = Dictionary.SpellCheckWordError.Ignore Then
+                    ToFlatFileDictionary.UserWordList.Add(New UserDictionaryBase.UserDictItem() With {.State = Dictionary.SpellCheckWordError.Ignore, .Word = item.Word})
+                Else
+                    ToFlatFileDictionary.UserWordList.Add(New UserDictionaryBase.UserDictItem() With {.State = Dictionary.SpellCheckWordError.OK, .Word = item.Word})
+                End If
+            Next
 
-        'user-ignored / added
-        mc_Dictionary.WordList.AddRange((From xItem In blDictItems.FullList Where xItem.User = True))
+        End Function
+
+        Public Class BoundFlatFileDictionaryEntry
+            Public User As Boolean = True
+            Public Property Ignore() As Boolean
+                Get
+                    Return ItemState = Dictionary.SpellCheckWordError.Ignore
+                End Get
+                Set(ByVal value As Boolean)
+                    If True Then
+                        ItemState = Dictionary.SpellCheckWordError.Ignore
+                    Else
+                        ItemState = Dictionary.SpellCheckWordError.SpellError
+                    End If
+                End Set
+            End Property
+            Public ItemState As Dictionary.SpellCheckWordError
+
+            Dim mc_Word As String
+            Public Property Word() As String
+                Get
+                    Return mc_Word
+                End Get
+                Set(ByVal value As String)
+                    mc_Word = value
+                End Set
+            End Property
+        End Class
+
+        Public Event FilterChanged(ByVal sender As Object, ByVal e As System.EventArgs)
+        Private Sub BindingList_FilterChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles BindingList.FilterChanged
+            RaiseEvent FilterChanged(Me, e)
+        End Sub
+    End Class
+
+#End Region
+
+#Region "For Alt to trigger toolstrip"
+
+    Const WM_SYSCOMMAND As Integer = &H112
+    Const SC_KEYMENU As Integer = &HF100
+
+    Protected Overrides Sub WndProc(ByRef m As System.Windows.Forms.Message)
+
+        Select Case m.Msg
+            Case WM_SYSCOMMAND
+                Select Case m.WParam.ToInt32
+                    Case SC_KEYMENU
+                        Static LastControl As Control
+                        If tsbSave.GetCurrentParent.Focused() Then
+                            If LastControl IsNot Nothing Then
+                                Try
+                                    LastControl.Focus()
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+                        Else
+                            LastControl = Me.ActiveControl
+                            tsbSave.GetCurrentParent.Focus()
+                            tsbSave.Select()
+                        End If
+                    Case Else
+                        MyBase.WndProc(m)
+                End Select
+            Case Else
+                MyBase.WndProc(m)
+        End Select
 
     End Sub
 
-    Private WithEvents blDictItems As New i00BindingList.BindingListView(Of FlatFileDictionary.DictionaryItem)
+#End Region
 
-    Private Sub UpdateLV()
-        blDictItems.Clear()
-        blDictItems.AddRange((From xItem In mc_Dictionary.WordList Where Not (xItem.User = True AndAlso xItem.ItemState = FlatFileDictionary.DictionaryItem.eItemState.Delete)))
+#Region "Key"
 
-        If dgvDictItems.DataSource Is Nothing Then
-            dgvDictItems.DataSource = blDictItems.BindingSource
-            Dim bn As New i00BindingList.BindingNavigatorWithFilter
-            bn.Dock = DockStyle.Bottom
-            bn.GripStyle = ToolStripGripStyle.Hidden
-            Me.Controls.Add(bn)
-            bn.BindingSource = blDictItems.BindingSource
+    Private Sub blDictItems_FilterChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Dict.FilterChanged
+        Keys.FilterSet(Dict.BindingList.Filter)
+    End Sub
+
+    Private WithEvents Keys As New KeyToolbarHelper
+
+    Private Function GetEnumFullPath(ByVal [Enum] As [Enum]) As String
+        Return Replace([Enum].GetType.FullName, "+", ".") & "." & [Enum].ToString
+    End Function
+
+    Private Sub frmDictionaryEditor_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+
+        Dim ShortcutKeyColor = System.Drawing.ColorTranslator.ToHtml(DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.ControlText), Color.FromKnownColor(KnownColor.Control)))
+
+        Keys.Add(New KeyToolbarHelper.KeyItems("Builtin Word", DrawingFunctions.BlendColor(Color.Black, Color.FromKnownColor(KnownColor.Window), 31), "These words are in the non-user dictionary, items cannot be edited in it, they can only be marked as deleted.", "[ItemState] = " & GetEnumFullPath(Dictionary.SpellCheckWordError.OK) & " AndAlso [User]=False"))
+        Keys.Add(New KeyToolbarHelper.KeyItems("Removed Word", DrawingFunctions.BlendColor(Color.Red, Color.FromKnownColor(KnownColor.Window), 31), "These words are in the non-user dictionary that have been marked as removed by the user dictionary." & vbCrLf & vbCrLf & "Select the row selectors and press <i><font color=" & ShortcutKeyColor & ">&lt;Delete&gt;</font></i> to mark the item as removed" & vbCrLf & "To unmark an item as removed press <i><font color=" & ShortcutKeyColor & ">&lt;Shift&gt;</font></i> + <i><font color=" & ShortcutKeyColor & ">&lt;Delete&gt;</font></i>", "[ItemState] = " & GetEnumFullPath(Dictionary.SpellCheckWordError.SpellError)))
+        Keys.Add(New KeyToolbarHelper.KeyItems("User Word", Color.FromKnownColor(KnownColor.Window), "These are words have been added to the user dictionary.", "[User] = True AndAlso [ItemState] <> " & GetEnumFullPath(Dictionary.SpellCheckWordError.Ignore)))
+        Keys.Add(New KeyToolbarHelper.KeyItems("Ignored Word", DrawingFunctions.BlendColor(Color.Blue, Color.FromKnownColor(KnownColor.Window), 31), "These are words have been marked in the user dictionary to be ignored by the i00 Spell Check engine.", "[User] = True AndAlso [ItemState] = " & GetEnumFullPath(Dictionary.SpellCheckWordError.Ignore)))
+
+        Keys.FillToolBarWithKeys(tsKeys)
+
+    End Sub
+
+    Private Sub Keys_FilterClicked(ByVal sender As Object, ByVal e As KeyToolbarHelper.KeyListEventArgs) Handles Keys.FilterClicked
+        Dict.BindingList.BindingSource.Filter = e.KeyItem.Filter
+    End Sub
+
+#End Region
+
+    Private Filename As String
+    Private WithEvents Dict As BoundFlatFileDictionary
+
+    Public Overloads Function ShowDialog(ByVal Dict As FlatFileDictionary) As Dictionary
+        Me.StartPosition = FormStartPosition.CenterParent
+
+        Me.Controls.Add(bn)
+
+        LoadDictionary(Dict)
+
+        MyBase.ShowDialog()
+
+        Dim NewDict = Me.Dict.ToFlatFileDictionary()
+        NewDict.SetFilename(Filename)
+        Return NewDict
+
+        ''rebuild the dictionary from the new data
+        'ReBuildDictionary()
+        'Return dict
+    End Function
+
+    Dim bn As New i00BindingList.BindingNavigatorWithFilter With {.Dock = DockStyle.Bottom, .GripStyle = ToolStripGripStyle.Hidden}
+
+    Private Sub LoadDictionary(ByVal FlatFileDictionary As FlatFileDictionary)
+        If FlatFileDictionary Is Nothing Then
+            Dict = New BoundFlatFileDictionary
+        Else
+            Dict = BoundFlatFileDictionary.FromFlatFileDictionary(FlatFileDictionary)
         End If
+
+        Me.Filename = FlatFileDictionary.Filename
+        If FlatFileDictionary.Filename = "" Then
+            Me.Text = "Dictionary Editor"
+        Else
+            Me.Text = "Dictionary Editor " & " - " & FlatFileDictionary.Filename
+        End If
+
+        dgvDictItems.DataSource = Dict.BindingList.BindingSource
+        bn.BindingSource = Dict.BindingList.BindingSource
+
+        'clear filter
+        Dict.BindingList.BindingSource.Filter = ""
+
     End Sub
 
     'prevent changing of non-user items
     Private Sub dgvDictItems_CellBeginEdit(ByVal sender As Object, ByVal e As System.Windows.Forms.DataGridViewCellCancelEventArgs) Handles dgvDictItems.CellBeginEdit
         If e.RowIndex <> -1 AndAlso e.ColumnIndex <> -1 Then
-            Dim DictItem = TryCast(dgvDictItems.Rows(e.RowIndex).DataBoundItem, i00SpellCheck.FlatFileDictionary.DictionaryItem)
+            Dim DictItem = TryCast(dgvDictItems.Rows(e.RowIndex).DataBoundItem, BoundFlatFileDictionary.BoundFlatFileDictionaryEntry)
             If DictItem IsNot Nothing Then
                 If DictItem.User = False Then
                     e.Cancel = True
@@ -85,25 +221,25 @@ Public Class frmDictionaryEditor
     'color rows / don't paint checkboxes on non-user rows
     Private Sub dgvDictItems_CellPainting(ByVal sender As Object, ByVal e As System.Windows.Forms.DataGridViewCellPaintingEventArgs) Handles dgvDictItems.CellPainting
         If e.RowIndex <> -1 AndAlso e.ColumnIndex <> -1 Then
-            Dim DictItem = TryCast(dgvDictItems.Rows(e.RowIndex).DataBoundItem, i00SpellCheck.FlatFileDictionary.DictionaryItem)
+            Dim DictItem = TryCast(dgvDictItems.Rows(e.RowIndex).DataBoundItem, BoundFlatFileDictionary.BoundFlatFileDictionaryEntry)
             If DictItem IsNot Nothing Then
                 If DictItem.User Then
-                    If DictItem.ItemState = FlatFileDictionary.DictionaryItem.eItemState.Ignore Then
+                    If DictItem.ItemState = Dictionary.SpellCheckWordError.Ignore Then
                         e.CellStyle.BackColor = DrawingFunctions.BlendColor(Color.Blue, Color.FromKnownColor(KnownColor.Window), 31)
                     End If
                 Else
-                    If DictItem.ItemState = FlatFileDictionary.DictionaryItem.eItemState.Delete Then
+                    If DictItem.ItemState = Dictionary.SpellCheckWordError.SpellError Then
                         e.CellStyle.BackColor = DrawingFunctions.BlendColor(Color.Red, Color.FromKnownColor(KnownColor.Window), 31)
                     Else
                         e.CellStyle.BackColor = DrawingFunctions.BlendColor(Color.Black, Color.FromKnownColor(KnownColor.Window), 31)
                     End If
-                    If dgvDictItems.Columns(e.ColumnIndex).DataPropertyName = "pIgnore" Then
+                    If dgvDictItems.Columns(e.ColumnIndex).DataPropertyName = "Ignore" Then
                         e.Handled = True
                         e.PaintBackground(e.ClipBounds, True)
                     End If
                 End If
             Else
-                If dgvDictItems.Columns(e.ColumnIndex).DataPropertyName = "pIgnore" Then
+                If dgvDictItems.Columns(e.ColumnIndex).DataPropertyName = "Ignore" Then
                     e.Handled = True
                     e.PaintBackground(e.ClipBounds, True)
                 End If
@@ -117,28 +253,25 @@ Public Class frmDictionaryEditor
 
     Private Sub tsbSave_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbSave.Click
         Using sfd As New SaveFileDialog
-            sfd.FileName = mc_Dictionary.Filename
+            sfd.FileName = Filename
             sfd.Filter = "Dictionary Files (*.dic)|*.dic|All Files (*.*)|*.*"
             sfd.FilterIndex = 0
             If sfd.ShowDialog = Windows.Forms.DialogResult.OK Then
                 Me.Text = "Dictionary Editor " & " - " & sfd.FileName
                 dgvDictItems.EndEdit()
-                ReBuildDictionary()
-                mc_Dictionary.Save(sfd.FileName, True)
+                Dim FFDictionary = Dict.ToFlatFileDictionary
+                FFDictionary.Save(sfd.FileName, True)
             End If
         End Using
     End Sub
 
     Private Sub tsbOpen_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbOpen.Click
         Using ofd As New OpenFileDialog
-            ofd.FileName = mc_Dictionary.Filename
+            ofd.FileName = Filename
             ofd.Filter = "Dictionary Files (*.dic)|*.dic|All Files (*.*)|*.*"
             ofd.FilterIndex = 0
             If ofd.ShowDialog = Windows.Forms.DialogResult.OK Then
-                mc_Dictionary.LoadFromFile(ofd.FileName)
-                'to update the binding source
-                UpdateLV()
-                Me.Text = "Dictionary Editor " & " - " & ofd.FileName
+                LoadDictionary(New FlatFileDictionary(ofd.FileName))
             End If
         End Using
     End Sub
@@ -150,125 +283,16 @@ Public Class frmDictionaryEditor
 
     'Prevent user from deleting non-user items
     Private Sub dgvDictItems_UserDeletingRow(ByVal sender As Object, ByVal e As System.Windows.Forms.DataGridViewRowCancelEventArgs) Handles dgvDictItems.UserDeletingRow
-        Dim DictItem = DirectCast(e.Row.DataBoundItem, i00SpellCheck.FlatFileDictionary.DictionaryItem)
+        Dim DictItem = DirectCast(e.Row.DataBoundItem, BoundFlatFileDictionary.BoundFlatFileDictionaryEntry)
         If DictItem.User = False Then
             If My.Computer.Keyboard.ShiftKeyDown Then
-                DictItem.ItemState = FlatFileDictionary.DictionaryItem.eItemState.Correct
+                DictItem.ItemState = Dictionary.SpellCheckWordError.OK
             Else
-                DictItem.ItemState = FlatFileDictionary.DictionaryItem.eItemState.Delete
+                DictItem.ItemState = Dictionary.SpellCheckWordError.SpellError
             End If
             e.Cancel = True
 
         End If
     End Sub
-
-#Region "Keys / Key filtering"
-
-    Public Class KeyList
-        Inherits List(Of KeyItems)
-
-        Public Class KeyItems
-            Public KeyType As KeyTypes
-            Public Color As Color
-            Public Description As String
-            Public Filter As String
-            Public Sub New(ByVal KeyType As KeyTypes, ByVal Color As Color, ByVal Description As String, ByVal Filter As String)
-                Me.KeyType = KeyType
-                Me.Color = Color
-                Me.Description = Description
-                Me.Filter = Filter
-            End Sub
-            Public Overrides Function ToString() As String
-                Return Replace(Me.KeyType.ToString, "_", " ")
-            End Function
-        End Class
-
-        Public Enum KeyTypes
-            Builtin_Word
-            Removed_Word
-            User_Word
-            Ignored_Word
-        End Enum
-
-        Private Function GetEnumFullPath(ByVal [Enum] As [Enum]) As String
-            Return Replace([Enum].GetType.FullName, "+", ".") & "." & [Enum].ToString
-        End Function
-
-        Public Sub New()
-            Dim ShortcutKeyColor = System.Drawing.ColorTranslator.ToHtml(DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.ControlText), Color.FromKnownColor(KnownColor.Control)))
-
-            Me.Add(New KeyItems(KeyTypes.Builtin_Word, DrawingFunctions.BlendColor(Color.Black, Color.FromKnownColor(KnownColor.Window), 31), "These words are in the non-user dictionary, items cannot be edited in it, they can only be marked as deleted.", "[ItemState] = " & GetEnumFullPath(FlatFileDictionary.DictionaryItem.eItemState.Correct) & " AndAlso [User]=False"))
-            Me.Add(New KeyItems(KeyTypes.Removed_Word, DrawingFunctions.BlendColor(Color.Red, Color.FromKnownColor(KnownColor.Window), 31), "These words are in the non-user dictionary that have been marked as removed by the user dictionary." & vbCrLf & vbCrLf & "Select the row selectors and press <i><font color=" & ShortcutKeyColor & ">&lt;Delete&gt;</font></i> to mark the item as removed" & vbCrLf & "To unmark an item as removed press <i><font color=" & ShortcutKeyColor & ">&lt;Shift&gt;</font></i> + <i><font color=" & ShortcutKeyColor & ">&lt;Delete&gt;</font></i>", "[ItemState] = " & GetEnumFullPath(FlatFileDictionary.DictionaryItem.eItemState.Delete)))
-            Me.Add(New KeyItems(KeyTypes.User_Word, Color.FromKnownColor(KnownColor.Window), "These are words have been added to the user dictionary.", "[User] = True AndAlso [ItemState] <> " & GetEnumFullPath(FlatFileDictionary.DictionaryItem.eItemState.Ignore)))
-            Me.Add(New KeyItems(KeyTypes.Ignored_Word, DrawingFunctions.BlendColor(Color.Blue, Color.FromKnownColor(KnownColor.Window), 31), "These are words have been marked in the user dictionary to be ignored by the i00 Spell Check engine.", "[User] = True AndAlso [ItemState] = " & GetEnumFullPath(FlatFileDictionary.DictionaryItem.eItemState.Ignore)))
-        End Sub
-    End Class
-
-    Dim Keys As New KeyList
-
-    Dim tsbFilterButtons As New List(Of ToolStripButton)
-
-    Private Sub frmDictionaryEditor_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
-        For Each item In Keys
-            Dim tsb As New ToolStripButton
-            tsb.AutoToolTip = False
-            tsb.Text = item.ToString
-            tsb.Tag = item.Description
-            AddHandler tsb.Click, AddressOf tsbKey_Click
-            Dim b As New Bitmap(14, 14)
-            Using g = Graphics.FromImage(b)
-                g.Clear(item.Color)
-                Using p As New Pen(DrawingFunctions.AlphaColor(Color.FromKnownColor(KnownColor.MenuText), 63))
-                    g.DrawRectangle(p, New Rectangle(0, 0, b.Width - 1, b.Height - 1))
-                End Using
-            End Using
-            tsb.Image = b
-            tsKeys.Items.Add(tsb)
-
-            Dim tsbFilter As New ToolStripButton
-            tsbFilter.DisplayStyle = ToolStripItemDisplayStyle.Image
-            tsbFilter.Image = My.Resources.Filter
-            tsbFilter.Text = "Filter by " & item.ToString
-            tsbFilter.Tag = item.Filter
-            AddHandler tsbFilter.Click, AddressOf tsbKeyFilter_Click
-            tsbFilterButtons.Add(tsbFilter)
-            tsKeys.Items.Add(tsbFilter)
-
-            If item IsNot Keys.Last Then
-                tsKeys.Items.Add(New ToolStripSeparator)
-            End If
-
-        Next
-    End Sub
-
-    Public WithEvents KeyTooltip As New HTMLToolTip
-
-    Private Sub tsbKey_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
-        Dim ToolStripButton = TryCast(sender, ToolStripButton)
-        If ToolStripButton IsNot Nothing Then
-            KeyTooltip.Dispose()
-            KeyTooltip = New HTMLToolTip With {.IsBalloon = True, .ToolTipTitle = ToolStripButton.Text, .ToolTipIcon = ToolTipIcon.Info}
-            KeyTooltip.ShowHTML(ToolStripButton.Tag.ToString, tsKeys, New Point(CInt(ToolStripButton.Bounds.Left + (ToolStripButton.Width / 2)), CInt(ToolStripButton.Bounds.Top + (ToolStripButton.Height / 2))), 5000)
-        End If
-    End Sub
-
-    Private Sub tsbKeyFilter_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
-        Dim ToolStripButton = TryCast(sender, ToolStripButton)
-        If ToolStripButton IsNot Nothing Then
-            blDictItems.BindingSource.Filter = ToolStripButton.Tag.ToString
-        End If
-    End Sub
-
-    Private Sub blDictItems_FilterChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles blDictItems.FilterChanged
-        For Each item In tsbFilterButtons
-            If item.Tag.ToString = blDictItems.Filter Then
-                item.Checked = True
-            Else
-                item.Checked = False
-            End If
-        Next
-    End Sub
-
-#End Region
 
 End Class

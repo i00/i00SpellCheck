@@ -374,6 +374,7 @@ Public Class HTMLSpellCheck
     Friend mt_SpellCheck As Threading.Thread
 
     Private Sub DoSpellCheck()
+        'Dim st = Now
         For Each item In (From xItem In mc_Words Where xItem.SpellCheckState = SpellCheckDialogWords.SpellCheckStates.Pending).ToArray
             Dim className As String = ""
             Select Case mc_Dictionary.SpellCheckWord(item.NewWord)
@@ -390,6 +391,7 @@ Public Class HTMLSpellCheck
             RaiseEvent WordSpellChecked(Me, New HTMLWordEventArgs() With {.Word = item})
             item.UpdateClass()
         Next
+        'MsgBox(Now.Subtract(st).TotalMilliseconds)
         RaiseEvent SpellCheckComplete(Me, EventArgs.Empty)
     End Sub
 

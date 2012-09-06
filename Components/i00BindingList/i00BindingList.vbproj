@@ -24,7 +24,8 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>i00BindingList.xml</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <NoWarn>
     </NoWarn>
     <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
@@ -35,7 +36,8 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>i00BindingList.xml</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <NoWarn>
     </NoWarn>
     <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
@@ -82,7 +84,6 @@
     <Compile Include="Binding List\FilterToolStrip\BindingNavigatorWithFilter.vb">
     </Compile>
     <Compile Include="Binding List\DGV\Plugins\iFilterPlugin.vb" />
-    <Compile Include="Binding List\List\INotifyPropertyChanged.vb" />
     <Compile Include="Binding List\DGV\Plugins\Color\ColorFilter.vb" />
     <Compile Include="Binding List\DGV\Plugins\Color\Controls\tsiColorPicker.vb" />
     <Compile Include="Controls\PersistentToolStripMenuItem.vb">

@@ -1,4 +1,4 @@
-﻿'i00 .Net Spell Check
+﻿'i00 .Net Spell Check Data Grid View
 '©i00 Productions All rights reserved
 'Created by Kris Bennett
 '----------------------------------------------------------------------------------------------------

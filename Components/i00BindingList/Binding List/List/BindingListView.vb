@@ -181,8 +181,11 @@ Public Class BindingListView(Of T)
         '    FullList.Add(theItem)
         '    OnListChanged(New System.ComponentModel.ListChangedEventArgs(ListChangedType.ItemAdded, FilteredList.IndexOf(theItem)))
         'Next
-        FilteredList.AddRange(value)
-        FullList.AddRange(value)
+
+        'qwertyuiop - hrm ... had to set it to a variable 1st otherwise it would "clone" the items so that the FilteredList item was not the same object in FullList???! WTF??
+        Dim AddValue = value.ToArray
+        FilteredList.AddRange(AddValue)
+        FullList.AddRange(AddValue)
         Me.OnListChanged(New ListChangedEventArgs(ListChangedType.Reset, -1))
     End Sub
 
@@ -274,7 +277,7 @@ Public Class BindingListView(Of T)
         Return FilteredList.IndexOf(AddItem)
     End Function
     Public Overloads Function Add(ByVal value As T) As Integer
-        AddObject(value)
+        Return AddObject(value)
     End Function
 
     Public Sub Clear() Implements System.Collections.IList.Clear

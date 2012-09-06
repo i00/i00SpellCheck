@@ -20,6 +20,53 @@ Partial Public MustInherit Class Dictionary
 
 #Region "Text Formating"
 
+#Region "Check Case"
+
+        Public Shared Function AllInCaps(ByVal CompareWord As String) As Boolean
+            Dim ChrsInWord = CStr((From xItem In CompareWord Select xItem Where Asc(LCase(xItem)) >= 97 AndAlso Asc(LCase(xItem)) <= 122).ToArray)
+            If ChrsInWord = UCase(ChrsInWord) Then
+                'all letters in this word are caps
+                Return True
+            End If
+        End Function
+
+        Public Shared Function CaseOK(ByVal CompareWord As String, ByVal DictionaryWord As String) As Boolean
+            If DictionaryWord = LCase(DictionaryWord) Then
+                'check for funny case ... if we have more than one letter and the word isn't in upper case
+                If CompareWord.Length > 1 AndAlso CompareWord.ToUpper <> CompareWord Then
+                    Dim AllButFirst = CompareWord.Substring(1)
+                    If AllButFirst <> AllButFirst.ToLower Then
+                        'interesting case
+                        'Return False
+                    Else
+                        Return True
+                    End If
+                Else
+                    Return True
+                End If
+            Else
+                'word is case sensitive :(
+                For iLetter = 1 To Len(DictionaryWord)
+                    Dim DicLetter = CChar(Mid(DictionaryWord, iLetter, 1))
+                    Dim Letter = CChar(Mid(CompareWord, iLetter, 1))
+                    If DicLetter = UCase(DicLetter) Then
+                        'this letter needs to be in caps... so check it in the orig word
+                        If Letter = DicLetter Then
+                            'we are ok
+                            Return True
+                        Else
+                            'we couldn't match this letter case
+                            'Return False
+                        End If
+                    End If
+                Next
+            End If
+
+            Return AllInCaps(CompareWord)
+        End Function
+
+#End Region
+
 #Region "Word Breaks"
 
         Public Shared Function RemoveWordBreaks(ByVal Text As String) As String

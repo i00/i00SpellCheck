@@ -243,6 +243,14 @@ Partial Class SpellCheckTextBox
         LockWindowUpdate(IntPtr.Zero)
     End Sub
 
+    Private Sub SpellMenuItems_WordUnIgnored(ByVal sender As Object, ByVal e As Menu.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordUnIgnored
+        Try
+            DictionaryUnIgnoreWord(e.Word)
+        Catch ex As Exception
+            MsgBox("The following error ignoring """ & e.Word & """:" & vbCrLf & ex.Message, MsgBoxStyle.Critical)
+        End Try
+    End Sub
+
     Private Sub SpellMenuItems_WordIgnored(ByVal sender As Object, ByVal e As Menu.AddSpellItemsToMenu.SpellItemEventArgs) Handles SpellMenuItems.WordIgnored
         Try
             DictionaryIgnoreWord(e.Word)

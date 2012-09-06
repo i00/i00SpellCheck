@@ -18,10 +18,6 @@ Partial Class SpellCheckTextBox
 
 #Region "Repaint events"
 
-    Private Sub SpellCheckTextBox_DictionaryChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.DictionaryChanged
-        RepaintControl()
-    End Sub
-
     Private Sub SpellCheckTextBox_SettingsChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.SettingsChanged
         RepaintControl()
     End Sub
@@ -64,7 +60,7 @@ Partial Class SpellCheckTextBox
     End Sub
 
     Private Sub CustomPaint()
-        If OKToDraw = False Then Exit Sub
+        If OKToDraw = False OrElse parentTextBox.ClientSize.Width = 0 Then Exit Sub
 
         Dim TextHeight As Integer = System.Windows.Forms.TextRenderer.MeasureText("Ag", parentTextBox.Font).Height
         Dim BufferWidth As Integer = System.Windows.Forms.TextRenderer.MeasureText("--", parentTextBox.Font).Width

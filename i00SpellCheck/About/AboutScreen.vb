@@ -29,6 +29,7 @@ Public Class AboutScreen
     Public Sub New()
         InitializeComponent()
         Me.Size = New Size(400, 400)
+        Me.Icon = My.Resources.Icon1
     End Sub
 
     Private Sub AboutScreen_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load

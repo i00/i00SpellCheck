@@ -1,4 +1,6 @@
-﻿Imports System.Drawing
+﻿'This code was origionaly taken from http://vbcity.com/forums/t/38841.aspx
+
+Imports System.Drawing
 Imports System.Runtime.InteropServices
 
 Public Class IconExtraction

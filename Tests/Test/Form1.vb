@@ -258,12 +258,15 @@ Public Class Form1
     End Sub
 
     Private Sub tsbSpellCheck_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbSpellCheck.Click
-        For Each item In tabSpellControls.SelectedTab.Controls.OfType(Of Control)()
-            Dim iSpellCheckDialog = TryCast(item.SpellCheck, i00SpellCheck.SpellCheckControlBase.iSpellCheckDialog)
-            If iSpellCheckDialog IsNot Nothing Then
+        Dim control As Control = tabSpellControls.SelectedTab
+        Do Until control Is Nothing
+            Dim iSpellCheckDialog = TryCast(control.SpellCheck, i00SpellCheck.SpellCheckControlBase.iSpellCheckDialog)
+            If iSpellCheckDialog IsNot Nothing AndAlso control.SpellCheck.CurrentDictionary.Loading = False Then
                 iSpellCheckDialog.ShowDialog()
+                Exit Sub
             End If
-        Next
+            control = tabSpellControls.SelectedTab.GetNextControl(control, True)
+        Loop
     End Sub
 
     Private Sub tsbProperties_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbProperties.Click
@@ -364,4 +367,39 @@ Public Class Form1
         End If
     End Sub
 
+    Private Sub tsbEditDictionary_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbEditDictionary.Click
+        Dim ctl As Control = tabSpellControls.SelectedTab
+        Do Until ctl Is Nothing
+            If ctl.SpellCheck IsNot Nothing AndAlso ctl.SpellCheck.CurrentDictionary.Loading = False Then
+
+                Dim controls As New List(Of Control)
+                Dim AllControlsWithSameDict = (From xItem In ctl.SpellCheck.AllControlsWithSameDict() Select xItem.Control).ToArray
+                If AllControlsWithSameDict.Count > 1 Then
+                    Using MessageBoxManager As New MessageBoxManager
+                        MessageBoxManager.Yes = "Just this"
+                        MessageBoxManager.No = "All controls"
+                        Select Case MsgBox("Do you want to modify the dictionary for just this control or all " & AllControlsWithSameDict.Count & " controls that share this dictionary?", MsgBoxStyle.YesNoCancel Or MsgBoxStyle.Question)
+                            Case MsgBoxResult.Yes 'Just this
+                                controls.Add(ctl)
+                            Case MsgBoxResult.No 'All controls
+                                controls.AddRange(AllControlsWithSameDict)
+                            Case MsgBoxResult.Cancel
+                                Return
+                        End Select
+                    End Using
+                Else
+                    'this is the only control using this dict... just do this one
+                    controls.Add(ctl)
+                End If
+                Dim NewDict = ctl.SpellCheck.CurrentDictionary.ShowUIEditor()
+                For Each item In controls
+                    item.SpellCheck.CurrentDictionary = NewDict
+                Next
+
+                Exit Sub
+            End If
+
+                ctl = tabSpellControls.SelectedTab.GetNextControl(ctl, True)
+        Loop
+    End Sub
 End Class

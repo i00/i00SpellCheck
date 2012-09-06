@@ -54,10 +54,6 @@ Public Class SpellCheckFastColoredTextBox
         CaseErrorStyle.Color = Settings.CaseMistakeColor
     End Sub
 
-    Private Sub SpellCheckFastColoredTextBox_DictionaryChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.DictionaryChanged
-        RepaintControl()
-    End Sub
-
     'Repaint control when settings are changed
     Private Sub SpellCheckFastColoredTextBox_SettingsChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.SettingsChanged
         LoadSettingsToObjects()

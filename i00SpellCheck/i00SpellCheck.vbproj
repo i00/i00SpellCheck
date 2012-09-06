@@ -17,7 +17,7 @@
     <OptionCompare>Binary</OptionCompare>
     <OptionStrict>On</OptionStrict>
     <OptionInfer>On</OptionInfer>
-    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -90,7 +90,8 @@
     <Compile Include="Controls\HTML\Components\Render.vb" />
     <Compile Include="Controls\HTML\MenuItem.vb">
     </Compile>
-    <Compile Include="Controls\MenuTextSeperator.vb" />
+    <Compile Include="Controls\MenuTextSeperator.vb">
+    </Compile>
     <Compile Include="Controls\SplitButton.vb">
     </Compile>
     <Compile Include="Extras\Crossword Generator\CrossWordGenerator.vb" />
@@ -101,9 +102,11 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Extras\Crossword Generator\TransparentToolStrip.vb" />
-    <Compile Include="Misc\CollectionToStringConverter.vb" />
+    <Compile Include="Spell Check\Controls\TextBox\Dialog\CollectionToStringConverter.vb" />
+    <Compile Include="Misc\KeyToolbarHelper.vb" />
     <Compile Include="Spell Check\Controls\DataGridView\DataGridView.vb" />
     <Compile Include="Misc\PluginManager.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base Ext\UserDictionary\UserDictionaryBase.vb" />
     <Compile Include="Spell Check\Engine\Dictionary\Base\Interfaces\iAnagram.vb" />
     <Compile Include="Spell Check\Engine\Dictionary\Base\Formatting.vb" />
     <Compile Include="Spell Check\Engine\Dictionary\Base\DictionaryEditor.vb" />
@@ -129,22 +132,25 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Spell Check\Engine\iTestHarness.vb" />
-    <Compile Include="Spell Check\Engine\Menu.vb" />
+    <Compile Include="Spell Check\Engine\Menu.vb">
+    </Compile>
     <Compile Include="Spell Check\Engine\SpellCheckControlBase.vb" />
     <Compile Include="Misc\clsImageFilters.vb" />
     <Compile Include="Misc\DrawingFunctions.vb" />
     <Compile Include="Controls\BufferedPanel.vb" />
-    <Compile Include="Controls\ExtendedListView.vb">
+    <Compile Include="Extras\Crossword Generator\ExtendedListView.vb">
     </Compile>
     <Compile Include="Controls\CrossThreadHelper.vb" />
-    <Compile Include="Controls\Grid Combo\clsGridCombo.vb" />
+    <Compile Include="Controls\Grid Combo\clsGridCombo.vb">
+    </Compile>
     <Compile Include="Controls\Grid Combo\frmAlphaOverlay.vb">
     </Compile>
-    <Compile Include="Controls\clsRTBHighlight.vb">
+    <Compile Include="Extras\Crossword Generator\clsRTBHighlight.vb">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Controls\HTML\Components\Parser.vb" />
-    <Compile Include="Controls\tsiColorPicker.vb" />
+    <Compile Include="Controls\tsiColorPicker.vb">
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -160,9 +166,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Misc\Serialization\Compress.vb" />
-    <Compile Include="Misc\Serialization\Encrypt.vb" />
-    <Compile Include="Misc\Serialization\Serialize.vb" />
     <Compile Include="Spell Check\Engine\Definitions.vb" />
     <Compile Include="Spell Check\Engine\Controls\HTMLSpellCheck.vb">
     </Compile>
@@ -959,7 +962,7 @@
     <Content Include="def\wood.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Icon.ico" />
+    <None Include="Resources\Icon.ico" />
     <None Include="Resources\Filter.png" />
     <None Include="Resources\info.png" />
     <None Include="Resources\error.png" />

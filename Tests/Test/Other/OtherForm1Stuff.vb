@@ -34,6 +34,20 @@ Partial Class Form1
 
     End Sub
 
+    Private Function ExtractIcon(ByVal file As String, ByVal Large As Boolean) As Bitmap
+        Using icon As Icon = icon.ExtractAssociatedIcon(file)
+            If Large Then
+                Return icon.ToBitmap
+            Else
+                ExtractIcon = New Bitmap(16, 16)
+                Using g = Graphics.FromImage(ExtractIcon)
+                    g.InterpolationMode = Drawing2D.InterpolationMode.High
+                    g.DrawIcon(icon, New Rectangle(0, 0, ExtractIcon.Width, ExtractIcon.Height))
+                End Using
+            End If
+        End Using
+    End Function
+
     Private Sub Form1_Load_2(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 
         Dim SpellCheckAssembly = System.Reflection.Assembly.Load("i00SpellCheck")
@@ -41,14 +55,16 @@ Partial Class Form1
             'qwertyuiop - should use something like: ... but it doesn't work for UNC's
             '... = System.Drawing.Icon.ExtractAssociatedIcon(Assembly)
             tsbAbout.ToolTipText = "About " & SpellCheckAssembly.GetName.Name & " " & SpellCheckAssembly.GetName.Version.ToString
-            
-            tsbAbout.Image = IconExtraction.GetDefaultIcon(SpellCheckAssembly.Location, IconExtraction.IconSize.SmallIcon).ToBitmap
+
+            tsbAbout.Image = ExtractIcon(SpellCheckAssembly.Location, False)
             tsbSpellCheck.Image = tsbAbout.Image
-            Me.Icon = IconExtraction.GetDefaultIcon(SpellCheckAssembly.Location, IconExtraction.IconSize.LargeIcon)
+            Me.Icon = Icon.ExtractAssociatedIcon(SpellCheckAssembly.Location)
         End If
 
         Dim ToolBoxIcon As New ToolboxBitmapAttribute(GetType(PropertyGrid))
         tsbProperties.Image = ToolBoxIcon.GetImage(GetType(PropertyGrid), False)
+
+
 
         Dim URLIcon = IconExtraction.GetDefaultIcon(".url", IconExtraction.IconSize.SmallIcon).ToBitmap
         tsbi00Productions.Image = URLIcon
@@ -125,7 +141,7 @@ Partial Class Form1
         End If
 
         UpdateEnabledCheck()
-
+        tabSpellControls_SelectedIndexChanged(tabSpellControls, EventArgs.Empty)
     End Sub
 
     Private Class FavIconData

@@ -62,6 +62,7 @@ Partial Class Form1
         Me.ilTabSpellControls = New System.Windows.Forms.ImageList(Me.components)
         Me.ToolStrip3 = New System.Windows.Forms.ToolStrip
         Me.tsiEnabled = New System.Windows.Forms.ToolStripButton
+        Me.tsbEditDictionary = New System.Windows.Forms.ToolStripButton
         Me.DataGridViewTextBoxColumn1 = New System.Windows.Forms.DataGridViewTextBoxColumn
         Me.ToolStrip1.SuspendLayout()
         Me.ToolStrip2.SuspendLayout()
@@ -364,7 +365,7 @@ Partial Class Form1
         'ToolStrip3
         '
         Me.ToolStrip3.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden
-        Me.ToolStrip3.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsbSpellCheck, Me.tsbProperties, Me.tsiEnabled})
+        Me.ToolStrip3.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsbSpellCheck, Me.tsbProperties, Me.tsiEnabled, Me.tsbEditDictionary})
         Me.ToolStrip3.Location = New System.Drawing.Point(0, 25)
         Me.ToolStrip3.Name = "ToolStrip3"
         Me.ToolStrip3.Size = New System.Drawing.Size(624, 25)
@@ -378,6 +379,15 @@ Partial Class Form1
         Me.tsiEnabled.Name = "tsiEnabled"
         Me.tsiEnabled.Size = New System.Drawing.Size(53, 22)
         Me.tsiEnabled.Text = "Enabled"
+        '
+        'tsbEditDictionary
+        '
+        Me.tsbEditDictionary.AutoToolTip = False
+        Me.tsbEditDictionary.Image = CType(resources.GetObject("tsbEditDictionary.Image"), System.Drawing.Image)
+        Me.tsbEditDictionary.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.tsbEditDictionary.Name = "tsbEditDictionary"
+        Me.tsbEditDictionary.Size = New System.Drawing.Size(104, 22)
+        Me.tsbEditDictionary.Text = "Edit Dictionary"
         '
         'DataGridViewTextBoxColumn1
         '
@@ -446,5 +456,6 @@ Partial Class Form1
     Friend WithEvents DataGridViewTextBoxColumn1 As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents tsbDonate As System.Windows.Forms.ToolStripButton
     Friend WithEvents ilTabSpellControls As System.Windows.Forms.ImageList
+    Friend WithEvents tsbEditDictionary As System.Windows.Forms.ToolStripButton
 
 End Class

@@ -79,7 +79,7 @@ Partial Class frmDictionaryEditor
         '
         'cbcIgnore
         '
-        Me.cbcIgnore.DataPropertyName = "pIgnore"
+        Me.cbcIgnore.DataPropertyName = "Ignore"
         Me.cbcIgnore.Frozen = True
         Me.cbcIgnore.HeaderText = "Ignore"
         Me.cbcIgnore.MinimumWidth = 43
@@ -88,7 +88,7 @@ Partial Class frmDictionaryEditor
         '
         'tbcWord
         '
-        Me.tbcWord.DataPropertyName = "pEntry"
+        Me.tbcWord.DataPropertyName = "Word"
         Me.tbcWord.HeaderText = "Word"
         Me.tbcWord.MinimumWidth = 100
         Me.tbcWord.Name = "tbcWord"
@@ -136,8 +136,8 @@ Partial Class frmDictionaryEditor
     Friend WithEvents tsbSave As System.Windows.Forms.ToolStripButton
     Friend WithEvents tsbOpen As System.Windows.Forms.ToolStripButton
     Friend WithEvents dgvDictItems As i00BindingList.DataGridView
-    Friend WithEvents cbcIgnore As System.Windows.Forms.DataGridViewCheckBoxColumn
-    Friend WithEvents tbcWord As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents tsKeys As System.Windows.Forms.ToolStrip
     Friend WithEvents ToolStripLabel1 As System.Windows.Forms.ToolStripLabel
+    Friend WithEvents cbcIgnore As System.Windows.Forms.DataGridViewCheckBoxColumn
+    Friend WithEvents tbcWord As System.Windows.Forms.DataGridViewTextBoxColumn
 End Class

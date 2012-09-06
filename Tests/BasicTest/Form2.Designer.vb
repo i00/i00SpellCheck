@@ -33,7 +33,7 @@ Partial Class Form2
         Me.TextBox1.Multiline = True
         Me.TextBox1.Name = "TextBox1"
         Me.TextBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.TextBox1.Size = New System.Drawing.Size(284, 264)
+        Me.TextBox1.Size = New System.Drawing.Size(384, 262)
         Me.TextBox1.TabIndex = 0
         Me.TextBox1.Text = "This form has absolutly NO user code in it... ntice how it is spell checked this " & _
             "is because the spell checkr will automatically spellcheck all owned forms also :" & _
@@ -43,8 +43,9 @@ Partial Class Form2
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(284, 264)
+        Me.ClientSize = New System.Drawing.Size(384, 262)
         Me.Controls.Add(Me.TextBox1)
+        Me.MinimumSize = New System.Drawing.Size(400, 300)
         Me.Name = "Form2"
         Me.Text = "Owned form test"
         Me.ResumeLayout(False)

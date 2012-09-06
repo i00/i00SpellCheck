@@ -120,12 +120,16 @@ Public Class frmCrosswordGenerator
         Select Case cboDict.SelectedItem.ToString
             Case "Default (definitions only)"
                 dict = New FlatFileDictionary
-                dict.WordList.AddRange((From xItem In Definitions.DefaultDefinitions.GetWordList Select New FlatFileDictionary.DictionaryItem With {.Entry = xItem, .ItemState = FlatFileDictionary.DictionaryItem.eItemState.Correct}).ToArray)
+                For Each item In (From xItem In Definitions.DefaultDefinitions.GetWordList).ToArray
+                    dict.IndexedDictionary.Add(item)
+                Next
             Case "Default"
                 dict = TryCast(Dictionary.DefaultDictionary, FlatFileDictionary)
             Case Else 'custom
                 dict = New FlatFileDictionary
-                dict.WordList.AddRange(From xItem In System.Text.RegularExpressions.Regex.Matches(txtCustomDict.Text, "(?<=\b)\w+?(?=\b)").OfType(Of System.Text.RegularExpressions.Match)() Where xItem.Value <> "" Select New FlatFileDictionary.DictionaryItem(xItem.Value, FlatFileDictionary.DictionaryItem.eItemState.Correct))
+                For Each item In (From xItem In System.Text.RegularExpressions.Regex.Matches(txtCustomDict.Text, "(?<=\b)\w+?(?=\b)").OfType(Of System.Text.RegularExpressions.Match)() Where xItem.Value <> "" Select xItem.Value).ToArray
+                    dict.IndexedDictionary.Add(item)
+                Next
         End Select
 
         If dict Is Nothing Then

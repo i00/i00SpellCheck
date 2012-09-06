@@ -18,7 +18,7 @@ Partial Class FlatFileDictionary
 
 #Region "Check that Word is in the Dictionary"
 
-    Public Overrides Function SpellCheckWord(ByVal Word As String) As SpellCheckWordError
+    Public Overrides Function SpellCheckWordNonUser(ByVal Word As String) As Dictionary.SpellCheckWordError
         If Word = "" Then Return SpellCheckWordError.OK
         'Doing this directly on the word object didnot work????:
         Dim theWord = Word
@@ -33,90 +33,43 @@ Partial Class FlatFileDictionary
             Return SpellCheckWordError.OK 'not in dic
         End If
 
-        SpellCheckWord = SpellCheckWordError.SpellError
-        Dim DicWords() As DictionaryItem = Nothing
+        SpellCheckWordNonUser = SpellCheckWordError.SpellError
 
         'add words that start with that letter only
-        DicWords = GetSectionDict(Word)
+        Dim DicWords = IndexedDictionary.Item(Word)
 
-        'add user dictionary ...
-        Dim UserDict = GetUserDict()
-        If UserDict IsNot Nothing Then
-            If DicWords Is Nothing Then
-                DicWords = UserDict
-            Else
-                DicWords = DicWords.Union(UserDict).ToArray
+        If DicWords Is Nothing Then
+            'allow word in caps...
+            If Formatting.AllInCaps(Word) Then
+                Return SpellCheckWordError.OK
             End If
+            Return SpellCheckWordError.SpellError
         End If
 
-
-        If DicWords Is Nothing Then GoTo FinalChecks
-
-        DicWords = (From xItem In DicWords Where LCase(xItem.Entry) = LCase(theWord) AndAlso xItem.ItemState <> DictionaryItem.eItemState.Delete Select xItem).ToArray
+        DicWords = (From xItem In DicWords Where LCase(xItem) = LCase(theWord)).ToList
 
         For Each iDicWord In DicWords
             'words found
-            If iDicWord.Entry = LCase(iDicWord.Entry) Then
-                'word is not case sensitive
-                If iDicWord.ItemState = DictionaryItem.eItemState.Ignore Then
-                    Return SpellCheckWordError.Ignore
-                Else
-                    'check for funny case ... if we have more than one letter and the word isn't in upper case
-                    If Word.Length > 1 AndAlso Word.ToUpper <> Word Then
-                        Dim AllButFirst = Word.Substring(1, Word.Length - 1)
-                        If AllButFirst <> AllButFirst.ToLower Then
-                            'interesting case
-                            SpellCheckWord = SpellCheckWordError.CaseError
-                        Else
-                            SpellCheckWord = SpellCheckWordError.OK
-                        End If
-                    Else
-                        Return SpellCheckWordError.OK
-                    End If
-                End If
+            Dim WordCaseOK = Formatting.CaseOK(Word, iDicWord)
+            If WordCaseOK Then
+                Return SpellCheckWordError.OK
             Else
-                'word is case sensitive :(
-                For iLetter = 1 To Len(iDicWord.Entry)
-                    Dim DicLetter = CChar(Mid(iDicWord.Entry, iLetter, 1))
-                    Dim Letter = CChar(Mid(theWord, iLetter, 1))
-                    If DicLetter = UCase(DicLetter) Then
-                        'this letter needs to be in caps... so check it in the orig word
-                        If Letter = DicLetter Then
-                            'we are ok
-                        Else
-                            'we couldn't match this iDicWord
-                            SpellCheckWord = SpellCheckWordError.CaseError
-                            GoTo NextWord
-                        End If
-                    End If
-                Next
-                'if we made it this far all caps are matched :)
-                If iDicWord.ItemState = DictionaryItem.eItemState.Ignore Then
-                    Return SpellCheckWordError.Ignore
-                Else
-                    Return SpellCheckWordError.OK
-                End If
+                SpellCheckWordNonUser = SpellCheckWordError.CaseError
+                'bad case
             End If
-NextWord:
         Next
-
-FinalChecks:
-        'we are not in the dictionary :(
-
-        '... check for special cases... eg all in caps - CEO
-        Dim ChrsInWord = CStr((From xItem In theWord Select xItem Where Asc(LCase(xItem)) >= 97 AndAlso Asc(LCase(xItem)) <= 122).ToArray)
-        If ChrsInWord = UCase(ChrsInWord) Then
-            'all letters in this word are caps
-            Return SpellCheckWordError.OK 'not in dic
-        End If
-
+       
     End Function
 
 #End Region
 
 #Region "Spelling Suggestions"
 
-    Public Overrides Function SpellCheckSuggestions(ByVal Word As String) As List(Of SpellCheckSuggestionInfo)
+    Private Function GetUserAddedWords() As String()
+        Return (From xItem In UserWordList Where xItem.State = SpellCheckWordError.OK Select xItem.Word).ToArray
+    End Function
+
+    Public Overrides Function SpellCheckSuggestionsNonUser(ByVal Word As String) As List(Of SpellCheckSuggestionInfo)
         Dim leewaynum As Integer
         Dim leewaypct As Double
 
@@ -147,27 +100,18 @@ FinalChecks:
         'this makes words such as runnning match running 1st then everything else
         Dim theWordNoDups = System.Text.RegularExpressions.Regex.Replace(theWord.ToLower, "(.)(\1)+", "$1")
 
-        Dim DicWords() As DictionaryItem = Nothing
+        'Dim DicWords() As String = Nothing
 
         'add words that start with that letter only
-        DicWords = GetSectionDict(Word)
+        Dim DicWords As List(Of String) = IndexedDictionary.Item(Word)
+        If DicWords Is Nothing Then Return Nothing
 
-        'add user dictionary ...
-        Dim UserDict = GetUserDict()
-        If UserDict IsNot Nothing Then
-            If DicWords Is Nothing Then
-                DicWords = UserDict
-            Else
-                DicWords = DicWords.Union(UserDict).ToArray
-            End If
-        End If
-        If DicWords Is Nothing Then
-            Return New List(Of SpellCheckSuggestionInfo)
-        End If
+        'add words from user dict
+        DicWords.AddRange(GetUserAddedWords)
 
-        Dim CutDownDict = (From xItem In DicWords Where xItem.ItemState <> DictionaryItem.eItemState.Delete AndAlso xItem.Entry.ToLower.StartsWith(Left(theWord.ToLower, 1)) AndAlso Len(xItem.Entry) > txtlen - leewaynum AndAlso Len(xItem.Entry) < txtlen + leewaynum Group xItem By Entry = xItem.Entry Into g = Group Select g(0).Entry).ToArray
+        Dim CutDownDict = (From xItem In DicWords Where xItem.ToLower.StartsWith(Left(theWord.ToLower, 1)) AndAlso Len(xItem) > txtlen - leewaynum AndAlso Len(xItem) < txtlen + leewaynum).ToArray
 
-        SpellCheckSuggestions = New List(Of SpellCheckSuggestionInfo)
+        SpellCheckSuggestionsNonUser = New List(Of SpellCheckSuggestionInfo)
 
         'Dim StartTime = Environment.TickCount
         For Each iWord In CutDownDict
@@ -237,14 +181,14 @@ FinalChecks:
                 If System.Text.RegularExpressions.Regex.Replace(iWord.ToLower, "(.)(\1)+", "$1") = theWordNoDups Then
                     Closeness = -1
                 End If
-                SpellCheckSuggestions.Add(New SpellCheckSuggestionInfo(Closeness, SugguestionTxt))
+                SpellCheckSuggestionsNonUser.Add(New SpellCheckSuggestionInfo(Closeness, SugguestionTxt))
             End If
 
             'End If
         Next
-        If SpellCheckSuggestions.Count > 0 Then
-            Dim MaxCloseness = SpellCheckSuggestions.Max(Function(x As SpellCheckSuggestionInfo) x.Closness)
-            For Each iSuggest In (From xItem In SpellCheckSuggestions Where xItem.Closness = -1).ToArray
+        If SpellCheckSuggestionsNonUser.Count > 0 Then
+            Dim MaxCloseness = SpellCheckSuggestionsNonUser.Max(Function(x As SpellCheckSuggestionInfo) x.Closness)
+            For Each iSuggest In (From xItem In SpellCheckSuggestionsNonUser Where xItem.Closness = -1).ToArray
                 iSuggest.Closness = MaxCloseness + 1
             Next
         End If

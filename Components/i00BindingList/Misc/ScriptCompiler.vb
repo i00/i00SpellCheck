@@ -218,7 +218,7 @@ Public Class ScriptCompiler
             a = CompilerResults.CompiledAssembly
         Catch ex As Exception
             Dim errors = (From xItem In CompilerResults.Errors.OfType(Of System.CodeDom.Compiler.CompilerError)() Where xItem.IsWarning = False).ToList
-            Throw New ScripCompilerException(errors.Count & " error" & If(errors.Count = 1, "", "s") & " occured when compilling, check CompilerResults for more information", errors)
+            Throw New ScripCompilerException(errors)
         End Try
         If CompileOnly Then Return Nothing
 
@@ -237,12 +237,11 @@ Public Class ScriptCompiler
         Inherits Exception
 
         Public errors As List(Of CompilerError)
-        Public Sub New(ByVal message As String, ByVal errors As List(Of CompilerError))
-            MyBase.New(message)
+        Public Sub New(ByVal errors As List(Of CompilerError))
+            MyBase.New(errors.Count & " error" & If(errors.Count = 1, "", "s") & " occured when compilling: " & Join((From xItem In errors Select xItem.ErrorText).ToArray, vbCrLf))
             Me.errors = errors
         End Sub
 
     End Class
-
 
 End Class

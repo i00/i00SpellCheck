@@ -4,7 +4,7 @@
     Public Function ScrabbleLookup(ByVal Letters As String) As System.Collections.Generic.List(Of Dictionary.Interfaces.ScrabbleResult) Implements Dictionary.Interfaces.iScrabble.ScrabbleLookup
         ScrabbleLookup = New List(Of Interfaces.ScrabbleResult)
 
-        Dim Dict() As String = (From xItem In WordList Where xItem.ItemState <> DictionaryItem.eItemState.Delete Select xItem.Entry.ToLower).ToArray
+        Dim Dict() As String = (From xItem In IndexedDictionary.GetFullList Select xItem.ToLower).ToArray
 
         For Each iDict In Dict
             Dim CheckLetters = Letters

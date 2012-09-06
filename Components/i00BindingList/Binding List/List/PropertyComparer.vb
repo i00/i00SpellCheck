@@ -1,4 +1,6 @@
-﻿Imports System.Reflection
+﻿'This code was origionaly taken from http://social.msdn.microsoft.com/forums/en-US/winformsdatacontrols/thread/43069cef-9f0a-4854-a5e7-42b701abc75e/
+
+Imports System.Reflection
 Imports System.ComponentModel
 
 <System.ComponentModel.DesignerCategory("")> _

@@ -18,11 +18,40 @@ Partial Public MustInherit Class Dictionary
 
 #Region "Loading / Saving"
 
-    Public MustOverride ReadOnly Property Loading() As Boolean
+    Dim mc_Loading As Boolean
+    Public ReadOnly Property Loading() As Boolean
+        Get
+            Return mc_Loading
+        End Get
+    End Property
 
-    Public MustOverride Sub LoadFromFile(ByVal Filename As String)
+    Public MustOverride Sub LoadFromFileInternal(ByVal Filename As String)
 
-    Public MustOverride Sub Save(Optional ByVal FileName As String = "", Optional ByVal ForceFullSave As Boolean = False)
+    Public Sub LoadFromFile(ByVal Filename As String)
+        mc_Loading = True
+
+        LoadFromFileInternal(Filename)
+
+        mc_Loading = False
+        mc_Filename = Filename
+    End Sub
+
+    Public MustOverride Sub SaveInternal(ByVal Filename As String, Optional ByVal ForceFullSave As Boolean = False)
+
+    Public Sub Save(Optional ByVal FileName As String = "", Optional ByVal ForceFullSave As Boolean = False)
+        If FileName = "" Then FileName = Me.Filename
+        If FileName = "" Then
+            Throw New Exception("Dictionary filename must be specified as no dictionary has been loaded yet")
+        End If
+
+        'if different filename or file doesn't exist then need a full save
+        If ForceFullSave = False AndAlso (mc_Filename <> FileName OrElse FileIO.FileSystem.FileExists(FileName) = False) Then
+            ForceFullSave = True
+        End If
+
+        SaveInternal(FileName, ForceFullSave)
+        mc_Filename = FileName
+    End Sub
 
 #End Region
 
@@ -44,17 +73,33 @@ Partial Public MustInherit Class Dictionary
         SpellError
         CaseError
         Ignore
+
+        NotInDictionary = -1
     End Enum
 
     Public MustOverride Function SpellCheckWord(ByVal Word As String) As SpellCheckWordError
 
 #End Region
 
-    Public MustOverride ReadOnly Property Filename() As String
+    Dim mc_Filename As String
+
+    Protected Friend Sub SetFilename(ByVal Filename As String)
+        mc_Filename = Filename
+    End Sub
+
+    Public ReadOnly Property Filename() As String
+        Get
+            Return mc_Filename
+        End Get
+    End Property
+
+    Public MustOverride ReadOnly Property DicFileFilter() As String
 
     Public MustOverride Sub Add(ByVal Item As String)
 
     Public MustOverride Sub Ignore(ByVal Item As String)
+
+    Public MustOverride Sub UnIgnore(ByVal Item As String)
 
     Public MustOverride Sub Remove(ByVal Item As String)
 

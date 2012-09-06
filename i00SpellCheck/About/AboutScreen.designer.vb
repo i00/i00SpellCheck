@@ -292,7 +292,6 @@ Partial Class AboutScreen
         Me.ClientSize = New System.Drawing.Size(784, 566)
         Me.Controls.Add(Me.bpLogo)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow
-        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MinimumSize = New System.Drawing.Size(364, 305)
         Me.Name = "AboutScreen"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen

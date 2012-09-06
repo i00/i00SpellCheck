@@ -178,6 +178,7 @@ Public Class Menu
         Public Event WordRemoved(ByVal sender As Object, ByVal e As SpellItemEventArgs)
         Public Event WordAdded(ByVal sender As Object, ByVal e As SpellItemEventArgs)
         Public Event WordIgnored(ByVal sender As Object, ByVal e As SpellItemEventArgs)
+        Public Event WordUnIgnored(ByVal sender As Object, ByVal e As SpellItemEventArgs)
 
         Private Sub SpellItemClick(ByVal sender As Object, ByVal e As System.EventArgs)
             Dim tsiSpellingSuggestion = TryCast(sender, CustomItems.tsiSpellingSuggestion)
@@ -197,6 +198,13 @@ Public Class Menu
             Dim tsiSpellingSuggestion = TryCast(sender, CustomItems.tsiSpellingSuggestion)
             If tsiSpellingSuggestion IsNot Nothing Then
                 RaiseEvent WordAdded(Me, New SpellItemEventArgs() With {.Word = tsiSpellingSuggestion.UnderlyingValue})
+            End If
+        End Sub
+
+        Private Sub SpellUnIgnoreWordClick(ByVal sender As Object, ByVal e As System.EventArgs)
+            Dim tsiSpellingSuggestion = TryCast(sender, CustomItems.tsiSpellingSuggestion)
+            If tsiSpellingSuggestion IsNot Nothing Then
+                RaiseEvent WordUnIgnored(Me, New SpellItemEventArgs() With {.Word = tsiSpellingSuggestion.UnderlyingValue})
             End If
         End Sub
 
@@ -281,7 +289,10 @@ Public Class Menu
                     End If
                     Select Case Result
                         Case i00SpellCheck.Dictionary.SpellCheckWordError.Ignore
-                            'un ignore?
+                            'unignore
+                            Dim tsi = New CustomItems.tsiSpellingSuggestion("Don't Ignore " & NiceWord, NiceWord, My.Resources.Ignore)
+                            AddHandler tsi.Click, AddressOf SpellUnIgnoreWordClick
+                            ContextMenuStrip.Items.Add(tsi)
                         Case Dictionary.SpellCheckWordError.SpellError, Dictionary.SpellCheckWordError.CaseError
                             Suggestions = (From xItem In Dictionary.SpellCheckSuggestions(Word) Order By xItem.Closness Descending).ToList
                             If Result = i00SpellCheck.Dictionary.SpellCheckWordError.CaseError Then

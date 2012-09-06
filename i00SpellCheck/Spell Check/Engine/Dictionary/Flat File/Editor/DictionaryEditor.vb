@@ -18,13 +18,8 @@ Partial Class FlatFileDictionary
 
     Public Overrides Function ShowUIEditor() As Dictionary
         Using frmDictionaryEditor As New frmDictionaryEditor
+            'needed to create a new dictionary object - otherwise it would not run "set" in the underlying property
             Return frmDictionaryEditor.ShowDialog(Me)
-            ''qwertyuiop - needed to create a new dictionary object - otherwise it would not run "set" in the underlying property
-            'Dim DictOut As New Dictionary
-            'DictOut.AddRange(Dict)
-            'DictOut.Filename = Dict.Filename
-            'Return DictOut
-            'Return Me
         End Using
     End Function
 

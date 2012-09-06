@@ -118,13 +118,16 @@ Public Class CrossWordGenerator
     <NonSerialized()> _
     Dim UsedWords As HashSet(Of String)
 
+
+    Dim AllWords As List(Of String)
     Public Sub Generate(ByVal Dictionary As FlatFileDictionary)
         Randomize()
         CrossWordCells.Clear()
         UsedWords = New HashSet(Of String)
         'initial word:
         'Put a random word on the board
-        Dim Word = (From xItem In Dictionary.WordList Where xItem.ItemState <> FlatFileDictionary.DictionaryItem.eItemState.Delete AndAlso xItem.Entry.Length <= Math.Max(CrossWordSize.Width, CrossWordSize.Height) And xItem.Entry.Length > 1 Order By Rnd() Select xItem.Entry).FirstOrDefault
+        AllWords = Dictionary.IndexedDictionary.GetFullList
+        Dim Word = (From xItem In AllWords Where xItem.Length <= Math.Max(CrossWordSize.Width, CrossWordSize.Height) And xItem.Length > 1 Order By Rnd()).FirstOrDefault
         'pick a point for this word on the grid
         If Word Is Nothing Then Exit Sub ' no words fit in the grid or dict empty...
         Dim across As Boolean
@@ -383,7 +386,7 @@ NextPositionX:
         End If
 
         'trim the dictionary down to the length that we want...
-        Dim Dict = (From xItem In Dictionary.WordList Where xItem.ItemState <> FlatFileDictionary.DictionaryItem.eItemState.Delete AndAlso InStr(xItem.Entry, RequiredCell.Value, CompareMethod.Text) > 0 AndAlso xItem.Entry.Length < ((EndCellVariable - StartCellVariable) + 1) AndAlso xItem.Entry.Length > 1 AndAlso UsedWords.Contains(LCase(xItem.Entry)) = False Select xItem.Entry Order By Rnd()).ToArray
+        Dim Dict = (From xItem In AllWords Where InStr(xItem, RequiredCell.Value, CompareMethod.Text) > 0 AndAlso xItem.Length < ((EndCellVariable - StartCellVariable) + 1) AndAlso xItem.Length > 1 AndAlso UsedWords.Contains(LCase(xItem)) = False Order By Rnd()).ToArray
         Pattern = "^"
         For x = StartCellVariable To EndCellVariable
             Dim cell = CellAtPoint(x, CellConstent, False, Not IsX)

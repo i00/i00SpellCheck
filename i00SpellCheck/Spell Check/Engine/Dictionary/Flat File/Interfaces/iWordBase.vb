@@ -2,7 +2,7 @@
     Implements Dictionary.Interfaces.iWordBase
 
     Private Function ContainsBaseWord(ByVal Word As String, ByVal CaseInsensitive As Boolean) As Boolean
-        Return (From xItem In WordList Where If(CaseInsensitive = False, xItem.Entry = Word, xItem.Entry.ToLower = Word.ToLower)).Count > 0
+        Return (From xItem In IndexedDictionary.GetFullList Where If(CaseInsensitive = False, xItem = Word, xItem.ToLower = Word.ToLower)).Count > 0
     End Function
 
     'makes countries becomes country etc

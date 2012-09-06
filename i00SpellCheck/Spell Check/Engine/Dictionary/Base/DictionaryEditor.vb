@@ -36,7 +36,7 @@ Partial Public Class Dictionary
     Public Overridable Function ShowUIEditor() As Dictionary
         Using ofd As New OpenFileDialog()
             ofd.FileName = Me.Filename
-            ofd.Filter = "Dictionary Files (*.dic)|*.dic|All Files (*.*)|*.*"
+            ofd.Filter = "Dictionary Files (" & Me.DicFileFilter & ")|" & Me.DicFileFilter & "|All Files (*.*)|*.*"
             ofd.FilterIndex = 0
             If ofd.ShowDialog = Windows.Forms.DialogResult.OK Then
                 Me.LoadFromFile(ofd.FileName)

@@ -6,7 +6,7 @@
 
         Letters = Letters.ToLower
 
-        Dim Dict() As String = (From xItem In WordList Where xItem.ItemState <> DictionaryItem.eItemState.Delete Select xItem.Entry.ToLower).ToArray 'fill dict here
+        Dim Dict() As String = (From xItem In IndexedDictionary.GetFullList Select xItem.ToLower).ToArray 'fill dict here
 
         Dim WordsWithMatchingChars = (From xItem In Dict Where xItem.Length = Letters.Length Select New With {.Word = xItem, .LetterCount = (From xItemWordMatch In xItem Where Letters.Contains(xItemWordMatch)).Count}).ToArray
 

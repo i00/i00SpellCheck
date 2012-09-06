@@ -364,9 +364,9 @@ Public Class HTMLToolTip
             If SetTipSize.Width > MaxTipWidth Then
                 SetTipSize.Width = MaxTipWidth
             End If
-            If RealTipPoint.Y + SetTipSize.Height > Onscreen.Bounds.Bottom Then
-                SetTipSize.Height = Onscreen.Bounds.Bottom - RealTipPoint.Y
-            End If
+            'If RealTipPoint.Y + SetTipSize.Height > Onscreen.Bounds.Bottom Then
+            '    SetTipSize.Height = Onscreen.Bounds.Bottom - RealTipPoint.Y
+            'End If
         End If
         If IsBalloon Then
             SetTipSize.Height += (BalloonBorderMargin * 2) + BalloonPointerHeight
