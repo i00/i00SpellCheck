@@ -962,6 +962,7 @@
     <Content Include="def\wood.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Redo.png" />
     <None Include="Resources\Icon.ico" />
     <None Include="Resources\Filter.png" />
     <None Include="Resources\info.png" />

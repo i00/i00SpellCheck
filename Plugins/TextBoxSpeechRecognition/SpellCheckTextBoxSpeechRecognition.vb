@@ -1,4 +1,20 @@
-﻿Imports i00SpellCheck
+﻿'i00 .Net Spell Check - TextBoxSpeechRecognition
+'©i00 Productions All rights reserved
+'Created by Kris Bennett
+'----------------------------------------------------------------------------------------------------
+'All property in this file is and remains the property of i00 Productions, regardless of its usage,
+'unless stated otherwise in writing from i00 Productions.
+'
+'Anyone wishing to use this code in their projects may do so, however are required to leave a post on
+'VBForums (under: http://www.vbforums.com/showthread.php?p=4075093) stating that they are doing so.
+'A simple "I am using i00 Spell check in my project" will surffice.
+'
+'i00 is not and shall not be held accountable for any damages directly or indirectly caused by the
+'use or miss-use of this product.  This product is only a component and thus is intended to be used 
+'as part of other software, it is not a complete software package, thus i00 Productions is not 
+'responsible for any legal ramifications that software using this product breaches.
+
+Imports i00SpellCheck
 
 'The weight is the priority order of the plugins ... if there are multiple plugins that extend the same control ...
 'in this case TextBoxBase the plugin with the heighest weight gets used ...
@@ -10,18 +26,45 @@ Public Class SpellCheckTextBoxSpeechRecognition
     'called when the control is loaded...
     Public Overrides Sub Load()
         MyBase.Load()
-        If parentTextBox IsNot Nothing Then
-            AddHandler parentTextBox.KeyUp, AddressOf parentTextBox_KeyUp
-            AddHandler parentTextBox.LostFocus, AddressOf parentTextBox_LostFocus
-            AddHandler parentTextBox.TextChanged, AddressOf parentTextBox_TextChanged
-            AddHandler parentTextBox.MouseDown, AddressOf parentTextBox_MouseDown
-            AddHandler parentTextBox.KeyPress, AddressOf parentTextBox_KeyPress
-        End If
+        AddHandler parentTextBox.KeyUp, AddressOf parentTextBox_KeyUp
     End Sub
 
-    Private WithEvents Recogniser As Speech.Recognition.SpeechRecognitionEngine
-
 #Region "Images"
+
+    Private Shared ReadOnly Property TalkImage() As Bitmap
+        Get
+            Static b As Bitmap
+            If b Is Nothing Then
+                b = New Bitmap(16, 16)
+                Using g = Graphics.FromImage(b)
+                    g.InterpolationMode = Drawing2D.InterpolationMode.High
+                    g.DrawImage(My.Resources.Talk, New Rectangle(0, 0, b.Width, b.Height))
+                End Using
+            End If
+            Return b
+        End Get
+    End Property
+
+    Private Shared ReadOnly Property StopImage() As Bitmap
+        Get
+            Static b As Bitmap
+            If b Is Nothing Then
+                b = New Bitmap(16, 16)
+                Using g = Graphics.FromImage(b)
+                    g.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
+                    Dim RectMargin As Single = CSng(b.Height / 6)
+                    Dim r As New RectangleF(RectMargin, RectMargin, b.Width - (RectMargin * 2), b.Height - (RectMargin * 2))
+                    Using lgb As New System.Drawing.Drawing2D.LinearGradientBrush(r, Color.Red, Color.Maroon, Drawing2D.LinearGradientMode.ForwardDiagonal)
+                        g.FillRectangle(lgb, r)
+                    End Using
+                    Using p As New Pen(Color.FromArgb(127, Color.Red))
+                        g.DrawRectangle(p, r.X, r.Y, r.Width, r.Height)
+                    End Using
+                End Using
+            End If
+            Return b
+        End Get
+    End Property
 
     Private Shared ReadOnly Property MicImage() As Bitmap
         Get
@@ -50,64 +93,13 @@ Public Class SpellCheckTextBoxSpeechRecognition
 
 #End Region
 
-    Private WithEvents DictateToolTip As i00SpellCheck.HTMLToolTip
-    Dim ToolTipLocation As Point
-    Dim ExistingText As String
-    Dim tmpText As String
+#Region "For the double click F12"
 
-    Dim DictateCancel As Boolean
-
-    Dim ListeningColor As String = System.Drawing.ColorTranslator.ToHtml(i00SpellCheck.DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.ControlText), Color.FromKnownColor(KnownColor.Control)))
     Private Sub parentTextBox_KeyUp(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs)
         Static LastF12Press As New Date
-        If e.KeyCode = Keys.F12 Then
+        If mc_AllowF12Dictate AndAlso e.KeyCode = Keys.F12 Then
             If (Now.Subtract(LastF12Press).TotalMilliseconds < SystemInformation.DoubleClickTime) Then
-                'do dictate
-                '... unless we are already...
-                If DictateToolTip Is Nothing Then
-                    'get position for tooltip
-                    ScrollToCaret()
-                    ToolTipLocation = Me.parentTextBox.GetPositionFromCharIndex(parentTextBox.SelectionStart)
-                    Dim lineHeight = GetLineHeightFromCharPosition(parentTextBox.SelectionStart)
-                    ToolTipLocation.Y += lineHeight
-
-                    'dictate
-                    tmpText = ""
-                    ExistingText = ""
-                    Dim [Error] As Exception = Nothing
-                    Try
-                        Recogniser = New Speech.Recognition.SpeechRecognitionEngine
-                        Try
-                            Recogniser.SetInputToDefaultAudioDevice()
-                        Catch ex As InvalidOperationException
-                            Throw New Exception("Could not set the default audio device" & vbCrLf & "Please make sure your soundcard and microphone are working correctly")
-                        End Try
-                        Recogniser.LoadGrammar(New System.Speech.Recognition.DictationGrammar)
-                        Recogniser.RecognizeAsync(Speech.Recognition.RecognizeMode.Multiple)
-                    Catch ex As Exception
-                        [Error] = ex
-                    End Try
-
-                    If [Error] Is Nothing Then
-                        'tooltip
-                        DictateCancel = False
-                        LastAudioLevel = 0
-                        DictateToolTip = New i00SpellCheck.HTMLToolTip With {.IsBalloon = True, .ToolTipTitle = "Dictate what you want typed", .ToolTipIcon = ToolTipIcon.Info}
-                        DictateToolTip.ToolTipOrientation = i00SpellCheck.HTMLToolTip.ToolTipOrientations.TopLeft
-                        DictateToolTip.Image = DirectCast(MicImageBW.Clone, Bitmap)
-                        DictateToolTip.ShowHTML("<i><font color=" & ListeningColor & ">Listening<br></i>...click this balloon or wait after you are done talking to confirm<br>...click on the textbox or press <i>&lt;Escape&gt;</i> to cancel</font>", parentTextBox, ToolTipLocation, 5000)
-                        'do something like?: '<br>...or right click the balloon when finished for corrections
-                    Else
-                        'show the error
-                        LastAudioLevel = 0
-                        DictateToolTip = New i00SpellCheck.HTMLToolTip With {.IsBalloon = True, .ToolTipTitle = "Error starting dictate", .ToolTipIcon = ToolTipIcon.Error}
-                        DictateToolTip.ToolTipOrientation = i00SpellCheck.HTMLToolTip.ToolTipOrientations.TopLeft
-                        DictateToolTip.Image = Nothing
-                        DictateToolTip.ShowHTML("<b>Error: </b>" & [Error].Message, parentTextBox, ToolTipLocation, 5000)
-                    End If
-
-                End If
-
+                DoDictate()
                 LastF12Press = New Date
             Else
                 LastF12Press = Now
@@ -117,43 +109,7 @@ Public Class SpellCheckTextBoxSpeechRecognition
         End If
     End Sub
 
-    Private Sub parentTextBox_LostFocus(ByVal sender As Object, ByVal e As System.EventArgs)
-        'cancel
-        CancelRecognition()
-    End Sub
-
-    Private Sub parentTextBox_TextChanged(ByVal sender As Object, ByVal e As System.EventArgs)
-        'cancel
-        CancelRecognition()
-    End Sub
-
-    Private Sub parentTextBox_MouseDown(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs)
-        'cancel
-        CancelRecognition()
-    End Sub
-
-    Private Sub parentTextBox_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
-        If Asc(e.KeyChar) = Keys.Escape Then
-            CancelRecognition()
-        End If
-    End Sub
-
-    Private Sub CancelRecognition()
-        DictateCancel = True
-        If DictateToolTip IsNot Nothing Then DictateToolTip.Hide()
-    End Sub
-
-
-    Private Sub CommitRecognition()
-        If DictateCancel = False Then
-            'write the spoken text
-            If tmpText <> "" Then
-                ExistingText &= " " & tmpText
-            End If
-            parentTextBox.SelectedText = Trim(ExistingText) & " "
-            DictateCancel = True
-        End If
-    End Sub
+#End Region
 
 #Region "For the test control"
 
@@ -161,102 +117,132 @@ Public Class SpellCheckTextBoxSpeechRecognition
         SetupControl = MyBase.SetupControl(Control)
         Dim TextBoxBase = TryCast(SetupControl, TextBoxBase)
         If TextBoxBase IsNot Nothing Then
-            TextBoxBase.AppendText(vbCrLf & vbCrLf & "The TextBoxSpeechRecognition project now adds speech recognition functionality to any TextBox, simply press F12 twice (quickly) to dictate what you want written!")
+            TextBoxBase.AppendText(vbCrLf & vbCrLf & "The TextBoxSpeechRecognition project now adds speech recognition functionality to any TextBox, simply press F12 twice (quickly), or right click and press Dictate to dictate what you want written!")
         End If
     End Function
 
 #End Region
 
-    Private Sub DictateToolTip_TipClick(ByVal sender As Object, ByVal e As i00SpellCheck.HTMLToolTip.TipClickEventArgs) Handles DictateToolTip.TipClick
-        CommitRecognition()
-    End Sub
+#Region "Properties"
 
-    Private Sub DictateToolTip_TipClosed(ByVal sender As Object, ByVal e As System.EventArgs) Handles DictateToolTip.TipClosed
+    Dim mc_AllowF12Dictate As Boolean = True
+    <System.ComponentModel.Category("Speech")> _
+    <System.ComponentModel.DefaultValue(True)> _
+    <System.ComponentModel.DisplayName("Allow F12 x2 to Dictate")> _
+    <System.ComponentModel.Description("Enables the double pressing of the F12 key to initialise dictation")> _
+    Public Property AllowF12Dictate() As Boolean
+        Get
+            Return mc_AllowF12Dictate
+        End Get
+        Set(ByVal value As Boolean)
+            mc_AllowF12Dictate = value
+        End Set
+    End Property
 
-        CommitRecognition()
+    Dim mc_ShowSpeakInMenu As Boolean = True
+    <System.ComponentModel.Category("Speech")> _
+    <System.ComponentModel.DefaultValue(True)> _
+    <System.ComponentModel.DisplayName("Show Speak in Menu")> _
+    <System.ComponentModel.Description("Shows the option to speek the text in the right click context menu")> _
+    Public Property ShowSpeakInMenu() As Boolean
+        Get
+            Return mc_ShowSpeakInMenu
+        End Get
+        Set(ByVal value As Boolean)
+            mc_ShowSpeakInMenu = value
+        End Set
+    End Property
 
-        If DictateToolTip IsNot Nothing Then
-            Try
-                DictateToolTip.Dispose()
-            Catch ex As Exception
+    Dim mc_ShowDictateInMenu As Boolean = True
+    <System.ComponentModel.Category("Speech")> _
+    <System.ComponentModel.DefaultValue(True)> _
+    <System.ComponentModel.DisplayName("Show Dictate in Menu")> _
+    <System.ComponentModel.Description("Shows the option to allow the user to dictate what they want typed in the right click context menu")> _
+    Public Property ShowDictateInMenu() As Boolean
+        Get
+            Return mc_ShowDictateInMenu
+        End Get
+        Set(ByVal value As Boolean)
+            mc_ShowDictateInMenu = value
+        End Set
+    End Property
 
-            End Try
+#End Region
+
+#Region "Add menu items"
+
+    Private Class tsiStandardProgress
+        Inherits tsiProgress
+        Implements i00SpellCheck.SpellCheckTextBox.StandardContextMenuStrip.StandardToolStripItem
+    End Class
+
+    Private Sub SpellCheckTextBoxSpeechRecognition_PostAddingStandardMenuItems(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.PostAddingStandardMenuItems
+
+        Dim MenuItems As New List(Of ToolStripItem)
+
+        If mc_ShowDictateInMenu Then
+            Dim tsiDictate = New StandardContextMenuStrip.StandardToolStripMenuItem("Dictate", MicImage)
+            AddHandler tsiDictate.Click, AddressOf tsiDictate_Click
+            MenuItems.Add(tsiDictate)
         End If
-        DictateToolTip = Nothing
 
-        If Recogniser IsNot Nothing Then
-            Try
-                Recogniser.RecognizeAsyncStop()
-            Catch ex As Exception
+        If mc_ShowSpeakInMenu Then
+            Dim tsiSpeak = New StandardContextMenuStrip.StandardToolStripMenuItem("Speak", TalkImage)
+            AddHandler tsiSpeak.Click, AddressOf tsiSpeak_Click
+            MenuItems.Add(tsiSpeak)
 
-            End Try
-            Recogniser = Nothing
-        End If
-    End Sub
+            If SpeechEngineHelper.Synthesizer IsNot Nothing AndAlso SpeechEngineHelper.Synthesizer.State = Speech.Synthesis.SynthesizerState.Speaking Then
+                'stop option
+                Dim tsiStopSpeak = New StandardContextMenuStrip.StandardToolStripMenuItem("Stop Speaking", StopImage)
+                AddHandler tsiStopSpeak.Click, AddressOf tsiStopSpeak_Click
+                MenuItems.Add(tsiStopSpeak)
+                SpeechEngineHelper.tsiStopSpeak = tsiStopSpeak
 
-    Dim LastAudioLevel As Integer
-    Private Sub Recogniser_AudioLevelUpdated(ByVal sender As Object, ByVal e As System.Speech.Recognition.AudioLevelUpdatedEventArgs) Handles Recogniser.AudioLevelUpdated
-        If DictateCancel Then Exit Sub
-        Dim AudioLevel = CInt(Int((e.AudioLevel / 100) * 16))
-
-        If LastAudioLevel <> AudioLevel Then
-            'redraw...
-            Dim b As New Bitmap(16, 16)
-            Using g = Graphics.FromImage(b)
-                g.DrawImageUnscaled(MicImageBW, New Point(0, 0))
-                g.SetClip(New Rectangle(0, 16 - AudioLevel, 16, AudioLevel))
-                g.DrawImageUnscaled(MicImage, New Point(0, 0))
-            End Using
-
-            If DictateToolTip.Image IsNot Nothing Then
-                DictateToolTip.Image.Dispose()
-                DictateToolTip.Image = Nothing
+                Dim tsiSpeakProgress = New tsiStandardProgress()
+                tsiSpeakProgress.Progress = SpeechEngineHelper.SpeechProgress
+                MenuItems.Add(tsiSpeakProgress)
+                SpeechEngineHelper.tsiSpeechProgress = tsiSpeakProgress
             End If
-
-            DictateToolTip.Image = b
-            DictateToolTip.ShowHTML(DictateToolTip.LastText, parentTextBox, ToolTipLocation, 3000)
-
-            LastAudioLevel = AudioLevel
         End If
 
-    End Sub
-
-    Dim strYouSaid As String = "<i><font color=" & ListeningColor & ">You Said:</font></i> "
-
-    Private Sub Recogniser_SpeechHypothesized(ByVal sender As Object, ByVal e As System.Speech.Recognition.SpeechHypothesizedEventArgs) Handles Recogniser.SpeechHypothesized
-        If DictateCancel Then Exit Sub
-        tmpText = e.Result.Text
-        DictateToolTip.ShowHTML(strYouSaid & ExistingText & "<font color=" & ListeningColor & ">" & tmpText & "</font>", parentTextBox, ToolTipLocation)
-    End Sub
-
-    'Dim InCorrectColor As String = System.Drawing.ColorTranslator.ToHtml(i00SpellCheck.DrawingFunctions.BlendColor(Color.Red, Color.FromKnownColor(KnownColor.ControlText), 127))
-
-    Private Sub Recogniser_SpeechRecognized(ByVal sender As Object, ByVal e As System.Speech.Recognition.SpeechRecognizedEventArgs) Handles Recogniser.SpeechRecognized
-        If DictateCancel Then Exit Sub
-        tmpText = ""
-        If Trim(e.Result.Text) <> "" Then
-            ''for error coloring
-            'For Each item In e.Result.Words
-            '    If (item.DisplayAttributes And Speech.Recognition.DisplayAttributes.ConsumeLeadingSpaces) = Speech.Recognition.DisplayAttributes.ConsumeLeadingSpaces AndAlso ExistingText <> "" Then
-            '        ExistingText = ExistingText.TrimEnd()
-            '    End If
-            '    ExistingText &= If(item.Confidence < 0.25, "<font color=" & InCorrectColor & "><b>", "") & item.Text & If(item.Confidence < 0.25, "</b></font>", "")
-            '    If (item.DisplayAttributes And Speech.Recognition.DisplayAttributes.OneTrailingSpace) = Speech.Recognition.DisplayAttributes.OneTrailingSpace Then
-            '        ExistingText &= " "
-            '    ElseIf (item.DisplayAttributes And Speech.Recognition.DisplayAttributes.TwoTrailingSpaces) = Speech.Recognition.DisplayAttributes.TwoTrailingSpaces Then
-            '        ExistingText &= "  "
-            '    End If
-            'Next
-
-            ExistingText &= e.Result.Text & " "
-
-            ''to play audio
-            'Dim s As New IO.MemoryStream
-            'e.Result.Audio.WriteToWaveStream(s)
-            's.Position = 0
-            'My.Computer.Audio.Play(s, AudioPlayMode.Background)
-
-            DictateToolTip.ShowHTML(strYouSaid & ExistingText, parentTextBox, ToolTipLocation, 3000)
+        If MenuItems.Count > 0 Then
+            If ContextMenuStrip.Items.Count > 0 Then
+                ContextMenuStrip.Items.Add(New StandardContextMenuStrip.StandardToolStripSeparator)
+            End If
+            For Each item In MenuItems
+                ContextMenuStrip.Items.AddRange(MenuItems.ToArray)
+            Next
         End If
     End Sub
+
+    Private Sub tsiStopSpeak_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        CancelSynthesis()
+    End Sub
+
+    Private Sub tsiSpeak_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        DoSynthesis()
+    End Sub
+
+    Private Sub tsiDictate_Click(ByVal sender As Object, ByVal e As System.EventArgs)
+        If LastMenuSpellClickReturn IsNot Nothing AndAlso LastMenuSpellClickReturn.UseMouseLocation Then
+            parentTextBox.SelectionStart = LastMenuSpellClickReturn.WordStart
+            parentTextBox.SelectionLength = 0
+        End If
+        DoDictate()
+    End Sub
+
+    Public Shared Sub CancelSynthesis()
+        SpeechEngineHelper.CancelSynthesis()
+    End Sub
+
+    Public Sub DoSynthesis()
+        SpeechEngineHelper.DoSynthesis(parentTextBox)
+    End Sub
+
+    Public Sub DoDictate()
+        SpeechEngineHelper.DoDictate(parentTextBox)
+    End Sub
+
+#End Region
+
 End Class

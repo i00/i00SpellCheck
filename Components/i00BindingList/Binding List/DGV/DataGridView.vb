@@ -132,6 +132,8 @@ Public Class DataGridView
                     End If
                 Else
                     Dim Column = Me.Columns(e.ColumnIndex)
+
+                    Dim HStyle = Column.HeaderCell.InheritedStyle
                     If Column IsNot Nothing Then
 
                         Dim CellBounds = New Rectangle(e.CellBounds.X, e.CellBounds.Y + 1, e.CellBounds.Width, e.CellBounds.Height - 2)
@@ -139,8 +141,10 @@ Public Class DataGridView
 
                         If OverColumnIndex = e.ColumnIndex Then
                             e.PaintBackground(e.CellBounds, True)
-                            Dim r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Header", 1, 1)
-                            r.DrawBackground(e.Graphics, CellBounds)
+                            If System.Windows.Forms.VisualStyles.VisualStyleRenderer.IsSupported Then
+                                Dim r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Header", 1, 1)
+                                r.DrawBackground(e.Graphics, CellBounds)
+                            End If
                             'e.Graphics.FillRectangle(Brushes.White, e.CellBounds)
 
                             Dim HighlightBounds As Rectangle
@@ -149,8 +153,20 @@ Public Class DataGridView
                             Else
                                 HighlightBounds = CellBounds
                             End If
-                            r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Header", 1, If((Control.MouseButtons And Windows.Forms.MouseButtons.Left) = Windows.Forms.MouseButtons.Left, 3, 2))
-                            r.DrawBackground(e.Graphics, HighlightBounds)
+                            If System.Windows.Forms.VisualStyles.VisualStyleRenderer.IsSupported Then
+                                Dim r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Header", 1, If((Control.MouseButtons And Windows.Forms.MouseButtons.Left) = Windows.Forms.MouseButtons.Left, 3, 2))
+                                r.DrawBackground(e.Graphics, HighlightBounds)
+                            Else
+                                If isOverWidget Then
+                                    Using p As New Pen(Color.FromKnownColor(KnownColor.ControlLightLight))
+                                        e.Graphics.DrawRectangle(p, HighlightBounds)
+                                    End Using
+                                    Using p As New Pen(Color.FromKnownColor(KnownColor.ControlDark))
+                                        e.Graphics.DrawLine(p, HighlightBounds.Left, HighlightBounds.Bottom, HighlightBounds.Right, HighlightBounds.Bottom)
+                                        e.Graphics.DrawLine(p, HighlightBounds.Right, HighlightBounds.Top, HighlightBounds.Right, HighlightBounds.Bottom)
+                                    End Using
+                                End If
+                            End If
                             'e.Graphics.FillRectangle(Brushes.Blue, HighlightBounds)
                             'e.PaintBackground(HighlightBounds, True)
                             If Column.IsDataBound AndAlso (ColumnSupportsSorting(Column) OrElse Me.SupportsFiltering <> FilteringMethods.None) AndAlso Column.ValueType IsNot GetType(System.Drawing.Image) Then
@@ -171,10 +187,17 @@ Public Class DataGridView
 
                                 If ShowDropDownArrow Then
                                     'show the widget dropdown
-                                    r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Toolbar", 4, If((Control.MouseButtons And Windows.Forms.MouseButtons.Left) = Windows.Forms.MouseButtons.Left, 1, 4))
-                                    r.DrawBackground(e.Graphics, WidgetButtonBounds)
+                                    If System.Windows.Forms.VisualStyles.VisualStyleRenderer.IsSupported Then
+                                        Dim r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Toolbar", 4, If((Control.MouseButtons And Windows.Forms.MouseButtons.Left) = Windows.Forms.MouseButtons.Left, 1, 4))
+                                        r.DrawBackground(e.Graphics, WidgetButtonBounds)
+                                    Else
+                                        'drop down arrow
+                                        Dim tsr As New ToolStripProfessionalRenderer
+                                        Using tsmi As New ToolStripMenuItem
+                                            tsr.DrawArrow(New ToolStripArrowRenderEventArgs(e.Graphics, tsmi, WidgetButtonBounds, HStyle.ForeColor, ArrowDirection.Down))
+                                        End Using
+                                    End If
                                 End If
-
                                 WidgetButtonBounds.X -= WidgetButtonBounds.Width
 
                             End If
@@ -185,19 +208,33 @@ Public Class DataGridView
                         If Column.SortMode <> DataGridViewColumnSortMode.NotSortable Then
                             Select Case Column.HeaderCell.SortGlyphDirection
                                 Case Windows.Forms.SortOrder.Ascending
-                                    Dim r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Header", 4, 1)
-                                    r.DrawBackground(e.Graphics, WidgetButtonBounds)
+                                    If System.Windows.Forms.VisualStyles.VisualStyleRenderer.IsSupported Then
+                                        Dim r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Header", 4, 1)
+                                        r.DrawBackground(e.Graphics, WidgetButtonBounds)
+                                    Else
+                                        'drop down arrow
+                                        Dim tsr As New ToolStripProfessionalRenderer
+                                        Using tsmi As New ToolStripMenuItem
+                                            tsr.DrawArrow(New ToolStripArrowRenderEventArgs(e.Graphics, tsmi, WidgetButtonBounds, HStyle.ForeColor, ArrowDirection.Up))
+                                        End Using
+                                    End If
                                 Case Windows.Forms.SortOrder.Descending
-                                    Dim r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Header", 4, 2)
-                                    r.DrawBackground(e.Graphics, WidgetButtonBounds)
+                                    If System.Windows.Forms.VisualStyles.VisualStyleRenderer.IsSupported Then
+                                        Dim r = New System.Windows.Forms.VisualStyles.VisualStyleRenderer("Header", 4, 2)
+                                        r.DrawBackground(e.Graphics, WidgetButtonBounds)
+                                    Else
+                                        'drop down arrow
+                                        Dim tsr As New ToolStripProfessionalRenderer
+                                        Using tsmi As New ToolStripMenuItem
+                                            tsr.DrawArrow(New ToolStripArrowRenderEventArgs(e.Graphics, tsmi, WidgetButtonBounds, HStyle.ForeColor, ArrowDirection.Down))
+                                        End Using
+                                    End If
                                 Case Else
                                     WidgetButtonBounds.X += WidgetButtonBounds.Width
                             End Select
                         Else
                             WidgetButtonBounds.X += WidgetButtonBounds.Width
                         End If
-
-                        Dim HStyle = Column.HeaderCell.InheritedStyle
 
                         Dim Padding = HStyle.Padding
                         If Padding = Nothing Then
@@ -216,107 +253,107 @@ Public Class DataGridView
                         TextRenderer.DrawText(e.Graphics, Column.HeaderText, HStyle.Font, ContentBounds, HStyle.ForeColor, TextStyle)
                         e.Handled = True
                     End If
-                End If
+                    End If
             Else
 
-                'data
-                '
-                If e.ColumnIndex = -1 Then
+                    'data
+                    '
+                    If e.ColumnIndex = -1 Then
 
-                Else
-                    Dim Column = Me.Columns(e.ColumnIndex)
-                    If Column IsNot Nothing Then
+                    Else
+                        Dim Column = Me.Columns(e.ColumnIndex)
+                        If Column IsNot Nothing Then
 
-                        e.Handled = True
-                        If Column.ValueType Is GetType(System.Drawing.Image) Then
-                            e.PaintBackground(e.ClipBounds, True)
-                            If e.Value Is Nothing Then
-                                If mc_NoImageImage IsNot Nothing Then
-                                    'draw the image bg... for no image...
-                                    Dim Image = NoImageImage
-                                    Dim ImageBounds = New Rectangle(e.CellBounds.X, e.CellBounds.Y, e.CellBounds.Width - 1, e.CellBounds.Height - 1)
-                                    Dim BestFitRect = DrawingFunctions.GetBestFitRect(ImageBounds, New RectangleF(0, 0, Image.Width, Image.Height), DrawingFunctions.BestFitStyle.Stretch Or DrawingFunctions.BestFitStyle.DoNotAllowEnlarge)
-                                    Using b As New Bitmap(CInt(BestFitRect.Width), CInt(BestFitRect.Height))
-                                        Using g = Graphics.FromImage(b)
-                                            g.InterpolationMode = Drawing2D.InterpolationMode.High
-                                            g.TranslateTransform(-BestFitRect.X, -BestFitRect.Y)
-                                            g.DrawImage(Image, BestFitRect)
+                            e.Handled = True
+                            If Column.ValueType Is GetType(System.Drawing.Image) Then
+                                e.PaintBackground(e.ClipBounds, True)
+                                If e.Value Is Nothing Then
+                                    If mc_NoImageImage IsNot Nothing Then
+                                        'draw the image bg... for no image...
+                                        Dim Image = NoImageImage
+                                        Dim ImageBounds = New Rectangle(e.CellBounds.X, e.CellBounds.Y, e.CellBounds.Width - 1, e.CellBounds.Height - 1)
+                                        Dim BestFitRect = DrawingFunctions.GetBestFitRect(ImageBounds, New RectangleF(0, 0, Image.Width, Image.Height), DrawingFunctions.BestFitStyle.Stretch Or DrawingFunctions.BestFitStyle.DoNotAllowEnlarge)
+                                        Using b As New Bitmap(CInt(BestFitRect.Width), CInt(BestFitRect.Height))
+                                            Using g = Graphics.FromImage(b)
+                                                g.InterpolationMode = Drawing2D.InterpolationMode.High
+                                                g.TranslateTransform(-BestFitRect.X, -BestFitRect.Y)
+                                                g.DrawImage(Image, BestFitRect)
+                                            End Using
+                                            b.Filters.Alpha() 'with alpha
+                                            e.Graphics.DrawImageUnscaled(b, New Point(CInt(BestFitRect.Location.X), CInt(BestFitRect.Location.Y)))
                                         End Using
-                                        b.Filters.Alpha() 'with alpha
-                                        e.Graphics.DrawImageUnscaled(b, New Point(CInt(BestFitRect.Location.X), CInt(BestFitRect.Location.Y)))
-                                    End Using
-                                End If
-                                TextRenderer.DrawText(e.Graphics, NoImageText, e.CellStyle.Font, e.CellBounds, DrawingFunctions.BlendColor(e.CellStyle.ForeColor, e.CellStyle.BackColor), TextFormatFlags.HorizontalCenter Or TextFormatFlags.VerticalCenter Or TextFormatFlags.NoPrefix Or TextFormatFlags.PreserveGraphicsClipping Or TextFormatFlags.PreserveGraphicsTranslateTransform)
-                            Else
-                                Dim Image = DirectCast(e.Value, Image)
-                                e.Graphics.InterpolationMode = Drawing2D.InterpolationMode.High
-                                Dim ImageBounds = New Rectangle(e.CellBounds.X, e.CellBounds.Y, e.CellBounds.Width - 1, e.CellBounds.Height - 1)
-                                DrawingFunctions.DrawImageBestFit(e.Graphics, ImageBounds, Image, DrawingFunctions.BestFitStyle.Stretch Or DrawingFunctions.BestFitStyle.DoNotAllowEnlarge)
-                            End If
-                        Else
-
-                            e.PaintBackground(e.ClipBounds, True)
-
-                            If mc_DrawUIEditorCells Then
-
-                                If e.Value IsNot Nothing Then
-                                    Dim PaintPropertyRect = New Rectangle(e.CellBounds.X + 2, CInt(Int(e.CellBounds.Y + ((e.CellBounds.Height - 15) / 2))), 19, 15)
-                                    'Dim PaintPropertyRect = New Rectangle(e.CellBounds.X + 2, e.CellBounds.Y + 2, 19, e.CellBounds.Height - 6)
-                                    If PropertyEditor.PaintProperty(e.Value, e.Graphics, PaintPropertyRect, GetColumnOverrideTypeEditor(Column)) = True Then
-                                        'Dim NiceText = System.ComponentModel.TypeDescriptor.GetConverter(e.Value).ConvertToString(e.Value)
-                                        e.Graphics.DrawRectangle(System.Drawing.SystemPens.WindowText, PaintPropertyRect)
                                     End If
+                                    TextRenderer.DrawText(e.Graphics, NoImageText, e.CellStyle.Font, e.CellBounds, DrawingFunctions.BlendColor(e.CellStyle.ForeColor, e.CellStyle.BackColor), TextFormatFlags.HorizontalCenter Or TextFormatFlags.VerticalCenter Or TextFormatFlags.NoPrefix Or TextFormatFlags.PreserveGraphicsClipping Or TextFormatFlags.PreserveGraphicsTranslateTransform)
+                                Else
+                                    Dim Image = DirectCast(e.Value, Image)
+                                    e.Graphics.InterpolationMode = Drawing2D.InterpolationMode.High
+                                    Dim ImageBounds = New Rectangle(e.CellBounds.X, e.CellBounds.Y, e.CellBounds.Width - 1, e.CellBounds.Height - 1)
+                                    DrawingFunctions.DrawImageBestFit(e.Graphics, ImageBounds, Image, DrawingFunctions.BestFitStyle.Stretch Or DrawingFunctions.BestFitStyle.DoNotAllowEnlarge)
                                 End If
-                            End If
+                            Else
 
-                            Select Case Me.SupportsFiltering()
-                                Case FilteringMethods.Basic
-                                    'qwertyuiop
-                                    'NOT IMPLEMENTED
-                                Case FilteringMethods.Advanced
-                                    Dim bs = DirectCast(Me.DataSource, AdvancedBindingSource)
-                                    Dim ThisFilterItem = (From xItem In bs.BasicFilters.OfType(Of AdvancedBindingSource.BasicFilter)() Where xItem.Field = Column.DataPropertyName).FirstOrDefault
-                                    If ThisFilterItem IsNot Nothing Then
-                                        'filtered...
+                                e.PaintBackground(e.ClipBounds, True)
 
-                                        Dim RegExString = System.Text.RegularExpressions.Regex.Escape(ThisFilterItem.Filter)
-                                        RegExString = Replace(RegExString, "\?", ".")
-                                        RegExString = Replace(RegExString, "\*", ".{0,}")
-                                        Dim FindResult = System.Text.RegularExpressions.Regex.Match(e.FormattedValue.ToString, RegExString, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-                                        If FindResult.Success Then
-                                            Dim CellBounds = New Rectangle(e.CellBounds.X, e.CellBounds.Y, e.CellBounds.Width - 1, e.CellBounds.Height - 1)
+                                If mc_DrawUIEditorCells Then
 
-                                            Dim CellSize = CellBounds.Size
-                                            CellSize.Width -= e.CellStyle.Padding.Left + e.CellStyle.Padding.Right
-                                            CellSize.Height -= e.CellStyle.Padding.Top + e.CellStyle.Padding.Bottom
-
-                                            Dim WordBounds = DrawingText.TextRendererMeasure.Measure(e.FormattedValue.ToString, e.CellStyle.Font, CellSize, DrawingText.TextRendererMeasure.TextFlagsFrom(e.CellStyle), , False)
-
-                                            Dim StartIndex = (From xItem In WordBounds Where xItem.LetterIndex = FindResult.Index).FirstOrDefault
-                                            Dim EndIndex = (From xItem In WordBounds Where xItem.LetterIndex = FindResult.Index + (FindResult.Length - 1)).FirstOrDefault
-
-                                            If StartIndex IsNot Nothing AndAlso EndIndex IsNot Nothing Then
-                                                Dim HighlightRect = New Rectangle(StartIndex.Bounds.X + CellBounds.X + e.CellStyle.Padding.Left, StartIndex.Bounds.Y + CellBounds.Y + e.CellStyle.Padding.Top, EndIndex.Bounds.Right - StartIndex.Bounds.X, EndIndex.Bounds.Bottom - StartIndex.Bounds.Y)
-
-                                                Using sb As New SolidBrush(Color.FromArgb(127, e.CellStyle.BackColor))
-                                                    e.Graphics.FillRectangle(sb, HighlightRect)
-                                                End Using
-
-                                                Using sb As New SolidBrush(Color.FromArgb(63, Color.FromKnownColor(KnownColor.Highlight)))
-                                                    e.Graphics.FillRectangle(sb, HighlightRect)
-                                                    'Using p As New Pen(sb)
-                                                    '    e.Graphics.DrawRectangle(p, HighlightRect)
-                                                    'End Using
-                                                End Using
-                                            End If
+                                    If e.Value IsNot Nothing Then
+                                        Dim PaintPropertyRect = New Rectangle(e.CellBounds.X + 2, CInt(Int(e.CellBounds.Y + ((e.CellBounds.Height - 15) / 2))), 19, 15)
+                                        'Dim PaintPropertyRect = New Rectangle(e.CellBounds.X + 2, e.CellBounds.Y + 2, 19, e.CellBounds.Height - 6)
+                                        If PropertyEditor.PaintProperty(e.Value, e.Graphics, PaintPropertyRect, GetColumnOverrideTypeEditor(Column)) = True Then
+                                            'Dim NiceText = System.ComponentModel.TypeDescriptor.GetConverter(e.Value).ConvertToString(e.Value)
+                                            e.Graphics.DrawRectangle(System.Drawing.SystemPens.WindowText, PaintPropertyRect)
                                         End If
                                     End If
-                                Case Else
-                            End Select
-                            e.PaintContent(e.ClipBounds)
+                                End If
+
+                                Select Case Me.SupportsFiltering()
+                                    Case FilteringMethods.Basic
+                                        'qwertyuiop
+                                        'NOT IMPLEMENTED
+                                    Case FilteringMethods.Advanced
+                                        Dim bs = DirectCast(Me.DataSource, AdvancedBindingSource)
+                                        Dim ThisFilterItem = (From xItem In bs.BasicFilters.OfType(Of AdvancedBindingSource.BasicFilter)() Where xItem.Field = Column.DataPropertyName).FirstOrDefault
+                                        If ThisFilterItem IsNot Nothing Then
+                                            'filtered...
+
+                                            Dim RegExString = System.Text.RegularExpressions.Regex.Escape(ThisFilterItem.Filter)
+                                            RegExString = Replace(RegExString, "\?", ".")
+                                            RegExString = Replace(RegExString, "\*", ".{0,}")
+                                            Dim FindResult = System.Text.RegularExpressions.Regex.Match(e.FormattedValue.ToString, RegExString, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                                            If FindResult.Success Then
+                                                Dim CellBounds = New Rectangle(e.CellBounds.X, e.CellBounds.Y, e.CellBounds.Width - 1, e.CellBounds.Height - 1)
+
+                                                Dim CellSize = CellBounds.Size
+                                                CellSize.Width -= e.CellStyle.Padding.Left + e.CellStyle.Padding.Right
+                                                CellSize.Height -= e.CellStyle.Padding.Top + e.CellStyle.Padding.Bottom
+
+                                                Dim WordBounds = DrawingText.TextRendererMeasure.Measure(e.FormattedValue.ToString, e.CellStyle.Font, CellSize, DrawingText.TextRendererMeasure.TextFlagsFrom(e.CellStyle), , False)
+
+                                                Dim StartIndex = (From xItem In WordBounds Where xItem.LetterIndex = FindResult.Index).FirstOrDefault
+                                                Dim EndIndex = (From xItem In WordBounds Where xItem.LetterIndex = FindResult.Index + (FindResult.Length - 1)).FirstOrDefault
+
+                                                If StartIndex IsNot Nothing AndAlso EndIndex IsNot Nothing Then
+                                                    Dim HighlightRect = New Rectangle(StartIndex.Bounds.X + CellBounds.X + e.CellStyle.Padding.Left, StartIndex.Bounds.Y + CellBounds.Y + e.CellStyle.Padding.Top, EndIndex.Bounds.Right - StartIndex.Bounds.X, EndIndex.Bounds.Bottom - StartIndex.Bounds.Y)
+
+                                                    Using sb As New SolidBrush(Color.FromArgb(127, e.CellStyle.BackColor))
+                                                        e.Graphics.FillRectangle(sb, HighlightRect)
+                                                    End Using
+
+                                                    Using sb As New SolidBrush(Color.FromArgb(63, Color.FromKnownColor(KnownColor.Highlight)))
+                                                        e.Graphics.FillRectangle(sb, HighlightRect)
+                                                        'Using p As New Pen(sb)
+                                                        '    e.Graphics.DrawRectangle(p, HighlightRect)
+                                                        'End Using
+                                                    End Using
+                                                End If
+                                            End If
+                                        End If
+                                    Case Else
+                                End Select
+                                e.PaintContent(e.ClipBounds)
+                            End If
                         End If
                     End If
-                End If
             End If
             e.Graphics.ResetClip()
         End If

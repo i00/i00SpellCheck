@@ -104,7 +104,7 @@ Partial Class FlatFileDictionary
 
         'add words that start with that letter only
         Dim DicWords As List(Of String) = IndexedDictionary.Item(Word)
-        If DicWords Is Nothing Then Return Nothing
+        If DicWords Is Nothing Then Return New List(Of SpellCheckSuggestionInfo)
 
         'add words from user dict
         DicWords.AddRange(GetUserAddedWords)

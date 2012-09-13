@@ -64,9 +64,12 @@ Partial Class Form1
         Me.tsiEnabled = New System.Windows.Forms.ToolStripButton
         Me.tsbEditDictionary = New System.Windows.Forms.ToolStripButton
         Me.DataGridViewTextBoxColumn1 = New System.Windows.Forms.DataGridViewTextBoxColumn
+        Me.ContextMenuStrip1 = New System.Windows.Forms.ContextMenuStrip(Me.components)
+        Me.AsdToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.ToolStrip1.SuspendLayout()
         Me.ToolStrip2.SuspendLayout()
         Me.ToolStrip3.SuspendLayout()
+        Me.ContextMenuStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
         'ToolStrip1
@@ -394,6 +397,18 @@ Partial Class Form1
         Me.DataGridViewTextBoxColumn1.HeaderText = "Column1"
         Me.DataGridViewTextBoxColumn1.Name = "DataGridViewTextBoxColumn1"
         '
+        'ContextMenuStrip1
+        '
+        Me.ContextMenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AsdToolStripMenuItem})
+        Me.ContextMenuStrip1.Name = "ContextMenuStrip1"
+        Me.ContextMenuStrip1.Size = New System.Drawing.Size(93, 26)
+        '
+        'AsdToolStripMenuItem
+        '
+        Me.AsdToolStripMenuItem.Name = "AsdToolStripMenuItem"
+        Me.AsdToolStripMenuItem.Size = New System.Drawing.Size(92, 22)
+        Me.AsdToolStripMenuItem.Text = "asd"
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -413,6 +428,7 @@ Partial Class Form1
         Me.ToolStrip2.PerformLayout()
         Me.ToolStrip3.ResumeLayout(False)
         Me.ToolStrip3.PerformLayout()
+        Me.ContextMenuStrip1.ResumeLayout(False)
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -457,5 +473,7 @@ Partial Class Form1
     Friend WithEvents tsbDonate As System.Windows.Forms.ToolStripButton
     Friend WithEvents ilTabSpellControls As System.Windows.Forms.ImageList
     Friend WithEvents tsbEditDictionary As System.Windows.Forms.ToolStripButton
+    Friend WithEvents ContextMenuStrip1 As System.Windows.Forms.ContextMenuStrip
+    Friend WithEvents AsdToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 
 End Class

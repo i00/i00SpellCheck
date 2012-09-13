@@ -399,7 +399,7 @@ Public Class Form1
                 Exit Sub
             End If
 
-                ctl = tabSpellControls.SelectedTab.GetNextControl(ctl, True)
+            ctl = tabSpellControls.SelectedTab.GetNextControl(ctl, True)
         Loop
     End Sub
 End Class

@@ -532,7 +532,7 @@ Public Class HTMLToolTip
                         End Using
                 End Select
 
-                ''shadow method 2
+                ''shadow method 3
                 'e.Graphics.TranslateTransform(BalloonShadowDepth, BalloonShadowDepth)
                 'Using pgb As New Drawing.Drawing2D.PathGradientBrush(p)
                 '    pgb.WrapMode = Drawing2D.WrapMode.Clamp
@@ -543,8 +543,6 @@ Public Class HTMLToolTip
                 '    e.Graphics.FillPath(pgb, p)
                 'End Using
                 'e.Graphics.ResetTransform()
-
-                'shadow method 3
 
                 Using lgb As New System.Drawing.Drawing2D.LinearGradientBrush(New Point(0, 0), New Point(0, TipSize.Height), Color.FromKnownColor(KnownColor.ControlLightLight), Color.FromKnownColor(KnownColor.ControlLight))
                     g.FillPath(lgb, p)

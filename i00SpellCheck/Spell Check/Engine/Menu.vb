@@ -290,6 +290,7 @@ Public Class Menu
                     Select Case Result
                         Case i00SpellCheck.Dictionary.SpellCheckWordError.Ignore
                             'unignore
+                            AddSeperatorIfNeeded()
                             Dim tsi = New CustomItems.tsiSpellingSuggestion("Don't Ignore " & NiceWord, NiceWord, My.Resources.Ignore)
                             AddHandler tsi.Click, AddressOf SpellUnIgnoreWordClick
                             ContextMenuStrip.Items.Add(tsi)

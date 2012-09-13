@@ -26,10 +26,9 @@ Partial Public Class SpellCheckLabel
 
     'Called when the control is loaded
     Overrides Sub Load()
-        Dim Label = TryCast(Me.Control, Label)
-        If Label IsNot Nothing Then
+        If parentLabel IsNot Nothing Then
             'Add control specific event handlers
-            If Label.UseCompatibleTextRendering Then
+            If parentLabel.UseCompatibleTextRendering Then
                 If CompatiblityWarningDisplayed = False Then
                     Dim a = System.Reflection.Assembly.GetEntryAssembly
                     Dim myAppType = a.GetTypes().Single(Function(t) t.Name = "MyApplication")
@@ -40,9 +39,9 @@ Partial Public Class SpellCheckLabel
                     Debug.Print("i00 Spell Check Label - does not work with UseCompatibleTextRendering set to True, " & ReasonForCompatiblityWarning & "controls will automatically be updated...")
                     CompatiblityWarningDisplayed = True
                 End If
-                Label.UseCompatibleTextRendering = False
+                parentLabel.UseCompatibleTextRendering = False
             End If
-            AddHandler Label.Paint, AddressOf Label_Paint
+            AddHandler parentLabel.Paint, AddressOf Label_Paint
             RepaintControl()
         End If
     End Sub
