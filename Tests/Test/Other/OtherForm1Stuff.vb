@@ -64,6 +64,11 @@ Partial Class Form1
         Dim ToolBoxIcon As New ToolboxBitmapAttribute(GetType(PropertyGrid))
         tsbProperties.Image = ToolBoxIcon.GetImage(GetType(PropertyGrid), False)
 
+        Try
+            tsbPerformanceMonitor.Image = IconExtraction.GetDefaultIcon(IO.Path.Combine(Environment.SystemDirectory, "perfmon.exe"), IconExtraction.IconSize.SmallIcon).ToBitmap
+        Catch ex As Exception
+
+        End Try
 
 
         Dim URLIcon = IconExtraction.GetDefaultIcon(".url", IconExtraction.IconSize.SmallIcon).ToBitmap
@@ -233,6 +238,23 @@ Partial Class Form1
                 Close()
             End If
         End Using
+    End Sub
+
+    Private WithEvents frmPerformanceMonitor As frmPerformanceMonitor
+    Private Sub tsbPerformanceMonitor_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbPerformanceMonitor.Click
+        If frmPerformanceMonitor Is Nothing OrElse frmPerformanceMonitor.IsDisposed Then
+            frmPerformanceMonitor = New frmPerformanceMonitor
+            frmPerformanceMonitor.Show(Me)
+        Else
+            frmPerformanceMonitor.BringToFront()
+            frmPerformanceMonitor.Focus()
+        End If
+        tsbPerformanceMonitor.Checked = True
+    End Sub
+
+    Private Sub frmPerformanceMonitor_FormClosed(ByVal sender As Object, ByVal e As System.Windows.Forms.FormClosedEventArgs) Handles frmPerformanceMonitor.FormClosed
+        tsbPerformanceMonitor.Checked = False
+        frmPerformanceMonitor = Nothing
     End Sub
 
     'Private Sub prop_PropertyValueChanged(ByVal s As Object, ByVal e As System.Windows.Forms.PropertyValueChangedEventArgs) Handles propRichTextBox.PropertyValueChanged, propTextBox.PropertyValueChanged

@@ -13,7 +13,43 @@
 <System.ComponentModel.DesignerCategory("")> _
 Public Class HTMLMenuItem
     Inherits ToolStripDropDownItem
-    Public HTMLText As String
+
+    Dim mc_HTMLText As String
+    Public Property HTMLText() As String
+        Get
+            Return mc_HTMLText
+        End Get
+        Set(ByVal value As String)
+
+            Dim ToBeWidth As Integer
+            Dim ToBeHeight As Integer
+
+            mc_HTMLText = value
+            Me.AutoSize = False
+            Dim theSize = GetSize()
+            If theSize.Width > 400 Then
+                ToBeWidth = 400
+                theSize = GetSize(400)
+            Else
+                ToBeWidth = CInt(theSize.Width) + 1
+            End If
+            If theSize.Height > SmallHeight + SmallHeightTolerance Then
+                ToBeHeight = SmallHeight
+                BigHeight = CInt(theSize.Height) + 1
+            Else
+                ToBeHeight = CInt(theSize.Height) + 1
+            End If
+
+            If Me.Width <> ToBeWidth Then
+                Me.Width = ToBeWidth
+                Debug.Print(value & " - " & ToBeWidth.ToString & Now.ToString)
+            End If
+            If Me.Height <> ToBeHeight Then
+                Me.Height = ToBeHeight
+            End If
+
+        End Set
+    End Property
     Public Overrides Property Text() As String
         Get
             Return MyBase.Text
@@ -31,24 +67,10 @@ Public Class HTMLMenuItem
 
     Public Sub New(ByVal HTMLText As String)
         Me.HTMLText = HTMLText
-        Me.AutoSize = False
-        Dim theSize = GetSize()
-        If theSize.Width > 400 Then
-            Me.Width = 400
-            theSize = GetSize(400)
-        Else
-            Me.Width = CInt(theSize.Width) + 1
-        End If
-        If theSize.Height > SmallHeight + SmallHeightTolerance Then
-            Me.Height = SmallHeight
-            BigHeight = CInt(theSize.Height) + 1
-        Else
-            Me.Height = CInt(theSize.Height) + 1
-        End If
     End Sub
 
     Const SmallHeightTolerance As Integer = 16
-    Const SmallHeight As Integer = 100
+    Public SmallHeight As Integer = 100
     Dim BigHeight As Integer
 
     <System.ComponentModel.Browsable(False)> _

@@ -66,7 +66,16 @@ Partial Public MustInherit Class Dictionary
         End Sub
     End Class
 
-    Public MustOverride Function SpellCheckSuggestions(ByVal Word As String) As List(Of SpellCheckSuggestionInfo)
+    Public Function SpellCheckSuggestions(ByVal Word As String) As List(Of SpellCheckSuggestionInfo)
+        Dim pc = DictionaryPerformanceCounter.SugguestionLookupCounter
+        If pc IsNot Nothing Then
+            pc.Increment()
+        End If
+
+        Return SpellCheckSuggestionsInternal(Word)
+    End Function
+
+    Public MustOverride Function SpellCheckSuggestionsInternal(ByVal Word As String) As List(Of SpellCheckSuggestionInfo)
 
     Public Enum SpellCheckWordError
         OK
@@ -77,7 +86,16 @@ Partial Public MustInherit Class Dictionary
         NotInDictionary = -1
     End Enum
 
-    Public MustOverride Function SpellCheckWord(ByVal Word As String) As SpellCheckWordError
+    Public Function SpellCheckWord(ByVal Word As String) As SpellCheckWordError
+        Dim pc = DictionaryPerformanceCounter.WordCheckCounter
+        If pc IsNot Nothing Then
+            pc.Increment()
+        End If
+
+        Return SpellCheckWordInternal(Word)
+    End Function
+
+    Public MustOverride Function SpellCheckWordInternal(ByVal Word As String) As SpellCheckWordError
 
 #End Region
 

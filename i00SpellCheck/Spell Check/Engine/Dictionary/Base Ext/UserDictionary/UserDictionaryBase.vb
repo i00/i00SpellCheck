@@ -60,21 +60,21 @@ Public MustInherit Class UserDictionaryBase
 
     Public MustOverride Function SpellCheckWordNonUser(ByVal Word As String) As i00SpellCheck.Dictionary.SpellCheckWordError
 
-    Public Overrides Function SpellCheckWord(ByVal Word As String) As i00SpellCheck.Dictionary.SpellCheckWordError
-        SpellCheckWord = IsInUserDictionary(Word)
-        If SpellCheckWord = SpellCheckWordError.NotInDictionary Then
+    Public Overrides Function SpellCheckWordInternal(ByVal Word As String) As i00SpellCheck.Dictionary.SpellCheckWordError
+        SpellCheckWordInternal = IsInUserDictionary(Word)
+        If SpellCheckWordInternal = SpellCheckWordError.NotInDictionary Then
             Return SpellCheckWordNonUser(Word)
         End If
     End Function
 
     Public MustOverride Function SpellCheckSuggestionsNonUser(ByVal Word As String) As System.Collections.Generic.List(Of Dictionary.SpellCheckSuggestionInfo)
 
-    Public Overrides Function SpellCheckSuggestions(ByVal Word As String) As System.Collections.Generic.List(Of Dictionary.SpellCheckSuggestionInfo)
-        SpellCheckSuggestions = SpellCheckSuggestionsNonUser(Word)
+    Public Overrides Function SpellCheckSuggestionsInternal(ByVal Word As String) As System.Collections.Generic.List(Of Dictionary.SpellCheckSuggestionInfo)
+        SpellCheckSuggestionsInternal = SpellCheckSuggestionsNonUser(Word)
         'remove items in the user dict that have been removed
-        Dim RemovedItems = (From xItem In SpellCheckSuggestions Join xItemUser In UserWordList On LCase(xItem.Word) Equals LCase(xItemUser.Word) Where xItemUser.State = SpellCheckWordError.SpellError).ToArray
+        Dim RemovedItems = (From xItem In SpellCheckSuggestionsInternal Join xItemUser In UserWordList On LCase(xItem.Word) Equals LCase(xItemUser.Word) Where xItemUser.State = SpellCheckWordError.SpellError).ToArray
         For Each item In RemovedItems
-            SpellCheckSuggestions.Remove(item.xItem)
+            SpellCheckSuggestionsInternal.Remove(item.xItem)
         Next
     End Function
 

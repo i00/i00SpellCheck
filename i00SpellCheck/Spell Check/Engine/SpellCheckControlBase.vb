@@ -215,7 +215,6 @@ Public MustInherit Class SpellCheckControlBase
         Catch ex As Exception
 
         End Try
-        '
         Application.AddMessageFilter(Me)
         Load()
     End Sub

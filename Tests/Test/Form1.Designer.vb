@@ -56,6 +56,8 @@ Partial Class Form1
         Me.WhenCtrlIsPressedToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.AlwaysToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.NeverToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.ToolStripSeparator1 = New System.Windows.Forms.ToolStripSeparator
+        Me.tsbPerformanceMonitor = New System.Windows.Forms.ToolStripButton
         Me.tsbSpellCheck = New System.Windows.Forms.ToolStripButton
         Me.tsbProperties = New System.Windows.Forms.ToolStripButton
         Me.tabSpellControls = New System.Windows.Forms.TabControl
@@ -127,7 +129,7 @@ Partial Class Form1
         'ToolStrip2
         '
         Me.ToolStrip2.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden
-        Me.ToolStrip2.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsbExamples, Me.tsbAbout, Me.ToolStripDropDownButton2})
+        Me.ToolStrip2.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsbExamples, Me.tsbAbout, Me.ToolStripDropDownButton2, Me.ToolStripSeparator1, Me.tsbPerformanceMonitor})
         Me.ToolStrip2.Location = New System.Drawing.Point(0, 0)
         Me.ToolStrip2.Name = "ToolStrip2"
         Me.ToolStrip2.Size = New System.Drawing.Size(624, 25)
@@ -332,6 +334,21 @@ Partial Class Form1
         Me.NeverToolStripMenuItem.Tag = "1"
         Me.NeverToolStripMenuItem.Text = "Never"
         '
+        'ToolStripSeparator1
+        '
+        Me.ToolStripSeparator1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
+        Me.ToolStripSeparator1.Size = New System.Drawing.Size(6, 25)
+        '
+        'tsbPerformanceMonitor
+        '
+        Me.tsbPerformanceMonitor.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.tsbPerformanceMonitor.AutoToolTip = False
+        Me.tsbPerformanceMonitor.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.tsbPerformanceMonitor.Name = "tsbPerformanceMonitor"
+        Me.tsbPerformanceMonitor.Size = New System.Drawing.Size(125, 22)
+        Me.tsbPerformanceMonitor.Text = "Performance Monitor"
+        '
         'tsbSpellCheck
         '
         Me.tsbSpellCheck.AutoToolTip = False
@@ -475,5 +492,7 @@ Partial Class Form1
     Friend WithEvents tsbEditDictionary As System.Windows.Forms.ToolStripButton
     Friend WithEvents ContextMenuStrip1 As System.Windows.Forms.ContextMenuStrip
     Friend WithEvents AsdToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ToolStripSeparator1 As System.Windows.Forms.ToolStripSeparator
+    Friend WithEvents tsbPerformanceMonitor As System.Windows.Forms.ToolStripButton
 
 End Class

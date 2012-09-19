@@ -256,7 +256,6 @@ Public Module SpellCheckFormExtension
             tt = New System.Threading.Timer(cb, Nothing, 1000, 1000)
         End Sub
 
-
         Private Delegate Sub cb_SetupNewControl(ByVal NewForm As Form)
         Private Sub SetupNewControl(ByVal NewForm As Form)
             If NewForm.IsDisposed Then
@@ -289,7 +288,11 @@ Public Module SpellCheckFormExtension
         Private Sub Form_Disposed(ByVal sender As Object, ByVal e As System.EventArgs)
             tt.Dispose()
             If OwnedFormsPolls.ContainsKey(SpellCheckSettings.MasterControl) Then
+                Debug.Print("Closing - " & SpellCheckSettings.MasterControl.GetType.ToString)
                 OwnedFormsPolls.Remove(SpellCheckSettings.MasterControl)
+                If OwnedFormsPolls.Count = 0 Then
+                    DictionaryPerformanceCounter.Remove()
+                End If
             End If
         End Sub
     End Class

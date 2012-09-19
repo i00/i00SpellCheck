@@ -402,4 +402,5 @@ Public Class Form1
             ctl = tabSpellControls.SelectedTab.GetNextControl(ctl, True)
         Loop
     End Sub
+
 End Class

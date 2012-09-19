@@ -204,7 +204,8 @@ Public Class HTMLSpellCheck
     End Sub
 
     Private Sub UpdateDocument()
-        Dim DocumentText As String = ""
+        'Dim DocumentText As String = ""
+        Dim DocumentText As New System.Text.StringBuilder
         Dim UpTo = 0
         For Each item In mc_Words
             RemoveHandler item.UpdateClassEvent, AddressOf UpdateClassEvent
@@ -219,15 +220,15 @@ Public Class HTMLSpellCheck
             AddHandler ThisWordItem.UpdateWordEvent, AddressOf UpdateWordEvent
             mc_Words.Add(ThisWordItem)
             If ThisWordItem.OrigWord <> "" Then
-                DocumentText &= "<a href='" & mc_Words.Count - 1 & "' class='Pending' id='" & mc_Words.Count - 1 & "'>" & ThisWordItem.OrigWord & "</a>"
+                DocumentText.Append("<a href='" & mc_Words.Count - 1 & "' class='Pending' id='" & mc_Words.Count - 1 & "'>" & ThisWordItem.OrigWord & "</a>")
             End If
             UpTo += item.Length + 1
             If UpTo <= mc_Text.Length Then
-                DocumentText &= mc_Text.Substring(UpTo - 1, 1)
+                DocumentText.Append(mc_Text.Substring(UpTo - 1, 1))
             End If
         Next
         mc_AllowNavigation = True
-        MyBase.DocumentText = HTMLStyle() & "<BODY onselectstart='return false;'>" & System.Text.RegularExpressions.Regex.Replace(DocumentText, "\r\n|\n\r|\r|\n", "<BR>")
+        MyBase.DocumentText = HTMLStyle() & "<BODY onselectstart='return false;'>" & System.Text.RegularExpressions.Regex.Replace(DocumentText.ToString, "\r\n|\n\r|\r|\n", "<BR>")
         mc_AllowNavigation = False
     End Sub
 

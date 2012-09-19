@@ -58,7 +58,7 @@ Partial Class FlatFileDictionary
                 'bad case
             End If
         Next
-       
+
     End Function
 
 #End Region
@@ -105,6 +105,9 @@ Partial Class FlatFileDictionary
         'add words that start with that letter only
         Dim DicWords As List(Of String) = IndexedDictionary.Item(Word)
         If DicWords Is Nothing Then Return New List(Of SpellCheckSuggestionInfo)
+
+        'clone the dictword list ... as we don't want to append the user words to the origional list
+        DicWords = DicWords.ToList
 
         'add words from user dict
         DicWords.AddRange(GetUserAddedWords)

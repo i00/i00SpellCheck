@@ -107,10 +107,11 @@
     <Compile Include="Spell Check\Controls\DataGridView\DataGridView.vb" />
     <Compile Include="Misc\PluginManager.vb" />
     <Compile Include="Spell Check\Engine\Dictionary\Base Ext\UserDictionary\UserDictionaryBase.vb" />
-    <Compile Include="Spell Check\Engine\Dictionary\Base\Interfaces\iAnagram.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\Optional Interfaces\iAnagram.vb" />
     <Compile Include="Spell Check\Engine\Dictionary\Base\Formatting.vb" />
     <Compile Include="Spell Check\Engine\Dictionary\Base\DictionaryEditor.vb" />
-    <Compile Include="Spell Check\Engine\Dictionary\Base\Interfaces\iScrabble.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\Optional Interfaces\iScrabble.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\PerformanceCounter.vb" />
     <Compile Include="Spell Check\Engine\Dictionary\Flat File\Editor\DictionaryEditor.vb">
       <SubType>Code</SubType>
     </Compile>
@@ -127,7 +128,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Spell Check\Engine\Dictionary\Base\iDictionary.vb" />
-    <Compile Include="Spell Check\Engine\Dictionary\Base\Interfaces\iWordBase.vb" />
+    <Compile Include="Spell Check\Engine\Dictionary\Base\Optional Interfaces\iWordBase.vb" />
     <Compile Include="Spell Check\Engine\Dictionary\Flat File\FlatFileSpellCheck.vb">
       <SubType>Code</SubType>
     </Compile>
