@@ -41,7 +41,7 @@ Public Class Synonyms
     Dim mc_File As String
     <System.ComponentModel.DisplayName("Filename")> _
     <System.ComponentModel.Editor(GetType(symFile_UITypeEditor), GetType(System.Drawing.Design.UITypeEditor))> _
-    Public Property File() As String
+    Public Overridable Property File() As String
         Get
             Return mc_File
         End Get
@@ -86,7 +86,7 @@ Public Class Synonyms
         End Get
     End Property
 
-    Public Function FindWord(ByVal Word As String) As List(Of FindWordReturn)
+    Public Overridable Function FindWord(ByVal Word As String) As List(Of FindWordReturn)
         If FileIO.FileSystem.FileExists(File) Then
             Using sr As New IO.StreamReader(File)
                 Do Until sr.EndOfStream
@@ -103,7 +103,7 @@ Public Class Synonyms
 
     Public Class FindWordReturn
         Inherits List(Of String)
-        Private Sub New()
+        Public Sub New()
 
         End Sub
         Public Shared Function FromFileLine(ByVal Line As String) As List(Of FindWordReturn)
@@ -116,7 +116,12 @@ Public Class Synonyms
                     Dim SplitDef = iDef.Split(New Char() {">"c}, 2)
                     Dim SplitDefWord = SplitDef(0).Split(";"c)
                     FindWordReturn.TypeDescription = SplitDefWord(0)
-                    FindWordReturn.WordType = DirectCast(CInt(SplitDefWord(1)), WordTypes)
+                    If UBound(SplitDefWord) >= 1 Then
+                        Dim WordType = SplitDefWord(1)
+                        If IsNumeric(WordType) Then
+                            FindWordReturn.WordType = DirectCast(CInt(WordType), WordTypes)
+                        End If
+                    End If
                     FindWordReturn.AddRange(SplitDef(1).Split(";"c))
                     If FindWordReturn.Count > 0 Then
                         Output.Add(FindWordReturn)
@@ -144,7 +149,7 @@ Public Class Synonyms
             Idiom = 8
             Other = 9
         End Enum
-        Public WordType As WordTypes
+        Public WordType As WordTypes = WordTypes.Other
     End Class
 
 End Class

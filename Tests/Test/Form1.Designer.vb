@@ -26,10 +26,10 @@ Partial Class Form1
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Form1))
         Me.ToolStrip1 = New System.Windows.Forms.ToolStrip
         Me.tslStatus = New System.Windows.Forms.ToolStripLabel
+        Me.tsbDonate = New System.Windows.Forms.ToolStripButton
+        Me.tsbi00Productions = New System.Windows.Forms.ToolStripButton
         Me.tsbCodeProject = New System.Windows.Forms.ToolStripButton
         Me.tsbVBForums = New System.Windows.Forms.ToolStripButton
-        Me.tsbi00Productions = New System.Windows.Forms.ToolStripButton
-        Me.tsbDonate = New System.Windows.Forms.ToolStripButton
         Me.ToolStrip2 = New System.Windows.Forms.ToolStrip
         Me.tsbExamples = New System.Windows.Forms.ToolStripDropDownButton
         Me.CrosswordSolverToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
@@ -78,7 +78,7 @@ Partial Class Form1
         '
         Me.ToolStrip1.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.ToolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden
-        Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tslStatus, Me.tsbCodeProject, Me.tsbVBForums, Me.tsbi00Productions, Me.tsbDonate})
+        Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tslStatus, Me.tsbDonate, Me.tsbi00Productions, Me.tsbCodeProject, Me.tsbVBForums})
         Me.ToolStrip1.Location = New System.Drawing.Point(0, 417)
         Me.ToolStrip1.Name = "ToolStrip1"
         Me.ToolStrip1.Size = New System.Drawing.Size(624, 25)
@@ -90,6 +90,24 @@ Partial Class Form1
         Me.tslStatus.Name = "tslStatus"
         Me.tslStatus.Size = New System.Drawing.Size(86, 22)
         Me.tslStatus.Text = "i00 Spell Check"
+        '
+        'tsbDonate
+        '
+        Me.tsbDonate.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.tsbDonate.AutoToolTip = False
+        Me.tsbDonate.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.tsbDonate.Name = "tsbDonate"
+        Me.tsbDonate.Size = New System.Drawing.Size(49, 22)
+        Me.tsbDonate.Text = "Donate"
+        '
+        'tsbi00Productions
+        '
+        Me.tsbi00Productions.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.tsbi00Productions.AutoToolTip = False
+        Me.tsbi00Productions.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.tsbi00Productions.Name = "tsbi00Productions"
+        Me.tsbi00Productions.Size = New System.Drawing.Size(93, 22)
+        Me.tsbi00Productions.Text = "i00 Productions"
         '
         'tsbCodeProject
         '
@@ -108,23 +126,6 @@ Partial Class Form1
         Me.tsbVBForums.Name = "tsbVBForums"
         Me.tsbVBForums.Size = New System.Drawing.Size(68, 22)
         Me.tsbVBForums.Text = "VB Forums"
-        '
-        'tsbi00Productions
-        '
-        Me.tsbi00Productions.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
-        Me.tsbi00Productions.AutoToolTip = False
-        Me.tsbi00Productions.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.tsbi00Productions.Name = "tsbi00Productions"
-        Me.tsbi00Productions.Size = New System.Drawing.Size(93, 22)
-        Me.tsbi00Productions.Text = "i00 Productions"
-        '
-        'tsbDonate
-        '
-        Me.tsbDonate.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
-        Me.tsbDonate.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.tsbDonate.Name = "tsbDonate"
-        Me.tsbDonate.Size = New System.Drawing.Size(49, 22)
-        Me.tsbDonate.Text = "Donate"
         '
         'ToolStrip2
         '
@@ -395,6 +396,7 @@ Partial Class Form1
         'tsiEnabled
         '
         Me.tsiEnabled.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.tsiEnabled.AutoToolTip = False
         Me.tsiEnabled.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.tsiEnabled.Name = "tsiEnabled"
         Me.tsiEnabled.Size = New System.Drawing.Size(53, 22)

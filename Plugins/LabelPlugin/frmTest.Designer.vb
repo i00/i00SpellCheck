@@ -22,7 +22,6 @@ Partial Class frmTest
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmTest))
         Me.PropertyGrid1 = New System.Windows.Forms.PropertyGrid
         Me.Label1 = New System.Windows.Forms.Label
         Me.SuspendLayout()
@@ -44,7 +43,7 @@ Partial Class frmTest
         Me.Label1.Padding = New System.Windows.Forms.Padding(4)
         Me.Label1.Size = New System.Drawing.Size(366, 442)
         Me.Label1.TabIndex = 2
-        Me.Label1.Text = resources.GetString("Label1.Text")
+        Me.Label1.Text = "Label1"
         '
         'frmTest
         '

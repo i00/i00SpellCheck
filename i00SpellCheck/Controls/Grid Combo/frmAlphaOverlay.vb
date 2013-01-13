@@ -7,7 +7,6 @@
 'as part of other software, it is not a complete software package, thus i00 Productions is not 
 'responsible for any legal ramifications that software using this product breaches.
 
-
 Imports System
 Imports System.Drawing
 Imports System.Drawing.Imaging

@@ -68,7 +68,9 @@ Public NotInheritable Class DictionaryPerformanceCounter
                 TriedToCreate = True
                 Try
                     Instate()
-                    mc_WordCheckCounter = New PerformanceCounter(CatName, WordCheckCounterName, False)
+                    If PerformanceCounterCategory.Exists(CatName) Then
+                        mc_WordCheckCounter = New PerformanceCounter(CatName, WordCheckCounterName, False)
+                    End If
                 Catch ex As Exception
 
                 End Try
@@ -85,7 +87,9 @@ Public NotInheritable Class DictionaryPerformanceCounter
                 TriedToCreate = True
                 Try
                     Instate()
-                    mc_SugguestionLookupCounter = New PerformanceCounter(CatName, SugguestionLookupCounterName, False)
+                    If PerformanceCounterCategory.Exists(CatName) Then
+                        mc_SugguestionLookupCounter = New PerformanceCounter(CatName, SugguestionLookupCounterName, False)
+                    End If
                 Catch ex As Exception
 
                 End Try

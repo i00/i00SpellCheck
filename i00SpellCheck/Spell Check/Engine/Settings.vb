@@ -22,23 +22,17 @@ Public Class SpellCheckSettings
         Return "SpellCheckSettings" 'MyBase.ToString()
     End Function
 
-    Public Event Redraw(ByVal sender As Object, ByVal e As EventArgs)
+    Public Class RedrawArgs
+        Inherits EventArgs
+        Public ReloadDictionaryCache As Boolean
+    End Class
 
-    Protected Overridable Sub OnRedraw()
-        RaiseEvent Redraw(Me, EventArgs.Empty)
+    Public Event Redraw(ByVal sender As Object, ByVal e As RedrawArgs)
+
+    Protected Overridable Sub OnRedraw(Optional ByVal RedrawArgs As RedrawArgs = Nothing)
+        If RedrawArgs Is Nothing Then RedrawArgs = New RedrawArgs
+        RaiseEvent Redraw(Me, RedrawArgs)
     End Sub
-
-    Friend Shared Function NewClone(ByVal MasterControl As Control, ByVal SpellCheckSettings As SpellCheckSettings) As SpellCheckSettings
-        If SpellCheckSettings Is Nothing Then
-            NewClone = New SpellCheckSettings
-        Else
-            NewClone = TryCast(SpellCheckSettings.Clone(), SpellCheckSettings)
-        End If
-        NewClone.MasterControl = MasterControl
-    End Function
-
-    Friend MasterControl As Control
-    Public DoSubforms As Boolean = True
 
     Private mc_AllowAdditions As Boolean = True
     <System.ComponentModel.DefaultValue(True)> _
@@ -89,19 +83,6 @@ Public Class SpellCheckSettings
         End Get
         Set(ByVal value As Boolean)
             mc_AllowChangeTo = value
-        End Set
-    End Property
-
-    Private mc_AllowF3 As Boolean = True
-    <System.ComponentModel.DefaultValue(True)> _
-    <System.ComponentModel.DisplayName("Allow F3")> _
-    <System.ComponentModel.Description("Allows the user to press F3 to change the case of text in a text box")> _
-    Public Property AllowF3() As Boolean
-        Get
-            Return mc_AllowF3
-        End Get
-        Set(ByVal value As Boolean)
-            mc_AllowF3 = value
         End Set
     End Property
 
@@ -206,11 +187,48 @@ Public Class SpellCheckSettings
         End Set
     End Property
 
+    Private mc_IgnoreWordsInUpperCase As Boolean = True
+    <System.ComponentModel.DefaultValue(True)> _
+    <System.ComponentModel.DisplayName("Ignore Words In Upper Case")> _
+    Public Property IgnoreWordsInUpperCase() As Boolean
+        Get
+            Return mc_IgnoreWordsInUpperCase
+        End Get
+        Set(ByVal value As Boolean)
+            mc_IgnoreWordsInUpperCase = value
+            OnRedraw(New RedrawArgs() With {.ReloadDictionaryCache = True})
+        End Set
+    End Property
+
+    Private mc_IgnoreWordsWithNumbers As Boolean = True
+    <System.ComponentModel.DefaultValue(True)> _
+    <System.ComponentModel.DisplayName("Ignore Words With Numbers")> _
+    Public Property IgnoreWordsWithNumbers() As Boolean
+        Get
+            Return mc_IgnoreWordsWithNumbers
+        End Get
+        Set(ByVal value As Boolean)
+            mc_IgnoreWordsWithNumbers = value
+            OnRedraw(New RedrawArgs() With {.ReloadDictionaryCache = True})
+        End Set
+    End Property
+
+    Public Function IgnoreWordOverride(ByVal Word As String) As Boolean
+        Word = Dictionary.Formatting.RemoveApoS(Word)
+        Return (IgnoreWordsInUpperCase AndAlso Dictionary.Formatting.AllInCaps(Word)) OrElse _
+               (IgnoreWordsWithNumbers AndAlso Dictionary.Formatting.ContainsNumbers(Word))
+    End Function
+
     Public Sub New()
 
     End Sub
 
-    Public Function Clone() As Object Implements System.ICloneable.Clone
+    Public Overloads Function Clone() As SpellCheckSettings
+        Return DirectCast(CloneObject(), SpellCheckSettings)
+    End Function
+
+    <System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)> _
+    Public Overloads Function CloneObject() As Object Implements System.ICloneable.Clone
         Dim SpellCheckSettings = New SpellCheckSettings
         For Each prop In Me.GetType.GetProperties
             If prop.CanWrite AndAlso prop.CanRead Then

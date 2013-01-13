@@ -40,9 +40,9 @@ Partial Class FlatFileDictionary
 
         If DicWords Is Nothing Then
             'allow word in caps...
-            If Formatting.AllInCaps(Word) Then
-                Return SpellCheckWordError.OK
-            End If
+            'If Formatting.AllInCaps(Word) Then
+            '    Return SpellCheckWordError.OK
+            'End If
             Return SpellCheckWordError.SpellError
         End If
 
@@ -86,10 +86,10 @@ Partial Class FlatFileDictionary
             Case Is < 5
                 leewaynum = 2
                 leewaypct = 0.75
-            Case 5, 6, 7
+            Case 5 To 7
                 leewaynum = 3
                 leewaypct = 0.6
-            Case 8, 9, 10, 11
+            Case 8 To 11
                 leewaynum = 4
                 leewaypct = 0.5
             Case Else

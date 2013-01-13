@@ -161,19 +161,32 @@ Public Class DrawingFunctions
     End Sub
 
     Public Shared Sub DrawString(ByVal g As Graphics, ByVal s As String, ByVal font As System.Drawing.Font, ByVal brush As System.Drawing.Brush, ByVal x As Single, ByVal y As Single, Optional ByVal Ratio As Single = 1)
-        Dim FontSize As SizeF = g.MeasureString(s, font, New PointF(0, 0), System.Drawing.StringFormat.GenericDefault)
-        Using gp As New GraphicsPath
-            gp.AddString(s, font.FontFamily, font.Style, font.Size, New PointF(0, 0), System.Drawing.StringFormat.GenericDefault)
-            Dim scale As Single = FontSize.Width / (gp.GetBounds.Right + gp.GetBounds.Left)
-            Using m As New Matrix
-                m.Translate(x, y, MatrixOrder.Append)
-                scale = scale * Ratio
-                m.Scale(scale, scale, MatrixOrder.Prepend)
-                gp.Transform(m)
-            End Using
+        Using gp = GetStringPath(s, font, x, y, Ratio, g)
             g.FillPath(brush, gp)
         End Using
     End Sub
+
+    Public Shared Function GetStringPath(ByVal s As String, ByVal font As System.Drawing.Font, ByVal x As Single, ByVal y As Single, Optional ByVal Ratio As Single = 1, Optional ByVal g As Graphics = Nothing) As GraphicsPath
+        Dim FontSize As SizeF
+        If g Is Nothing Then
+            Using b As New Bitmap(1, 1)
+                Using g2 = Graphics.FromImage(b)
+                    FontSize = g2.MeasureString(s, font, New PointF(0, 0), System.Drawing.StringFormat.GenericDefault)
+                End Using
+            End Using
+        Else
+            FontSize = g.MeasureString(s, font, New PointF(0, 0), System.Drawing.StringFormat.GenericDefault)
+        End If
+        GetStringPath = New GraphicsPath
+        GetStringPath.AddString(s, font.FontFamily, font.Style, font.Size, New PointF(0, 0), System.Drawing.StringFormat.GenericDefault)
+        Dim scale As Single = FontSize.Width / (GetStringPath.GetBounds.Right + GetStringPath.GetBounds.Left)
+        Using m As New Matrix
+            m.Translate(x, y, MatrixOrder.Append)
+            scale = scale * Ratio
+            m.Scale(scale, scale, MatrixOrder.Prepend)
+            GetStringPath.Transform(m)
+        End Using
+    End Function
 
     Public Shared Sub DrawElipseText(ByVal g As Graphics, ByVal RequiredLocation As PointF, ByVal Text As String, ByVal font As Font, ByVal requiredWidth As Integer, ByVal fontColor As Color)
         Dim StringSize As SizeF = g.MeasureString(Text, font)
@@ -504,7 +517,7 @@ Finish:
                     Try
                         g.FillPath(brush, gp)
                     Catch ex As Exception
-                        Debug.Print("error modDrawing.DrawString")
+                        'Debug.Print("error modDrawing.DrawString")
                     End Try
                 End Using
             End If

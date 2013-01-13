@@ -29,22 +29,24 @@ Partial Class SpellCheckTextBox
 #Region "Repaint"
 
     Public Overrides Sub RepaintControl()
-        If Me.RenderCompatibility Then
-            If OKToDraw Then
-                parentTextBox.Invalidate()
-            End If
-        Else
-            'only redraw if the overlay hasn't been created yet or if the overlay is visible
-            If DrawOverlayForm Is Nothing Then
-                OpenOverlay()
-            End If
-            If OKToDraw Then
-                DrawOverlayFormVisible = parentTextBox.Visible
+        If parentTextBox IsNot Nothing Then
+            If Me.RenderCompatibility Then
+                If OKToDraw Then
+                    parentTextBox.Invalidate()
+                End If
             Else
-                DrawOverlayFormVisible = False
-            End If
-            If DrawOverlayFormVisible Then
-                Me.CustomPaint()
+                'only redraw if the overlay hasn't been created yet or if the overlay is visible
+                If DrawOverlayForm Is Nothing Then
+                    OpenOverlay()
+                End If
+                If OKToDraw Then
+                    DrawOverlayFormVisible = parentTextBox.Visible
+                Else
+                    DrawOverlayFormVisible = False
+                End If
+                If DrawOverlayFormVisible Then
+                    Me.CustomPaint()
+                End If
             End If
         End If
     End Sub
@@ -52,12 +54,6 @@ Partial Class SpellCheckTextBox
 #End Region
 
 #Region "Painting"
-
-    'For compatibility mode...
-    Private textBoxGraphics As Graphics
-    Private Sub parentTextBox_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.SizeChanged
-        textBoxGraphics = Graphics.FromHwnd(parentTextBox.Handle)
-    End Sub
 
     Private Sub CustomPaint()
         If OKToDraw = False OrElse parentTextBox.ClientSize.Width = 0 Then Exit Sub
@@ -142,7 +138,7 @@ Partial Class SpellCheckTextBox
                                         P2 = parentTextBox.GetPositionFromCharIndex(LetterIndex + Len(words(iWord)) - 1)
                                         P2.X += System.Windows.Forms.TextRenderer.MeasureText("-" & Right(words(iWord), 1) & "-", parentTextBox.Font).Width - BufferWidth
                                     End If
-                                    Dim LineHeight As Integer = GetLineHeightFromCharPosition(LetterIndex)
+                                    Dim LineHeight As Integer = extTextBoxCommon.GetLineHeightFromCharPosition(parentTextBox, LetterIndex, RTBContents)
                                     'P1.Y += LineHeight
                                     P2.Y = P1.Y + LineHeight
                                     'P2.Y = P1.Y
@@ -176,6 +172,7 @@ Draw:
                 If DrawOverlayForm IsNot Nothing Then
                     DrawOverlayForm.SetBitmap(b, 255)
                 Else
+                    Dim textBoxGraphics = Graphics.FromHwnd(parentTextBox.Handle)
                     textBoxGraphics.DrawImageUnscaled(b, 0, 0)
                 End If
 
@@ -255,7 +252,7 @@ Draw:
         End If
     End Sub
 
-    Private Sub parentTextBox_ForOverlay_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.Disposed
+    Private Sub parentTextBox_ForOverlay_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentTextBox.Disposed
         CloseOverlay()
     End Sub
 
@@ -263,18 +260,18 @@ Draw:
 
 #Region "Stuff for overlay"
 
-    Private Sub parentTextBox_ForOverlay_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.SizeChanged
+    Private Sub parentTextBox_ForOverlay_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentTextBox.SizeChanged
         If DrawOverlayForm IsNot Nothing Then
             SetOverlayBounds()
             RepaintControl()
         End If
     End Sub
 
-    Private Sub mc_parentTextBox_LocationChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.LocationChanged
+    Private Sub mc_parentTextBox_LocationChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentTextBox.LocationChanged
         SetOverlayBounds()
     End Sub
 
-    Private Sub mc_parentTextBox_VisibleChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.VisibleChanged
+    Private Sub mc_parentTextBox_VisibleChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentTextBox.VisibleChanged
         If DrawOverlayForm IsNot Nothing AndAlso DrawOverlayForm.IsDisposed = False Then
             If DrawOverlayFormVisible <> parentTextBox.Visible Then
                 DrawOverlayFormVisible = parentTextBox.Visible
@@ -323,7 +320,7 @@ Draw:
         End Set
     End Property
 
-    Private Sub mc_parentTextBox_ParentChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.ParentChanged
+    Private Sub mc_parentTextBox_ParentChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentTextBox.ParentChanged
         If DrawOverlayForm IsNot Nothing Then
             If DrawOverlayForm.Owner IsNot Me.parentTextBox.Parent Then
                 CloseOverlay()

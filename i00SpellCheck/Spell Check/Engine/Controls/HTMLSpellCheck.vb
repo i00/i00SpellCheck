@@ -165,10 +165,14 @@ Public Class HTMLSpellCheck
             Dim SetClass_cb As New SetClass_cb(AddressOf SetClass)
             MyBase.Invoke(SetClass_cb, id, className)
         Else
-            Dim element = MyBase.Document.GetElementById(id)
-            If element IsNot Nothing Then
-                element.SetAttribute("className", className)
-            End If
+            Try
+                Dim element = MyBase.Document.GetElementById(id)
+                If element IsNot Nothing Then
+                    element.SetAttribute("className", className)
+                End If
+            Catch ex As Exception
+
+            End Try
         End If
     End Sub
 
@@ -347,7 +351,11 @@ Public Class HTMLSpellCheck
 
     'Sets the HTML to the document string
     Dim mc_Text As String
-    Public Sub SetText(ByVal Text As String)
+
+    Private Settings As New SpellCheckSettings
+
+    Public Sub SetText(ByVal Text As String, Optional ByVal Settings As SpellCheckSettings = Nothing)
+        If Settings IsNot Nothing Then Me.Settings = Settings
         mc_Text = Text
         UpdateDocument()
     End Sub
@@ -378,17 +386,21 @@ Public Class HTMLSpellCheck
         'Dim st = Now
         For Each item In (From xItem In mc_Words Where xItem.SpellCheckState = SpellCheckDialogWords.SpellCheckStates.Pending).ToArray
             Dim className As String = ""
-            Select Case mc_Dictionary.SpellCheckWord(item.NewWord)
-                Case Dictionary.SpellCheckWordError.OK
-                    item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.OK
-                Case Dictionary.SpellCheckWordError.SpellError
-                    item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.Error
-                Case Dictionary.SpellCheckWordError.CaseError
-                    item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.Case
-                Case Dictionary.SpellCheckWordError.Ignore
-                    item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.OK
-            End Select
-
+            If Settings.IgnoreWordOverride(item.NewWord) Then
+                'ok as all in caps etc
+                item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.OK
+            Else
+                Select Case mc_Dictionary.SpellCheckWord(item.NewWord)
+                    Case Dictionary.SpellCheckWordError.OK
+                        item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.OK
+                    Case Dictionary.SpellCheckWordError.SpellError
+                        item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.Error
+                    Case Dictionary.SpellCheckWordError.CaseError
+                        item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.Case
+                    Case Dictionary.SpellCheckWordError.Ignore
+                        item.SpellCheckState(False) = SpellCheckDialogWords.SpellCheckStates.OK
+                End Select
+            End If
             RaiseEvent WordSpellChecked(Me, New HTMLWordEventArgs() With {.Word = item})
             item.UpdateClass()
         Next

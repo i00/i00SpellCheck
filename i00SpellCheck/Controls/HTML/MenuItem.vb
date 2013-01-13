@@ -20,16 +20,16 @@ Public Class HTMLMenuItem
             Return mc_HTMLText
         End Get
         Set(ByVal value As String)
-
+            If value = "" Then value = " "
             Dim ToBeWidth As Integer
             Dim ToBeHeight As Integer
 
             mc_HTMLText = value
             Me.AutoSize = False
-            Dim theSize = GetSize()
+            Dim theSize = GetHTMLInfo.Size
             If theSize.Width > 400 Then
                 ToBeWidth = 400
-                theSize = GetSize(400)
+                theSize = GetHTMLInfo(400).Size
             Else
                 ToBeWidth = CInt(theSize.Width) + 1
             End If
@@ -38,11 +38,11 @@ Public Class HTMLMenuItem
                 BigHeight = CInt(theSize.Height) + 1
             Else
                 ToBeHeight = CInt(theSize.Height) + 1
+                BigHeight = ToBeHeight
             End If
 
             If Me.Width <> ToBeWidth Then
                 Me.Width = ToBeWidth
-                Debug.Print(value & " - " & ToBeWidth.ToString & Now.ToString)
             End If
             If Me.Height <> ToBeHeight Then
                 Me.Height = ToBeHeight
@@ -80,14 +80,6 @@ Public Class HTMLMenuItem
         End Get
     End Property
 
-    Private Function GetSize(Optional ByVal MaxWidth As Single = -1) As SizeF
-        Dim status As New HTMLParser.Status
-        status.Font = New HTMLParser.STRFont(System.Drawing.SystemFonts.MenuFont)
-        status.Brush = New HTMLParser.STRBrush(Color.FromKnownColor(KnownColor.MenuText))
-
-        Return HTMLParser.PaintHTML(HTMLText, , MaxWidth, status)
-    End Function
-
     Private Sub tsiDefinition_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Click
         Expand()
     End Sub
@@ -124,6 +116,14 @@ Public Class HTMLMenuItem
             Me.Invalidate()
         End If
     End Sub
+
+    Public Function GetHTMLInfo(Optional ByVal MaxWidth As Single = -1) As HTMLParser.PaintHTMLReturn
+        Dim status As New HTMLParser.Status
+        status.Font = New HTMLParser.STRFont(System.Drawing.SystemFonts.MenuFont)
+        status.Brush = New HTMLParser.STRBrush(Color.FromKnownColor(KnownColor.MenuText))
+
+        Return HTMLParser.PaintHTML(HTMLText, , MaxWidth, status)
+    End Function
 
     Private Sub tsiDefinition_Paint(ByVal sender As Object, ByVal e As System.Windows.Forms.PaintEventArgs) Handles Me.Paint
         Dim status As New HTMLParser.Status

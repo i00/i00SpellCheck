@@ -29,7 +29,7 @@ Partial Class frmTest
         'FastColoredTextBox1
         '
         Me.FastColoredTextBox1.AllowDrop = True
-        Me.FastColoredTextBox1.AutoScrollMinSize = New System.Drawing.Size(83, 14)
+        Me.FastColoredTextBox1.AutoScrollMinSize = New System.Drawing.Size(179, 14)
         Me.FastColoredTextBox1.BackBrush = Nothing
         Me.FastColoredTextBox1.Cursor = System.Windows.Forms.Cursors.IBeam
         Me.FastColoredTextBox1.DisabledColor = System.Drawing.Color.FromArgb(CType(CType(100, Byte), Integer), CType(CType(180, Byte), Integer), CType(CType(180, Byte), Integer), CType(CType(180, Byte), Integer))
@@ -40,7 +40,7 @@ Partial Class frmTest
         Me.FastColoredTextBox1.SelectionColor = System.Drawing.Color.FromArgb(CType(CType(50, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(255, Byte), Integer))
         Me.FastColoredTextBox1.Size = New System.Drawing.Size(366, 442)
         Me.FastColoredTextBox1.TabIndex = 0
-        Me.FastColoredTextBox1.Text = "Class11"
+        Me.FastColoredTextBox1.Text = "FastColoredTextBox1"
         '
         'PropertyGrid1
         '

@@ -82,14 +82,17 @@
     <Compile Include="frmSplash.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Other\IconExtraction.vb">
+    <Compile Include="Misc\ControlExtPropGrid.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Misc\IconExtraction.vb">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Other\MessageBoxManager.vb" />
-    <Compile Include="Other\OtherForm1Stuff.vb">
+    <Compile Include="Misc\MessageBoxManager.vb" />
+    <Compile Include="Misc\OtherForm1Stuff.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Other\AutoGrowLabel.vb" />
+    <Compile Include="Misc\AutoGrowLabel.vb" />
     <Compile Include="Form1.Designer.vb">
       <DependentUpon>Form1.vb</DependentUpon>
     </Compile>
@@ -111,13 +114,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Other\Performance Monitor\clsGrid.vb" />
-    <Compile Include="Other\Performance Monitor\frmPerformanceMonitor.Designer.vb">
-      <DependentUpon>frmPerformanceMonitor.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Other\Performance Monitor\frmPerformanceMonitor.vb">
-      <SubType>Form</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">
@@ -134,10 +130,6 @@
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Other\Performance Monitor\frmPerformanceMonitor.resx">
-      <DependentUpon>frmPerformanceMonitor.vb</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="My Project\Application.myapp">
@@ -151,6 +143,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Components\PrefMon\PrefMon.vbproj">
+      <Project>{2CB74250-44C6-4ABB-9CC0-9292387B87B5}</Project>
+      <Name>PrefMon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\i00SpellCheck\i00SpellCheck.vbproj">
       <Project>{27D0D9B3-719C-46B7-9F03-3F91E82E7436}</Project>
       <Name>i00SpellCheck</Name>
@@ -163,9 +159,17 @@
       <Project>{0812402A-DBD8-4DC2-9886-2AF9075E9F1D}</Project>
       <Name>LabelPlugin</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\TextBoxPrinter\TextBoxPrinter.vbproj">
+      <Project>{BE14E758-924E-4508-BCD3-1E5407919C04}</Project>
+      <Name>TextBoxPrinter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Plugins\TextBoxSpeechRecognition\TextBoxSpeechRecognition.vbproj">
       <Project>{853E73A8-4419-40B4-8E3E-DE506B57902C}</Project>
       <Name>TextBoxSpeechRecognition</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\TextBoxTranslator\TextBoxTranslator.vbproj">
+      <Project>{2DD0CEDA-191E-43E0-9FC4-E201FE39991D}</Project>
+      <Name>TextBoxTranslator</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

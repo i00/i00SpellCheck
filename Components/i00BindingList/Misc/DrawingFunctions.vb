@@ -216,7 +216,7 @@ Public Class DrawingFunctions
                     Try
                         g.FillPath(brush, gp)
                     Catch ex As Exception
-                        Debug.Print("error modDrawing.DrawString")
+                        'Debug.Print("error modDrawing.DrawString")
                     End Try
                 End Using
             End If

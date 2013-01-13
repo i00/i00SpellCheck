@@ -36,14 +36,28 @@ Public Class FlatFileDictionary
         End Get
     End Property
 
-    Public Shared Sub LoadDefaultDictionary()
+    Public Delegate Sub DictionaryLoaded_cb()
+
+    Public Shared Sub LoadDefaultDictionary(Optional ByVal DictionaryLoaded_cb As DictionaryLoaded_cb = Nothing)
+        Dim ThreadLoaded As Boolean = False
         If DefaultDictionary Is Nothing Then
             'load from file
             If FileIO.FileSystem.FileExists(DefaultDictFile) Then
                 'load this
                 Try
                     DefaultDictionary = New FlatFileDictionary()
-                    DefaultDictionary.LoadFromFile(DefaultDictFile)
+                    If DictionaryLoaded_cb IsNot Nothing Then
+                        ThreadLoaded = True
+                        Dim t As New Threading.Thread(AddressOf mtLoadDictionary)
+                        t.Name = "Load spell check dictionary"
+
+                        t.IsBackground = True 'make it abort when the app is killed
+                        t.Start(DictionaryLoaded_cb)
+
+                    Else
+                        'load it in this thread
+                        DefaultDictionary.LoadFromFile(DefaultDictFile)
+                    End If
                 Catch ex As Exception
                     'failed ... load blank one 
                     DefaultDictionary = New FlatFileDictionary(DefaultDictFile, True)
@@ -52,6 +66,20 @@ Public Class FlatFileDictionary
                 'file not found ... load blank one
                 DefaultDictionary = New FlatFileDictionary(DefaultDictFile, True)
             End If
+        End If
+        If DictionaryLoaded_cb IsNot Nothing Then
+            If ThreadLoaded = False Then
+                'we didn't need to load this in a thread... so invoke the cb here...
+                DictionaryLoaded_cb.Invoke()
+            End If
+        End If
+    End Sub
+
+    Private Shared Sub mtLoadDictionary(ByVal o As Object)
+        DefaultDictionary.LoadFromFile(DefaultDictFile)
+        Dim DictionaryLoaded_cb = DirectCast(o, DictionaryLoaded_cb)
+        If DictionaryLoaded_cb IsNot Nothing Then
+            DictionaryLoaded_cb.Invoke()
         End If
     End Sub
 
@@ -111,7 +139,7 @@ Public Class FlatFileDictionary
             Return (From xItem In UnderlyingDict.Values.OfType(Of List(Of String))() Select xItem.Count).Sum
         End Function
 
-        Shadows Sub Add(ByVal Word As String)
+        Public Sub Add(ByVal Word As String)
             Dim firstLetter = Word.ToLower.First
             If UnderlyingDict.ContainsKey(firstLetter) = False Then
                 Dim List As New List(Of String)
@@ -119,6 +147,13 @@ Public Class FlatFileDictionary
             End If
             DirectCast(UnderlyingDict(firstLetter), List(Of String)).Add(Word)
         End Sub
+
+        Public Function Contains(ByVal Word As String) As Boolean
+            Dim firstLetter = Word.ToLower.First
+            If UnderlyingDict.ContainsKey(firstLetter) Then
+                Return DirectCast(UnderlyingDict(firstLetter), List(Of String)).Contains(Word)
+            End If
+        End Function
 
     End Class
 

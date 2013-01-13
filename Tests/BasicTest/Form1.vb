@@ -7,7 +7,7 @@ Public Class Form1
         TextBox1.SelectionLength = 0
 
         'The following is all that needs to be called...
-        Me.EnableSpellCheck()
+        Me.EnableControlExtensions()
         'All multi-line textboxes within the control specified will automatically be spell checked!
 
         'If the control specified is a form then all owned forms will AUTOMATICALLY have their textboxes 

@@ -8,26 +8,24 @@ Public Class Form1
         AddHandler SpellCheckFormExtension.DictionaryLoaded, AddressOf DictionaryLoaded
         tslStatus.Text = "Loading dictionary..."
 
-        'SpellCheckControlAdded/Removed events are called whenever a spell check is created (auto or manual) on a control
+        'ControlExtensionAdded/Removed events are called whenever a spell check is created (auto or manual) on a control
         'Here this is used to process new textboxes for owner-draw events
-        AddHandler SpellCheckControlExtension.SpellCheckControlAdded, AddressOf SpellCheckControlAdded
-        AddHandler SpellCheckControlExtension.SpellCheckControlRemoved, AddressOf SpellCheckControlRemoved
+        AddHandler ControlExtensions.ControlExtensionAdded, AddressOf ControlExtensionAdded
+        AddHandler ControlExtensions.ControlExtensionRemoved, AddressOf ControlExtensionRemoved
 
-        ''enable the spell check
-        ''this will enable the spell check on ALL POSSIBLE CONTROLS ON THIS form AND ALL POSSIBLE CONTROLS ON ALL OWNED FORMS AS THEY OPEN automatically :)
-        Me.EnableSpellCheck()
+        ''Enable control extensions
+        ''this will enable control extensions on ALL POSSIBLE CONTROLS ON THIS form AND ALL POSSIBLE CONTROLS ON ALL OWNED FORMS AS THEY OPEN automatically :)
+        Me.EnableControlExtensions()
+
+        ''To load a single control extension on a control call: 
+        'ControlExtensions.LoadSingleControlExtension(TextBox1, New TextBoxPrinter.TextBoxPrinter)
+
         ''To enable spell check on single line textboxes you will need to call:
         'TextBox1.EnableSpellCheck()
 
-        ''if you wanted to pass in options you can do so by going:
-        'Dim SpellCheckSettings As New i00SpellCheck.SpellCheckSettings
-        'SpellCheckSettings.DoSubforms = True 'Specifies if owned forms should be automatically spell checked
-        'SpellCheckSettings.AllowAdditions = True 'Specifies if you want to allow the user to add words to the dictionary
-        'SpellCheckSettings.AllowIgnore = True 'Specifies if you want to allow the user ignore words
-        'SpellCheckSettings.AllowRemovals = True 'Specifies if you want to allow users to delete words from the dictionary
-        'SpellCheckSettings.AllowInMenuDefs = True 'Specifies if the in menu definitions should be shown for correctly spelled words
-        'SpellCheckSettings.AllowChangeTo = True 'Specifies if "Change to..." (to change to a synonym) should be shown in the menu for correctly spelled words
-        'Me.EnableSpellCheck(SpellCheckSettings)
+        ''If you wanted to pass in options you can do so by handling the ControlExtensionAdding event PRIOR to calling EnableControlExtensions:
+        'AddHandler ControlExtensions.ControlExtensionAdding, AddressOf ControlExtensionAdding
+        ''Also refer to the commented ControlExtensionAdding Sub in this form for more info
 
         ''You can also enable spell checking on an individual Control (if supported):
         'TextBox1.EnableSpellCheck()
@@ -37,13 +35,19 @@ Public Class Form1
 
         ''To see if the spell check is enabled on a Control:
         'Dim SpellCheckEnabled = TextBox1.IsSpellCheckEnabled()
+        ''To see if another control extension is loaded (in this case call see if the TextBoxPrinter Extension is loaded on TextBox1):
+        'Dim PrinterExtLoaded = TextBox1.ExtensionCast(Of TextBoxPrinter.TextBoxPrinter)() IsNot Nothing
 
-        ''To change options on an individual Control:
+        ''To change spelling options on an individual Control:
         'TextBox1.SpellCheck.Settings.AllowAdditions = True
         'TextBox1.SpellCheck.Settings.AllowIgnore = True
         'TextBox1.SpellCheck.Settings.AllowRemovals = True
         'TextBox1.SpellCheck.Settings.ShowMistakes = True
         ''etc
+
+        ''To set control extension options / call methods from control extensions (in this case call Print() from TextBox1):
+        'Dim PrinterExt = TextBox1.ExtensionCast(Of TextBoxPrinter.TextBoxPrinter)()
+        'PrinterExt.Print()
 
         ''To show a spellcheck dialog for an individual Control:
         'Dim iSpellCheckDialog = TryCast(TextBox1.SpellCheck, i00SpellCheck.SpellCheckControlBase.iSpellCheckDialog)
@@ -70,21 +74,48 @@ Public Class Form1
 
         ''Repaint all of the controls that use the same dictionary...
         'TextBox1.SpellCheck.InvalidateAllControlsWithSameDict()
+
     End Sub
 
+    ''This is used to setup spell check settings when the spell check extension is loaded:
+    'Private Sub ControlExtensionAdding(ByVal sender As Object, ByVal e As ControlExtensionAddingEventArgs)
+    '    Dim SpellCheckControlBase = TryCast(e.Extension, SpellCheckControlBase)
+    '    If SpellCheckControlBase IsNot Nothing Then
+    '        Static SpellCheckSettings As i00SpellCheck.SpellCheckSettings 'Static for settings to be shared amongst all controls, use dim for control specific settings...
+    '        If SpellCheckSettings Is Nothing Then
+    '            SpellCheckSettings = New i00SpellCheck.SpellCheckSettings
+    '            SpellCheckSettings.AllowAdditions = True 'Specifies if you want to allow the user to add words to the dictionary
+    '            SpellCheckSettings.AllowIgnore = True 'Specifies if you want to allow the user ignore words
+    '            SpellCheckSettings.AllowRemovals = True 'Specifies if you want to allow users to delete words from the dictionary
+    '            SpellCheckSettings.AllowInMenuDefs = True 'Specifies if the in menu definitions should be shown for correctly spelled words
+    '            SpellCheckSettings.AllowChangeTo = True 'Specifies if "Change to..." (to change to a synonym) should be shown in the menu for correctly spelled words
+    '        End If
+    '        SpellCheckControlBase.Settings = SpellCheckSettings
+    '    End If
+    'End Sub
+
+    Private Delegate Sub DictionaryLoaded_cb(ByVal sender As Object, ByVal e As EventArgs)
     Private Sub DictionaryLoaded(ByVal sender As Object, ByVal e As EventArgs)
-        tslStatus.Text = "Dictionary loaded " & Dictionary.DefaultDictionary.Count & " word" & If(Dictionary.DefaultDictionary.Count = 1, "", "s")
+        If Me.InvokeRequired Then
+            Dim DictionaryLoaded_cb As New DictionaryLoaded_cb(AddressOf DictionaryLoaded)
+            Me.Invoke(DictionaryLoaded_cb, sender, e)
+        Else
+            tslStatus.Text = "Dictionary loaded " & Dictionary.DefaultDictionary.Count & " word" & If(Dictionary.DefaultDictionary.Count = 1, "", "s")
+        End If
     End Sub
 
-    Private Sub SpellCheckControlAdded(ByVal sender As Object, ByVal e As SpellCheckControlAddedRemovedEventArgs)
+    Private Sub ControlExtensionAdded(ByVal sender As Object, ByVal e As ControlExtensionAddedRemovedEventArgs)
         'add the custom draw event handlers...
-        AddHandler SpellCheckControls(e.Control).SpellCheckErrorPaint, AddressOf SpellCheckErrorPaint
+        If TypeOf e.Extension Is SpellCheckControlBase Then
+            'we are adding the spelling control extension
+            AddHandler e.Control.SpellCheck.SpellCheckErrorPaint, AddressOf SpellCheckErrorPaint
+        End If
     End Sub
 
-    Private Sub SpellCheckControlRemoved(ByVal sender As Object, ByVal e As SpellCheckControlAddedRemovedEventArgs)
+    Private Sub ControlExtensionRemoved(ByVal sender As Object, ByVal e As ControlExtensionAddedRemovedEventArgs)
         'remove the custom draw event handlers...
-        If SpellCheckControls.ContainsKey(e.Control) Then
-            RemoveHandler SpellCheckControls(e.Control).SpellCheckErrorPaint, AddressOf SpellCheckErrorPaint
+        If e.Control.ExtensionCast(Of SpellCheckControlBase)() IsNot Nothing Then
+            RemoveHandler e.Control.SpellCheck.SpellCheckErrorPaint, AddressOf SpellCheckErrorPaint
         End If
     End Sub
 
@@ -124,32 +155,29 @@ Public Class Form1
                         e.DrawDefault = True
                     Else
                         Randomize()
-                        'e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
+                        Static DictLetterPoints As New Dictionary(Of Char, Single)
+                        Dim rndRange = 0.2
                         Using gp As New Drawing2D.GraphicsPath
                             Dim Points As New List(Of PointF)
-                            Dim StartX = e.Bounds.X + ((Rnd() * 16) - 8)
-                            For i = StartX To e.Bounds.Right + 8 Step (Rnd() * 16) + 16
-                                Dim y = ((Rnd() * 8) + ((e.Bounds.Height / 2) - 4) + e.Bounds.Top)
-                                Points.Add(New PointF(i, CSng(y)))
+                            For i = 0 To e.Word.Length - 1
+                                If DictLetterPoints.ContainsKey(e.Word(i)) = False Then
+                                    DictLetterPoints.Add(e.Word(i), CSng((Rnd() * rndRange) + ((1 - rndRange) / 2)))
+                                End If
+                                Dim ThisYPerc = DictLetterPoints(e.Word(i))
+                                Dim ThisX = If(e.Word.Length = 1, 0, i / (e.Word.Length - 1))
+                                Points.Add(New PointF(CSng(e.Bounds.X + (e.Bounds.Width * ThisX)), CSng(e.Bounds.Y + (e.Bounds.Height * ThisYPerc))))
                             Next
                             If Points.Count = 1 Then
-                                'add another point
-                                Dim y = ((Rnd() * 8) + ((e.Bounds.Height / 2) - 4) + e.Bounds.Top)
-                                Points.Add(New PointF(Points.First.X, CSng(y)))
-                            End If
-                            If Points.Count > 1 Then
+                                Points.Add(New PointF(e.Bounds.Right, Points.Last.Y))
+                                gp.AddLines(Points.ToArray)
+                            Else
                                 gp.AddCurve(Points.ToArray)
-                                Using p As New Pen(Color, 3)
-                                    Try
-                                        e.Graphics.DrawPath(p, gp)
-                                    Catch ex As Exception
-                                        ' path produces an out of memory exception if all of the points are in the same spot ...
-                                        'this happens sometimes since generating alot of random numbers in quick succession duplicates sometimes!
-                                    End Try
-                                End Using
                             End If
-                            e.DrawDefault = False
+                            Using p As New Pen(Color, 3)
+                                e.Graphics.DrawPath(p, gp)
+                            End Using
                         End Using
+                        e.DrawDefault = False
                     End If
                 Case Else
                     'draw default
@@ -214,8 +242,9 @@ Public Class Form1
 
     Private Sub ShowErrorsToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ShowErrorsToolStripMenuItem.Click
         ShowIgnoredToolStripMenuItem.Enabled = ShowErrorsToolStripMenuItem.Checked
+        Dim SpellCheckControls = ControlExtensions.GetControlsWithExtension(Of SpellCheckControlBase)()
         For Each item In SpellCheckControls
-            item.Value.Settings.ShowMistakes = ShowErrorsToolStripMenuItem.Checked
+            item.SpellCheck.Settings.ShowMistakes = ShowErrorsToolStripMenuItem.Checked
         Next
         UpdatePropertyGrids()
     End Sub
@@ -230,29 +259,33 @@ Public Class Form1
                 item.Checked = False
             End If
         Next
+        Dim SpellCheckControls = ControlExtensions.GetControlsWithExtension(Of SpellCheckControlBase)()
         For Each item In SpellCheckControls
-            item.Value.Settings.ShowIgnored = SelectedEnum
+            item.SpellCheck.Settings.ShowIgnored = SelectedEnum
         Next
         UpdatePropertyGrids()
     End Sub
 
     Private Sub tsiCPSpellingError_ColorChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsiCPSpellingError.ColorChanged
+        Dim SpellCheckControls = ControlExtensions.GetControlsWithExtension(Of SpellCheckControlBase)()
         For Each item In SpellCheckControls
-            item.Value.Settings.MistakeColor = tsiCPSpellingError.SelectedColor
+            item.SpellCheck.Settings.MistakeColor = tsiCPSpellingError.SelectedColor
         Next
         UpdatePropertyGrids()
     End Sub
 
     Private Sub tsiCPCaseError_ColorChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsiCPCaseError.ColorChanged
+        Dim SpellCheckControls = ControlExtensions.GetControlsWithExtension(Of SpellCheckControlBase)()
         For Each item In SpellCheckControls
-            item.Value.Settings.CaseMistakeColor = tsiCPCaseError.SelectedColor
+            item.SpellCheck.Settings.CaseMistakeColor = tsiCPCaseError.SelectedColor
         Next
         UpdatePropertyGrids()
     End Sub
 
     Private Sub tsiCPIgnoreColor_ColorChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsiCPIgnoreColor.ColorChanged
+        Dim SpellCheckControls = ControlExtensions.GetControlsWithExtension(Of SpellCheckControlBase)()
         For Each item In SpellCheckControls
-            item.Value.Settings.IgnoreColor = tsiCPIgnoreColor.SelectedColor
+            item.SpellCheck.Settings.IgnoreColor = tsiCPIgnoreColor.SelectedColor
         Next
         UpdatePropertyGrids()
     End Sub
@@ -277,7 +310,7 @@ Public Class Form1
     Private Sub UpdatePropertyGrids()
         Dim ctl As Control = Me
         Do Until ctl Is Nothing
-            Dim PropertyGrid = TryCast(ctl, PropertyGrid)
+            Dim PropertyGrid = TryCast(ctl, ControlExtPropGrid)
             If PropertyGrid IsNot Nothing Then
                 PropertyGrid.Visible = tsbProperties.Checked
                 PropertyGrid.Refresh()
@@ -287,8 +320,9 @@ Public Class Form1
     End Sub
 
     Private Sub tsiDrawStyle_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsiDrawStyle.SelectedIndexChanged
+        Dim SpellCheckControls = ControlExtensions.GetControlsWithExtension(Of SpellCheckControlBase)()
         For Each item In SpellCheckControls
-            item.Value.RepaintControl()
+            item.SpellCheck.RepaintControl()
         Next
     End Sub
 

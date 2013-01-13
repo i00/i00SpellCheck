@@ -259,12 +259,6 @@ Public Class HTMLParser
                 Return
             End If
 
-            If TypeOf html Is HTMLParser.Label Then
-                Dim label As HTMLParser.Label = TryCast(html, HTMLParser.Label)
-                _size = New SizeF(label.Width, label.Height)
-                Return
-            End If
-
             Throw New Exception("Unknown HTML element!")
         End Sub
 
@@ -358,18 +352,6 @@ Public Class HTMLParser
                     Dim tag As HTMLParser.Tag = DirectCast(part, HTMLParser.Tag)
                     Dim oldStatus As New Status(status)
 
-                    If tag.LName = "label" Then
-                        Dim attr As HTMLParser.Attribute = tag.AttrList.Find("ID")
-                        Dim ID As String = If((attr IsNot Nothing), attr.Value, "")
-                        attr = tag.AttrList.Find("value")
-                        Dim value As String = If((attr IsNot Nothing), attr.Value, "")
-                        attr = tag.AttrList.Find("width")
-                        Dim width As Single = If((attr IsNot Nothing), attr.GetValueAsFloat(-1), -1)
-                        attr = tag.AttrList.Find("height")
-                        Dim height As Single = If((attr IsNot Nothing), attr.GetValueAsFloat(-1), -1)
-
-                        _elements.Add(New Element((New HTMLParser.Label(ID, value, width, height))))
-                    End If
                     Select Case tag.LName
                         Case "img"
                             Dim Src = tag.AttrList.Find("src")
@@ -757,51 +739,6 @@ AddElement:
 
         Public Overrides Function ToString() As String
             Return String.Format("Comment: {0}", Me.Value)
-        End Function
-    End Class
-
-    Public Class Label
-        Inherits SimplePart
-        Private _id As String
-        Private _width As Single
-        Private _height As Single
-
-        Public Property Height() As Single
-            Get
-                Return _height
-            End Get
-            Set(ByVal value As Single)
-                _height = value
-            End Set
-        End Property
-
-        Public Property Width() As Single
-            Get
-                Return _width
-            End Get
-            Set(ByVal value As Single)
-                _width = value
-            End Set
-        End Property
-
-        Public Property ID() As String
-            Get
-                Return _id
-            End Get
-            Set(ByVal value As String)
-                _id = value
-            End Set
-        End Property
-
-        Public Sub New(ByVal id As String, ByVal value As String, ByVal width As Single, ByVal height As Single)
-            MyBase.New(PartType.SpecialAnchore, value)
-            _id = id
-            _width = width
-            _height = height
-        End Sub
-
-        Public Overrides Function ToString() As String
-            Return String.Format("LABEL: ID={0};value={1};W={2};H={3}", _id, Value, _width, _height)
         End Function
     End Class
 

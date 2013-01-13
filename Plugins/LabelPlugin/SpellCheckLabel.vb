@@ -47,9 +47,9 @@ Partial Public Class SpellCheckLabel
     End Sub
 
     'Lets the EnableSpellCheck() know what ControlTypes we can spellcheck
-    Public Overrides ReadOnly Property ControlType() As System.Type
+    Public Overrides ReadOnly Property ControlTypes() As IEnumerable(Of System.Type)
         Get
-            Return GetType(Label)
+            Return New System.Type() {GetType(Label)}
         End Get
     End Property
 
@@ -84,7 +84,9 @@ Partial Public Class SpellCheckLabel
 #Region "Painting"
 
     Public Overrides Sub RepaintControl()
-        parentLabel.Invalidate()
+        If parentLabel IsNot Nothing Then
+            parentLabel.Invalidate()
+        End If
     End Sub
 
     Private Sub Label_Paint(ByVal sender As Object, ByVal e As System.Windows.Forms.PaintEventArgs)

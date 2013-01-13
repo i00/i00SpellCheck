@@ -28,6 +28,7 @@ Public Class AboutScreen
 
     Public Sub New()
         InitializeComponent()
+        'Me.AnimationPoint = New Rectangle(100, 100, 400, 300)
         Me.Size = New Size(400, 400)
         Me.Icon = My.Resources.Icon1
     End Sub
@@ -38,9 +39,9 @@ Public Class AboutScreen
         lblReferences.Width = pnlReferences.ClientSize.Width - lblReferences.Left - System.Windows.Forms.SystemInformation.VerticalScrollBarWidth
         lblReferences.Text = Join((From xItem In a.GetReferencedAssemblies Order By xItem.Name Select xItem.Name).ToArray, vbCrLf)
 
-        Dim fi As FileVersionInfo = FileVersionInfo.GetVersionInfo(a.Location)
+        'Dim fi As FileVersionInfo = FileVersionInfo.GetVersionInfo(a.Location)
 
-        lblVersion.Text = "Version: " & fi.ProductVersion
+        lblVersion.Text = "Version: " & a.GetName.Version.ToString
 
         SelectedTab = New TabItem("About")
         Tabs.Add(SelectedTab)
@@ -69,6 +70,7 @@ Public Class AboutScreen
 
         SiteLink.Text = "http://i00Productions.org"
         SiteLinkProduct.Text = "http://www.vbforums.com/showthread.php?p=4075093"
+        SiteLinkProduct2.Text = "http://www.codeproject.com/Articles/265823/i00-Spell-Check-No-Third-Party-Components-Required"
 
     End Sub
 
@@ -77,7 +79,7 @@ Public Class AboutScreen
         If sPanel IsNot Nothing Then sPanel.Refresh()
     End Sub
 
-    Private Sub SiteLink_LinkClicked(ByVal sender As System.Object, ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs) Handles SiteLink.LinkClicked, SiteLinkProduct.LinkClicked
+    Private Sub SiteLink_LinkClicked(ByVal sender As System.Object, ByVal e As System.Windows.Forms.LinkLabelLinkClickedEventArgs) Handles SiteLink.LinkClicked, SiteLinkProduct.LinkClicked, SiteLinkProduct2.LinkClicked
         Dim sLinkLabel = TryCast(sender, LinkLabel)
         If sLinkLabel IsNot Nothing Then System.Diagnostics.Process.Start(sLinkLabel.Text)
     End Sub

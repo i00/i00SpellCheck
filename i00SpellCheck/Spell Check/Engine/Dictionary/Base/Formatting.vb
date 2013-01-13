@@ -22,6 +22,12 @@ Partial Public MustInherit Class Dictionary
 
 #Region "Check Case"
 
+        Public Shared Function ContainsNumbers(ByVal CompareWord As String) As Boolean
+            For Each item In CompareWord
+                If Char.IsDigit(item) Then Return True
+            Next
+        End Function
+
         Public Shared Function AllInCaps(ByVal CompareWord As String) As Boolean
             Dim ChrsInWord = CStr((From xItem In CompareWord Select xItem Where Asc(LCase(xItem)) >= 97 AndAlso Asc(LCase(xItem)) <= 122).ToArray)
             If ChrsInWord = UCase(ChrsInWord) Then

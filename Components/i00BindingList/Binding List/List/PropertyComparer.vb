@@ -1,4 +1,11 @@
-﻿'This code was origionaly taken from http://social.msdn.microsoft.com/forums/en-US/winformsdatacontrols/thread/43069cef-9f0a-4854-a5e7-42b701abc75e/
+﻿'©i00 Productions All rights reserved
+'This article is derived from http://social.msdn.microsoft.com/forums/en-US/winformsdatacontrols/thread/43069cef-9f0a-4854-a5e7-42b701abc75e/
+'----------------------------------------------------------------------------------------------------
+'
+'i00 is not and shall not be held accountable for any damages directly or indirectly caused by the
+'use or miss-use of this product.  This product is only a component and thus is intended to be used 
+'as part of other software, it is not a complete software package, thus i00 Productions is not 
+'responsible for any legal ramifications that software using this product breaches.
 
 Imports System.Reflection
 Imports System.ComponentModel

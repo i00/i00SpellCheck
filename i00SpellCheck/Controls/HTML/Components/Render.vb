@@ -8,7 +8,28 @@
 'responsible for any legal ramifications that software using this product breaches.
 
 Partial Class HTMLParser
-    Public Shared Function PaintHTML(ByVal HTML As String, Optional ByVal g As Graphics = Nothing, Optional ByVal MaxWidth As Single = -1, Optional ByVal status As Status = Nothing) As SizeF
+
+    Public Class PaintHTMLReturn
+        Public Size As SizeF
+        Friend Lines As New List(Of TextLine)()
+        Friend HTMLElements As IList(Of Element)
+        Public Function GetHTMLText() As String
+            Dim sb As New System.Text.StringBuilder
+            Dim iElement As Integer = 0
+            For Each line In Lines
+                Do Until iElement > line.LastElement
+                    If HTMLElements(iElement).HTML IsNot Nothing AndAlso HTMLElements(iElement).HTML.Type = PartType.Text Then
+                        sb.Append(HTMLElements(iElement).HTML.Value & " ")
+                    End If
+                    iElement += 1
+                Loop
+                If line IsNot Lines.Last Then sb.Append(vbCrLf)
+            Next
+            Return sb.ToString
+        End Function
+    End Class
+
+    Public Shared Function PaintHTML(ByVal HTML As String, Optional ByVal g As Graphics = Nothing, Optional ByVal MaxWidth As Single = -1, Optional ByVal status As Status = Nothing) As PaintHTMLReturn
         HTML = Replace(HTML, vbCrLf, "<br>")
         Dim _textLines As New List(Of TextLine)()
         Dim currWdth As Single = 0, currHgth As Single = 0
@@ -20,7 +41,6 @@ Partial Class HTMLParser
         Dim font As Font = status.Font.GetRealFont()
         Dim values As IList(Of Element) = Nothing
         Dim _totalHeight As Single = 0
-        Dim _labelsPositions As New Dictionary(Of String, Element)
         Dim _totalWidth As Single = 0
 
         Dim b As Bitmap = Nothing
@@ -116,7 +136,11 @@ SizeElement:
             End If
         End Try
 
-        PaintHTML = New SizeF(_totalWidth, _totalHeight)
+        PaintHTML = New PaintHTMLReturn
+        PaintHTML.Lines = _textLines
+        PaintHTML.Size = New SizeF(_totalWidth, _totalHeight)
+        PaintHTML.HTMLElements = values
+
         If b IsNot Nothing Then
             'don't paint
             Exit Function
@@ -167,15 +191,6 @@ SizeElement:
                 If values(currElement).Type = ElementType.HTML Then
                     If values(currElement).HTML.Type = HTMLParser.PartType.Text Then
                         g.DrawString(System.Web.HttpUtility.HtmlDecode(values(currElement).HTML.Value), font, brush, left, top + line.Height - values(currElement).Size.Height)
-                    Else
-                        Dim label As HTMLParser.Label = TryCast(values(currElement).HTML, HTMLParser.Label)
-                        Dim rect As New RectangleF(left, top + line.Height - values(currElement).Size.Height, values(currElement).Size.Width, values(currElement).Size.Height)
-                        Dim irect As New Rectangle(CInt(Math.Truncate(left)), CInt(Math.Truncate(top + line.Height - values(currElement).Size.Height)), CInt(Math.Truncate(values(currElement).Size.Width)), CInt(Math.Truncate(values(currElement).Size.Height)))
-
-                        g.DrawString(System.Web.HttpUtility.HtmlDecode(label.Value), font, brush, rect)
-
-                        values(currElement).DisplayedRect = irect
-                        _labelsPositions.Add(label.ID, values(currElement))
                     End If
 
                     left += values(currElement).Size.Width

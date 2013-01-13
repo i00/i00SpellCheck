@@ -20,23 +20,20 @@ namespace CSharpTest
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //enable the spell check
-            //this will enable the spell check on ALL POSSIBLE CONTROLS ON THIS form AND ALL POSSIBLE CONTROLS ON ALL OWNED FORMS AS THEY OPEN automatically :)
-            this.EnableSpellCheck(null);
+            //Enable control extensions
+            //this will enable control extensions on ALL POSSIBLE CONTROLS ON THIS form AND ALL POSSIBLE CONTROLS ON ALL OWNED FORMS AS THEY OPEN automatically :)
+            this.EnableControlExtensions();
+
+            ////To load a single control extension on a control call: 
+            //ControlExtensions.LoadSingleControlExtension(TextBox1, New TextBoxPrinter.TextBoxPrinter());
 
             ////To enable spell check on single line textboxes you will need to call:
             //TextBox1.EnableSpellCheck(null);
 
-            ////if you wanted to pass in options you can do so by going:
-            //i00SpellCheck.SpellCheckSettings SpellCheckSettings = new i00SpellCheck.SpellCheckSettings();
-            //SpellCheckSettings.DoSubforms = true; //Specifies if owned forms should be automatically spell checked
-            //SpellCheckSettings.AllowAdditions = true; //Specifies if you want to allow the user to add words to the dictionary
-            //SpellCheckSettings.AllowIgnore = true; //Specifies if you want to allow the user ignore words
-            //SpellCheckSettings.AllowRemovals = true; //Specifies if you want to allow users to delete words from the dictionary
-            //SpellCheckSettings.AllowInMenuDefs = true; //Specifies if the in menu definitions should be shown for correctly spelled words
-            //SpellCheckSettings.AllowChangeTo = true; //Specifies if "Change to..." (to change to a synonym) should be shown in the menu for correctly spelled words
-            //this.EnableSpellCheck(SpellCheckSettings);
-
+            ////If you wanted to pass in options you can do so by handling the ControlExtensionAdding event PRIOR to calling EnableControlExtensions:
+            //ControlExtensions.ControlExtensionAdding += ControlExtensionAdding;
+            ////Also refer to the commented ControlExtensionAdding Sub in this form for more info
+            
             ////You can also enable spell checking on an individual Control (if supported):
             //TextBox1.EnableSpellCheck(null);
 
@@ -45,6 +42,8 @@ namespace CSharpTest
 
             ////To see if the spell check is enabled on a Control:
             //bool SpellCheckEnabled = TextBox1.IsSpellCheckEnabled();
+            ////To see if another control extension is loaded (in this case call see if the TextBoxPrinter Extension is loaded on TextBox1):
+            //var PrinterExtLoaded = TextBox1.ExtensionCast<TextBoxPrinter.TextBoxPrinter>() != null;
 
             ////To change options on an individual Control:
             //TextBox1.SpellCheck(true, null).Settings.AllowAdditions = true;
@@ -53,11 +52,18 @@ namespace CSharpTest
             //TextBox1.SpellCheck(true, null).Settings.ShowMistakes = true;
             ////etc
 
+            ////To set control extension options / call methods from control extensions (in this case call Print() from TextBox1):
+            //object PrinterExt = TextBox1.ExtensionCast<TextBoxPrinter.TextBoxPrinter>();
+            //PrinterExt.Print();
+            
             ////To show a spellcheck dialog for an individual Control:
-            ////...Sorry I don't know how to convert this ... let me know if you do!
+            //var iSpellCheckDialog = TextBox1.SpellCheck(true,null) as i00SpellCheck.SpellCheckControlBase.iSpellCheckDialog;
+            //if (iSpellCheckDialog != null) {
+            //    iSpellCheckDialog.ShowDialog();
+            //}
 
             ////To load a custom dictionary from a saved file:
-            i00SpellCheck.FlatFileDictionary Dictionary = new i00SpellCheck.FlatFileDictionary("c:\\Custom.dic", false);
+            //i00SpellCheck.FlatFileDictionary Dictionary = new i00SpellCheck.FlatFileDictionary("c:\\Custom.dic", false);
 
             ////To create a new blank dictionary and save it as a file
             //i00SpellCheck.FlatFileDictionary Dictionary = new i00SpellCheck.FlatFileDictionary("c:\\Custom.dic", true);
@@ -104,6 +110,30 @@ namespace CSharpTest
 
             this.Icon = Icon.ExtractAssociatedIcon("i00SpellCheck.exe");
         }
+
+
+
+        ////This is used to setup spell check settings when the spell check extension is loaded:
+        //static i00SpellCheck.SpellCheckSettings SpellCheckSettings = null;//Static for settings to be shared amongst all controls, use "i00SpellCheck.SpellCheckSettings SpellCheckSettings = null;" in the method below for control specific settings...
+        //private void ControlExtensionAdding(object sender, i00SpellCheck.MiscControlExtension.ControlExtensionAddingEventArgs e)
+        //{
+        //    var SpellCheckControlBase = e.Extension as SpellCheckControlBase;
+        //    if (SpellCheckControlBase != null)
+        //    {
+        //        //i00SpellCheck.SpellCheckSettings SpellCheckSettings = null;
+        //        if (SpellCheckSettings == null)
+        //        {
+        //            SpellCheckSettings = new i00SpellCheck.SpellCheckSettings();
+        //            SpellCheckSettings.AllowAdditions = true; //Specifies if you want to allow the user to add words to the dictionary
+        //            SpellCheckSettings.AllowIgnore = true; //Specifies if you want to allow the user ignore words
+        //            SpellCheckSettings.AllowRemovals = true; //Specifies if you want to allow users to delete words from the dictionary
+        //            SpellCheckSettings.AllowInMenuDefs = true; //Specifies if the in menu definitions should be shown for correctly spelled words
+        //            SpellCheckSettings.AllowChangeTo = true; //Specifies if "Change to..." (to change to a synonym) should be shown in the menu for correctly spelled words
+        //        }
+        //        SpellCheckControlBase.Settings = SpellCheckSettings;
+        //    }
+        //}
+
 
         //show and hide the property grid
         private void tsbProperties_Click(object sender, EventArgs e)
@@ -158,7 +188,7 @@ namespace CSharpTest
             }
             else
             {
-                TextBox1.EnableSpellCheck(null);
+                TextBox1.EnableSpellCheck();
             }
             UpdateEnabledCheck();
         }

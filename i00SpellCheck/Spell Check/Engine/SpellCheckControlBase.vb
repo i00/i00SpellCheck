@@ -14,30 +14,22 @@
 'as part of other software, it is not a complete software package, thus i00 Productions is not 
 'responsible for any legal ramifications that software using this product breaches.
 
+<DoNotApplyControlExtension()> _
 Public MustInherit Class SpellCheckControlBase
-    Inherits NativeWindow
-    Implements IMessageFilter
+    Inherits ControlExtension
 
 #Region "Ignore"
-
-#Region "Update the WndProc Handle when the control gets a new handle - for when properties like RightToLeft are changed"
-
-    Private Sub mc_Control_HandleCreated(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.HandleCreated
-        AssignHandle(Control.Handle)
-    End Sub
-
-#End Region
 
 #Region "IMessageFilter - For Keypress to Make Ignore Underline Appear"
 
     Const WM_KEYDOWN As Integer = &H100
     Const WM_KEYUP As Integer = &H101
 
-    Public Function PreFilterMessage(ByRef m As System.Windows.Forms.Message) As Boolean Implements System.Windows.Forms.IMessageFilter.PreFilterMessage
+    Private Sub SpellCheckControlBase_PreFilterMessage(ByVal sender As Object, ByRef e As PreFilterMessageEventArgs) Handles Me.PreFilterMessage
         Static ctlPressed As Boolean
-        Select Case m.Msg
+        Select Case e.m.Msg
             Case WM_KEYDOWN
-                Select Case m.WParam.ToInt32
+                Select Case e.m.WParam.ToInt32
                     Case Keys.ControlKey
                         If Settings.ShowIgnored = SpellCheckSettings.ShowIgnoreState.OnKeyDown AndAlso ctlPressed = False Then
                             ctlPressed = True
@@ -45,7 +37,7 @@ Public MustInherit Class SpellCheckControlBase
                         End If
                 End Select
             Case WM_KEYUP
-                Select Case m.WParam.ToInt32
+                Select Case e.m.WParam.ToInt32
                     Case Keys.ControlKey
                         If Settings.ShowIgnored = SpellCheckSettings.ShowIgnoreState.OnKeyDown AndAlso ctlPressed = True Then
                             ctlPressed = False
@@ -53,7 +45,7 @@ Public MustInherit Class SpellCheckControlBase
                         End If
                 End Select
         End Select
-    End Function
+    End Sub
 
 #End Region
 
@@ -80,7 +72,7 @@ Public MustInherit Class SpellCheckControlBase
                 'return the default :)
                 If Dictionary.DefaultDictionary Is Nothing Then
                     'load flat file as default dictionary
-                    FlatFileDictionary.LoadDefaultDictionary()
+                    FlatFileDictionary.LoadDefaultDictionary(AddressOf SpellCheckFormExtension.DictionaryLoaded_cb)
                 End If
                 Return Dictionary.DefaultDictionary
             Else
@@ -111,7 +103,10 @@ Public MustInherit Class SpellCheckControlBase
         End Set
     End Property
 
-    Private Sub mc_Settings_Redraw(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Settings.Redraw
+    Private Sub mc_Settings_Redraw(ByVal sender As Object, ByVal e As SpellCheckSettings.RedrawArgs) Handles mc_Settings.Redraw
+        If e.ReloadDictionaryCache Then
+            dictCache.Clear()
+        End If
         RaiseEvent SettingsChanged(Me, EventArgs.Empty)
     End Sub
 
@@ -124,8 +119,11 @@ Public MustInherit Class SpellCheckControlBase
         End Get
     End Property
 
+    Protected DrawSpellingErrors As Boolean = True
+
     Protected ReadOnly Property OKToDraw() As Boolean
         Get
+            If DrawSpellingErrors = False Then Return False
             If OKToSpellCheck = False Then Return False
             If Settings.ShowMistakes = False Then Return False
             Return True
@@ -174,7 +172,8 @@ Public MustInherit Class SpellCheckControlBase
     End Sub
 
     Public Function AllControlsWithSameDict() As IEnumerable(Of SpellCheckControlBase)
-        Return (From xItem In SpellCheckControls Where xItem.Value.CurrentDictionary Is CurrentDictionary Select xItem.Value)
+        Dim SpellCheckControls = ControlExtensions.GetControlsWithExtension(Of SpellCheckControlBase)()
+        Return (From xItem In SpellCheckControls Where xItem.SpellCheck.CurrentDictionary Is CurrentDictionary Select xItem.SpellCheck)
     End Function
 
     Dim mc_CurrentSynonyms As Synonyms = Nothing
@@ -193,45 +192,14 @@ Public MustInherit Class SpellCheckControlBase
         End Set
     End Property
 
-    <System.ComponentModel.Category("Control")> _
-    <System.ComponentModel.Description("The type of control that will be automatically spellchecked by this class")> _
-    <System.ComponentModel.DisplayName("Control Type")> _
-    Public MustOverride ReadOnly Property ControlType() As Type
-
-    Protected Friend WithEvents mc_Control As Control
-    <System.ComponentModel.Category("Control")> _
-    <System.ComponentModel.Description("The Control associated with the SpellCheckControlBase object")> _
-    <System.ComponentModel.DisplayName("Control")> _
-    Public Overridable ReadOnly Property Control() As Control
-        Get
-            Return mc_Control
-        End Get
-    End Property
-
-    Friend Sub DoLoad()
-        'AssignHandle allows the WndProc to be fired :)
-        Try
-            AssignHandle(Control.Handle)
-        Catch ex As Exception
-
-        End Try
-        Application.AddMessageFilter(Me)
-        Load()
-    End Sub
-
-    MustOverride Sub Load()
-
     Public Interface iSpellCheckDialog
         Sub ShowDialog()
     End Interface
 
 
-    Private Sub mc_Control_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles mc_Control.Disposed
+    Private Sub SpellCheckControlBase_ControlDisposed(ByVal sender As Object, ByRef e As System.EventArgs) Handles Me.ControlDisposed
         'kill all running threads
         AbortSpellCheckThreads()
-
-        'remove the meesage filter...
-        Application.RemoveMessageFilter(Me)
     End Sub
 
 #Region "Dictionary Functions"
@@ -361,15 +329,18 @@ Public MustInherit Class SpellCheckControlBase
 
         Do Until WordsToCheck.Count = 0
             Dim arrToCheck() As KeyValuePair(Of String, Dictionary.SpellCheckWordError)
-            Try
+            SyncLock WordsToCheck
                 arrToCheck = WordsToCheck.ToArray
-            Catch ex As ArgumentException
-                Continue Do
-            End Try
+            End SyncLock
             For Each item In arrToCheck
                 'Dim item = WordsToCheck.First
                 If dictCache.ContainsKey(item.Key) = False Then
-                    dictCache.Add(item.Key, CurrentDictionary.SpellCheckWord(item.Key))
+                    If Settings.IgnoreWordOverride(item.Key) Then
+                        'ignore word in caps etc...
+                        dictCache.Add(item.Key, Dictionary.SpellCheckWordError.OK)
+                    Else
+                        dictCache.Add(item.Key, CurrentDictionary.SpellCheckWord(item.Key))
+                    End If
                 End If
                 WordsToCheck.Remove(item.Key)
             Next
@@ -388,6 +359,8 @@ Public MustInherit Class SpellCheckControlBase
                 Dim cb As New cb_InvokeRepaint(AddressOf InvokeRepaint)
                 Control.Invoke(cb)
             Catch ex As ObjectDisposedException
+                'control was disposed
+            Catch ex As InvalidOperationException
                 'control was disposed
             End Try
             'End If

@@ -88,6 +88,10 @@
     <Compile Include="frmTest.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Misc\EnumerateWindows.vb" />
+    <Compile Include="Misc\PipeServer\Client.vb" />
+    <Compile Include="Misc\ImageRes.vb" />
+    <Compile Include="Misc\PipeServer\Server.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -103,8 +107,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="SpeechEngineHelper.vb" />
-    <Compile Include="SpellCheckTextBoxSpeechRecognition.vb" />
+    <Compile Include="SpeechEngineHelper.vb">
+    </Compile>
+    <Compile Include="TextBoxSpeechRecognition.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="frmTest.resx">
@@ -140,6 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Icon.ico" />
+    <None Include="Resources\PipeServerIcon.ico" />
     <None Include="Resources\Talk.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

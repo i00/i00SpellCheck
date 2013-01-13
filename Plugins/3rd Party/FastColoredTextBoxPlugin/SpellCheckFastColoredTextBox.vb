@@ -42,9 +42,9 @@ Public Class SpellCheckFastColoredTextBox
     End Sub
 
     'Lets the EnableSpellCheck() know what ControlTypes we can spellcheck
-    Public Overrides ReadOnly Property ControlType() As System.Type
+    Public Overrides ReadOnly Property ControlTypes() As IEnumerable(Of System.Type)
         Get
-            Return GetType(FastColoredTextBox)
+            Return New System.Type() {GetType(FastColoredTextBox)}
         End Get
     End Property
 
@@ -113,6 +113,7 @@ Public Class SpellCheckFastColoredTextBox
         If ErrorStyleMarker IsNot Nothing Then
             parentFastColoredTextBox.Selection = ErrorStyleMarker.Range
 
+            SpellMenuItems.RemoveSpellMenuItems()
             SpellMenuItems.AddItems(ErrorStyleMarker.Range.Text, CurrentDictionary, CurrentDefinitions, CurrentSynonyms, Settings)
             ErrorMenu.Show(parentFastColoredTextBox, New Point(ErrorStyleMarker.rectangle.X, ErrorStyleMarker.rectangle.Bottom))
         End If
@@ -212,7 +213,7 @@ Public Class SpellCheckFastColoredTextBox
 
             Dim eArgs = New SpellCheckCustomPaintEventArgs With {.Graphics = gr, .Word = range.Text, .Bounds = rect, .WordState = WordState}
             OnSpellCheckErrorPaint(eArgs)
-                Select Case WordState
+            Select Case WordState
                 Case Dictionary.SpellCheckWordError.CaseError, Dictionary.SpellCheckWordError.SpellError
                     If eArgs.DrawDefault Then
                         DrawingFunctions.DrawWave(gr, New Point(rect.Left, rect.Bottom), New Point(rect.Right, rect.Bottom), Color)
@@ -239,7 +240,9 @@ Public Class SpellCheckFastColoredTextBox
     Public Overrides Sub RepaintControl()
         'qwertyuiop - will probably look at a way to pass back new errors eventually so we can just paint those as this would be able to SetStyle on those new errors ...
         'this has not been an issue before... as most controls repaint as a whole...
-        UpdateErrors(parentFastColoredTextBox.VisibleRange)
+        If parentFastColoredTextBox IsNot Nothing Then
+            UpdateErrors(parentFastColoredTextBox.VisibleRange)
+        End If
     End Sub
 
     Private Sub tmrRepaint_Tick(ByVal sender As Object, ByVal e As System.EventArgs) Handles tmrRepaint.Tick
@@ -324,8 +327,8 @@ Public Class SpellCheckFastColoredTextBox
     Public Function SetupControl(ByVal Control As System.Windows.Forms.Control) As Control Implements i00SpellCheck.iTestHarness.SetupControl
         Dim FastColoredTextBox = TryCast(Control, FastColoredTextBox)
         If FastColoredTextBox IsNot Nothing Then
-            FastColoredTextBox.LeftBracket = "("
-            FastColoredTextBox.RightBracket = ")"
+            FastColoredTextBox.LeftBracket = "("c
+            FastColoredTextBox.RightBracket = ")"c
 
             DirectCast(FastColoredTextBox.SpellCheck(), SpellCheckFastColoredTextBox).SpellCheckMatch = "('.*$|"".*?"")"
 

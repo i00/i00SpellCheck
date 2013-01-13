@@ -29,7 +29,6 @@ Partial Public MustInherit Class Dictionary
 
     Public Sub LoadFromFile(ByVal Filename As String)
         mc_Loading = True
-
         LoadFromFileInternal(Filename)
 
         mc_Loading = False

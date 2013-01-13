@@ -1,6 +1,6 @@
 ﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
 Partial Class AboutScreen
-    Inherits System.Windows.Forms.Form
+    Inherits WindowAnimation 'System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -28,6 +28,7 @@ Partial Class AboutScreen
         Me.pnlTabHolders = New System.Windows.Forms.Panel
         Me.pnlAbout = New System.Windows.Forms.Panel
         Me.Panel1 = New System.Windows.Forms.Panel
+        Me.SiteLinkProduct2 = New System.Windows.Forms.LinkLabel
         Me.SiteLinkProduct = New System.Windows.Forms.LinkLabel
         Me.Label3 = New System.Windows.Forms.Label
         Me.CtlLogo1 = New i00SpellCheck.ctlLogo
@@ -97,19 +98,34 @@ Partial Class AboutScreen
         Me.pnlAbout.Controls.Add(Me.CtlLogo1)
         Me.pnlAbout.Location = New System.Drawing.Point(339, 273)
         Me.pnlAbout.Name = "pnlAbout"
-        Me.pnlAbout.Size = New System.Drawing.Size(288, 150)
+        Me.pnlAbout.Size = New System.Drawing.Size(288, 163)
         Me.pnlAbout.TabIndex = 12
         Me.pnlAbout.Tag = "About"
         '
         'Panel1
         '
         Me.Panel1.Anchor = CType((System.Windows.Forms.AnchorStyles.Left Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Panel1.Controls.Add(Me.SiteLinkProduct2)
         Me.Panel1.Controls.Add(Me.SiteLinkProduct)
         Me.Panel1.Controls.Add(Me.Label3)
         Me.Panel1.Location = New System.Drawing.Point(3, 121)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(282, 26)
+        Me.Panel1.Size = New System.Drawing.Size(282, 39)
         Me.Panel1.TabIndex = 10
+        '
+        'SiteLinkProduct2
+        '
+        Me.SiteLinkProduct2.AutoSize = True
+        Me.SiteLinkProduct2.BackColor = System.Drawing.Color.Transparent
+        Me.SiteLinkProduct2.LinkColor = System.Drawing.Color.FromArgb(CType(CType(128, Byte), Integer), CType(CType(128, Byte), Integer), CType(CType(255, Byte), Integer))
+        Me.SiteLinkProduct2.Location = New System.Drawing.Point(3, 26)
+        Me.SiteLinkProduct2.Name = "SiteLinkProduct2"
+        Me.SiteLinkProduct2.Size = New System.Drawing.Size(19, 13)
+        Me.SiteLinkProduct2.TabIndex = 10
+        Me.SiteLinkProduct2.TabStop = True
+        Me.SiteLinkProduct2.Tag = "false"
+        Me.SiteLinkProduct2.Text = "...."
+        Me.SiteLinkProduct2.VisitedLinkColor = System.Drawing.Color.FromArgb(CType(CType(128, Byte), Integer), CType(CType(128, Byte), Integer), CType(CType(255, Byte), Integer))
         '
         'SiteLinkProduct
         '
@@ -331,4 +347,5 @@ Partial Class AboutScreen
     Friend WithEvents pnlReferences As i00SpellCheck.BufferedPanel
     Friend WithEvents lblReferences As i00SpellCheck.AutoGrowLabel
     Friend WithEvents btnClose As System.Windows.Forms.Button
+    Friend WithEvents SiteLinkProduct2 As System.Windows.Forms.LinkLabel
 End Class

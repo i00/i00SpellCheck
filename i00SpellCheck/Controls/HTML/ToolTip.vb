@@ -15,11 +15,11 @@ Public Class HTMLToolTip
     Inherits ToolTip
 
     Public Class TipClickEventArgs
+        Inherits EventArgs
         Public mouse As MouseEventArgs
         Public handled As Boolean
     End Class
 
-    
     Private WithEvents MasterForm As Form
 
     Private window As IWin32Window
@@ -58,7 +58,6 @@ Public Class HTMLToolTip
 
 #End Region
 
-
     Public Overloads Sub Hide()
         ToolTipWindow.hide(MyBase.UseAnimation OrElse MyBase.UseFading)
         'MyBase.Hide(window)
@@ -85,11 +84,6 @@ Public Class HTMLToolTip
 
     Public Sub ShowHTML(ByVal text As String, ByVal window As IWin32Window, ByVal point As Point, Optional ByVal Duration As Integer = Integer.MaxValue)
         mc_LastText = text
-        If ToolTipWindow.TipImage IsNot Nothing Then
-            Dim TipImage = ToolTipWindow.TipImage
-            ToolTipWindow.TipImage = Nothing
-            TipImage.Dispose()
-        End If
 
         If ToolTipTitle <> "" Then
             text = "<font face='" & System.Drawing.SystemFonts.StatusFont.Name & "' size='" & CInt(System.Drawing.SystemFonts.StatusFont.Size * 1.2) & "' color='" & System.Drawing.ColorTranslator.ToHtml(DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.Highlight), Color.FromKnownColor(KnownColor.ControlText))) & "'>" & ToolTipTitle & "</font>" & vbCrLf & text
@@ -108,19 +102,19 @@ Public Class HTMLToolTip
                     'left
                     If p.Y < ThisScreen.Bounds.Height / 2 Then
                         'top
-                        ThisPopupOrientation = ToolTipOrientations.TopLeft
+                        ThisPopupOrientation = ToolTipOrientations.LowRight
                     Else
                         'bot
-                        ThisPopupOrientation = ToolTipOrientations.LowLeft
+                        ThisPopupOrientation = ToolTipOrientations.TopRight
                     End If
                 Else
                     'right
                     If p.Y < ThisScreen.Bounds.Height / 2 Then
                         'top
-                        ThisPopupOrientation = ToolTipOrientations.TopRight
+                        ThisPopupOrientation = ToolTipOrientations.LowLeft
                     Else
                         'bot
-                        ThisPopupOrientation = ToolTipOrientations.LowRight
+                        ThisPopupOrientation = ToolTipOrientations.TopLeft
                     End If
                 End If
             Else
@@ -143,15 +137,15 @@ Public Class HTMLToolTip
         If IsBalloon Then
             'offset so that the pointy bit points to the point instead of the corner
             Select Case ThisPopupOrientation
-                Case ToolTipOrientations.LowLeft
+                Case ToolTipOrientations.TopRight
                     point.X -= BalloonPointerStartAt
                     point.Y -= TipSize.Height - BalloonShadowDepth - CInt(BalloonShadowBlur / 2)
-                Case ToolTipOrientations.TopRight
+                Case ToolTipOrientations.LowLeft
                     point.X -= TipSize.Width - BalloonPointerStartAt - BalloonShadowDepth - CInt(BalloonShadowBlur / 2)
-                Case ToolTipOrientations.LowRight
+                Case ToolTipOrientations.TopLeft
                     point.X -= TipSize.Width - BalloonPointerStartAt - BalloonShadowDepth - CInt(BalloonShadowBlur / 2)
                     point.Y -= TipSize.Height - BalloonShadowDepth - CInt(BalloonShadowBlur / 2)
-                Case ToolTipOrientations.TopLeft
+                Case ToolTipOrientations.LowRight
                     point.X -= BalloonPointerStartAt
             End Select
         End If
@@ -169,6 +163,7 @@ Public Class HTMLToolTip
         Using b As New Bitmap(TipSize.Width, TipSize.Height)
             Using g = Graphics.FromImage(b)
                 HTMLToolTipDraw(g, TipSize, text)
+                'g.DrawRectangle(Pens.Red, New Rectangle(0, 0, b.Width - 1, b.Height - 1))
             End Using
             ToolTipWindow.Show(window, MyBase.UseAnimation OrElse MyBase.UseFading, Duration, b)
         End Using
@@ -187,6 +182,8 @@ Public Class HTMLToolTip
     Private Sub ToolTipWindow_TipClosed(ByVal sender As Object, ByVal e As System.EventArgs) Handles ToolTipWindow.TipClosed
         RaiseEvent TipClosed(Me, EventArgs.Empty)
     End Sub
+
+#Region "Window"
 
     Public Class ToolTipPopup
         Inherits PerPixelAlphaForm
@@ -226,7 +223,7 @@ Public Class HTMLToolTip
         Dim FadeFrom As Byte
         Dim FadeTo As Byte
         Dim StartFadeTime As Integer
-        Const FadeTime As Integer = 250
+        Public FadeTime As Integer = 250
 
         Dim CurrentFade As Byte
         Public Overrides Sub SetBitmap(ByVal bitmap As System.Drawing.Bitmap, ByVal opacity As Byte)
@@ -334,11 +331,13 @@ Public Class HTMLToolTip
         End Sub
     End Class
 
+#End Region
+
     Dim LastMaxTipWidth As Integer
 
     Private Function SetTipSize(ByVal control As Control, ByVal TipText As String, ByVal ToolTipPoint As Point) As Size
         If control Is Nothing Then
-            Dim TipSizeF = HTMLParser.PaintHTML(TipText, Nothing, , HTMLRenderStatus)
+            Dim TipSizeF = HTMLParser.PaintHTML(TipText, Nothing, , HTMLRenderStatus).Size
             SetTipSize = New Size(CInt(TipSizeF.Width) + 1, CInt(TipSizeF.Height) + 1)
         Else
             Dim RealTipPoint = control.PointToScreen(New Point(0, 0))
@@ -348,17 +347,19 @@ Public Class HTMLToolTip
             Dim Onscreen = Screen.FromPoint(RealTipPoint)
 
             Dim MaxTipWidth = RealTipPoint.X
-            If IsBalloon And (ThisPopupOrientation = ToolTipOrientations.LowRight OrElse ThisPopupOrientation = ToolTipOrientations.TopRight) Then
+            If IsBalloon And (ThisPopupOrientation = ToolTipOrientations.TopLeft OrElse ThisPopupOrientation = ToolTipOrientations.LowLeft) Then
+                MaxTipWidth -= Onscreen.Bounds.Left
             Else
                 MaxTipWidth = Onscreen.Bounds.Right - MaxTipWidth
                 If IsBalloon Then MaxTipWidth -= (BalloonBorderMargin * 2)
             End If
-            MaxTipWidth -= If(Me.ToolTipIcon <> Windows.Forms.ToolTipIcon.None, 22, 0)
+
+            MaxTipWidth -= GetIconMargin()
 
 
             LastMaxTipWidth = MaxTipWidth
 
-            Dim TipSizeF = HTMLParser.PaintHTML(TipText, Nothing, MaxTipWidth, HTMLRenderStatus)
+            Dim TipSizeF = HTMLParser.PaintHTML(TipText, Nothing, MaxTipWidth, HTMLRenderStatus).Size
             SetTipSize = New Size(CInt(TipSizeF.Width) + 1, CInt(TipSizeF.Height) + 1)
 
             If SetTipSize.Width > MaxTipWidth Then
@@ -377,27 +378,12 @@ Public Class HTMLToolTip
         SetTipSize.Width += BalloonShadowDepth + CInt(BalloonShadowBlur / 2)
 
         'add some right padding
-        SetTipSize.Width += RightPadding
-
-        If Me.ToolTipIcon <> Windows.Forms.ToolTipIcon.None Then
-            SetTipSize.Width += 22
+        If IsBalloon = False Then
+            SetTipSize.Width += RightPadding
         End If
+
+        SetTipSize.Width += GetIconMargin()
     End Function
-
-#Region "APIs"
-
-    <System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint:="GetClassLong")> _
-    Public Shared Function GetClassLongPtr32(ByVal hWnd As IntPtr, ByVal nIndex As Integer) As Integer
-    End Function
-
-    <System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint:="SetClassLong")> _
-    Public Shared Function SetClassLongPtr32(ByVal hWnd As IntPtr, ByVal nIndex As Integer, ByVal dwNewLong As Integer) As Integer
-    End Function
-
-    Private Const GCL_STYLE As Integer = -26
-    Private Const CS_DROPSHADOW As Integer = &H20000
-
-#End Region
 
     Public ReadOnly Property Handle() As IntPtr
         Get
@@ -425,19 +411,23 @@ Public Class HTMLToolTip
         GenBalloonPath.CloseFigure()
     End Function
 
-    Public Enum ShadowModes
-        None
-        Basic
-        Complex
-    End Enum
-
-    Dim mc_ShadowMode As ShadowModes = ShadowModes.Basic
-    Public Property ShadowMode() As ShadowModes
+    Dim mc_BorderColor As Color = Color.FromKnownColor(KnownColor.ControlDark)
+    Public Property BorderColor() As Color
         Get
-            Return mc_ShadowMode
+            Return mc_BorderColor
         End Get
-        Set(ByVal value As ShadowModes)
-            mc_ShadowMode = value
+        Set(ByVal value As Color)
+            mc_BorderColor = value
+        End Set
+    End Property
+
+    Dim mc_Shadow As Boolean = True
+    Public Property Shadow() As Boolean
+        Get
+            Return mc_Shadow
+        End Get
+        Set(ByVal value As Boolean)
+            mc_Shadow = value
         End Set
     End Property
 
@@ -461,154 +451,169 @@ Public Class HTMLToolTip
         End Set
     End Property
 
-    Private Sub HTMLToolTipDraw(ByVal g As Graphics, ByVal TipSize As Size, ByVal TipText As String)
-        Dim Rect As New Rectangle(0, 0, TipSize.Width - 1, TipSize.Height - 1)
-        g.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
-        g.InterpolationMode = Drawing2D.InterpolationMode.High
+    Dim mc_BackgroundBrush As Brush
+    Public Property BackgroundBrush() As Brush
+        Get
+            Return mc_BackgroundBrush
+        End Get
+        Set(ByVal value As Brush)
+            mc_BackgroundBrush = value
+        End Set
+    End Property
 
-        Dim DataOffsetPoint = New Point(0, 0)
-
-        Dim IconImage As Bitmap = mc_Image
-        If IconImage Is Nothing Then
-            Select Case MyBase.ToolTipIcon
-                Case Windows.Forms.ToolTipIcon.Error
-                    IconImage = My.Resources._error
-                Case Windows.Forms.ToolTipIcon.Info
-                    IconImage = My.Resources.info
-                Case Windows.Forms.ToolTipIcon.Warning
-                    IconImage = My.Resources.Warning
-            End Select
+    Private Function GetIconMargin() As Integer
+        If Me.Image IsNot Nothing Then
+            Return Me.Image.Width + 6
+        Else
+            If Me.ToolTipIcon = Windows.Forms.ToolTipIcon.None Then
+                Return 0
+            Else
+                Return 16 + 6
+            End If
         End If
+    End Function
 
-        Dim BalloonRect = New Rectangle(Rect.X, Rect.Y, Rect.Width - BalloonShadowDepth - CInt(BalloonShadowBlur / 2), Rect.Height - BalloonShadowDepth - CInt(BalloonShadowBlur / 2))
+    Private Sub HTMLToolTipDraw(ByVal gOutput As Graphics, ByVal TipSize As Size, ByVal TipText As String)
+        Using bTip As New Bitmap(TipSize.Width, TipSize.Height)
+            Using g = Graphics.FromImage(bTip)
 
-        If IsBalloon Then
-            DataOffsetPoint.X += BalloonBorderMargin
-            DataOffsetPoint.Y += BalloonBorderMargin
+                Dim Rect As New Rectangle(0, 0, TipSize.Width - 1, TipSize.Height - 1)
+                g.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
+                g.InterpolationMode = Drawing2D.InterpolationMode.High
 
-            Using p = GenBalloonPath(BalloonRect, ToolTipOrientations.LowLeft)
-                Select Case ThisPopupOrientation
-                    Case ToolTipOrientations.LowLeft
-                        'default :)
-                    Case ToolTipOrientations.LowRight
-                        Using m As New Drawing2D.Matrix(-1, 0, 0, 1, 0, 0)
-                            m.Translate(-BalloonRect.Width, 0)
-                            p.Transform(m)
-                        End Using
-                    Case ToolTipOrientations.TopLeft
-                        Using m As New Drawing2D.Matrix(1, 0, 0, -1, 0, 0)
-                            m.Translate(0, -BalloonRect.Height)
-                            p.Transform(m)
-                        End Using
-                        DataOffsetPoint.Y += BalloonPointerHeight
-                    Case ToolTipOrientations.TopRight
-                        Using m As New Drawing2D.Matrix
-                            m.RotateAt(180, New PointF(CSng(BalloonRect.Width / 2), CSng(BalloonRect.Height / 2)))
-                            p.Transform(m)
-                        End Using
-                        DataOffsetPoint.Y += BalloonPointerHeight
-                End Select
+                Dim DataOffsetPoint = New Point(0, 0)
 
-                Select Case ShadowMode
-                    Case ShadowModes.Basic
-                        For i = 0 To BalloonShadowDepth
-                            g.TranslateTransform(1, 1)
-                            Using b As New SolidBrush(Color.FromArgb(CInt((255 - ((i / BalloonShadowDepth) * 255)) / BalloonShadowDepth), ShadowBaseColor))
-                                g.FillPath(b, p)
-                            End Using
-                        Next
-                        g.ResetTransform()
-                    Case ShadowModes.Complex
-                        Using bShadow As New Bitmap(BalloonRect.Width + BalloonShadowBlur, BalloonRect.Height + BalloonShadowBlur)
-                            Using gShadow = Graphics.FromImage(bShadow)
-                                gShadow.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
-                                Using sb As New SolidBrush(Color.FromArgb(63, ShadowBaseColor))
-                                    'gShadow.TranslateTransform(BalloonShadowBlur / 2, BalloonShadowBlur / 2)
-                                    gShadow.FillPath(sb, p)
-                                End Using
-                            End Using
-                            bShadow.Filters.GausianBlur(BalloonShadowBlur)
-                            g.DrawImage(bShadow, Rect.Width - bShadow.Width, Rect.Height - bShadow.Height)
-                        End Using
-                End Select
-
-                ''shadow method 3
-                'e.Graphics.TranslateTransform(BalloonShadowDepth, BalloonShadowDepth)
-                'Using pgb As New Drawing.Drawing2D.PathGradientBrush(p)
-                '    pgb.WrapMode = Drawing2D.WrapMode.Clamp
-                '    Dim _ColorBlend As New Drawing2D.ColorBlend(3)
-                '    _ColorBlend.Colors = New Color() {Color.Transparent, Color.FromArgb(63, ShadowBaseColor), Color.FromArgb(63, ShadowBaseColor)}
-                '    _ColorBlend.Positions = New Single() {0, 0.1, 1}
-                '    pgb.InterpolationColors = _ColorBlend
-                '    e.Graphics.FillPath(pgb, p)
-                'End Using
-                'e.Graphics.ResetTransform()
-
-                Using lgb As New System.Drawing.Drawing2D.LinearGradientBrush(New Point(0, 0), New Point(0, TipSize.Height), Color.FromKnownColor(KnownColor.ControlLightLight), Color.FromKnownColor(KnownColor.ControlLight))
-                    g.FillPath(lgb, p)
-                End Using
-
-                'should be the same as below...
-                If IconImage IsNot Nothing Then g.DrawImage(IconImage, New Rectangle(DataOffsetPoint.X, DataOffsetPoint.Y + 2, 16, 16))
-
-                If Me.ToolTipIcon <> Windows.Forms.ToolTipIcon.None Then
-                    DataOffsetPoint.X += 22
+                Dim IconImage As Bitmap = mc_Image
+                If IconImage Is Nothing Then
+                    Select Case MyBase.ToolTipIcon
+                        Case Windows.Forms.ToolTipIcon.Error
+                            IconImage = My.Resources._error
+                        Case Windows.Forms.ToolTipIcon.Info
+                            IconImage = My.Resources.info
+                        Case Windows.Forms.ToolTipIcon.Warning
+                            IconImage = My.Resources.Warning
+                    End Select
                 End If
 
-                g.TranslateTransform(DataOffsetPoint.X, DataOffsetPoint.Y)
-                HTMLParser.PaintHTML(TipText, g, LastMaxTipWidth, HTMLRenderStatus)
-                g.ResetTransform()
-                'end same as below
+                Dim BalloonRect = New Rectangle(Rect.X, Rect.Y, Rect.Width - BalloonShadowDepth - CInt(BalloonShadowBlur / 2), Rect.Height - BalloonShadowDepth - CInt(BalloonShadowBlur / 2))
 
-                Using pen As New Pen(Color.FromKnownColor(KnownColor.ControlDark))
-                    g.DrawPath(pen, p)
-                End Using
+                If IsBalloon Then
+                    DataOffsetPoint.X += BalloonBorderMargin
+                    DataOffsetPoint.Y += BalloonBorderMargin
 
-            End Using
-        Else
-            Select Case ShadowMode
-                Case ShadowModes.Basic
-                    For i = 0 To BalloonShadowDepth
-                        g.TranslateTransform(1, 1)
-                        Using b As New SolidBrush(Color.FromArgb(CInt((255 - ((i / BalloonShadowDepth) * 255)) / BalloonShadowDepth), ShadowBaseColor))
-                            g.FillRectangle(b, BalloonRect)
+                    Using p = GenBalloonPath(BalloonRect, ToolTipOrientations.TopRight)
+                        Select Case ThisPopupOrientation
+                            Case ToolTipOrientations.TopRight
+                                'default :)
+                            Case ToolTipOrientations.TopLeft
+                                Using m As New Drawing2D.Matrix(-1, 0, 0, 1, 0, 0)
+                                    m.Translate(-BalloonRect.Width, 0)
+                                    p.Transform(m)
+                                End Using
+                            Case ToolTipOrientations.LowRight
+                                Using m As New Drawing2D.Matrix(1, 0, 0, -1, 0, 0)
+                                    m.Translate(0, -BalloonRect.Height)
+                                    p.Transform(m)
+                                End Using
+                                DataOffsetPoint.Y += BalloonPointerHeight
+                            Case ToolTipOrientations.LowLeft
+                                Using m As New Drawing2D.Matrix
+                                    m.RotateAt(180, New PointF(CSng(BalloonRect.Width / 2), CSng(BalloonRect.Height / 2)))
+                                    p.Transform(m)
+                                End Using
+                                DataOffsetPoint.Y += BalloonPointerHeight
+                        End Select
+
+                        If mc_BackgroundBrush IsNot Nothing Then
+                            g.FillPath(mc_BackgroundBrush, p)
+                        Else
+                            If Me.BackColor = Color.FromKnownColor(KnownColor.Info) Then
+                                Using lgb As New System.Drawing.Drawing2D.LinearGradientBrush(New Point(0, 0), New Point(0, TipSize.Height), Color.FromKnownColor(KnownColor.ControlLightLight), Color.FromKnownColor(KnownColor.ControlLight))
+                                    g.FillPath(lgb, p)
+                                End Using
+                            Else
+                                Using sb As New SolidBrush(Me.BackColor)
+                                    g.FillPath(sb, p)
+                                End Using
+                            End If
+                        End If
+                        'should be the same as below...
+                        If IconImage IsNot Nothing Then
+                            If Image IsNot Nothing Then
+                                'custom image
+                                g.DrawImageUnscaled(Image, New Point(DataOffsetPoint.X, DataOffsetPoint.Y + 2))
+                            Else
+                                'standard image
+                                g.DrawImage(IconImage, New Rectangle(DataOffsetPoint.X, DataOffsetPoint.Y + 2, 16, 16))
+                            End If
+                        End If
+
+                        DataOffsetPoint.X += GetIconMargin()
+
+                        g.TranslateTransform(DataOffsetPoint.X, DataOffsetPoint.Y)
+                        HTMLParser.PaintHTML(TipText, g, LastMaxTipWidth, HTMLRenderStatus)
+                        g.ResetTransform()
+                        'end same as below
+
+                        Using pen As New Pen(mc_BorderColor)
+                            g.DrawPath(pen, p)
                         End Using
-                    Next
+
+                    End Using
+                Else
+
+                    If mc_BackgroundBrush IsNot Nothing Then
+                        g.FillRectangle(mc_BackgroundBrush, BalloonRect)
+                    Else
+                        If Me.BackColor = Color.FromKnownColor(KnownColor.Info) Then
+                            Using lgb As New System.Drawing.Drawing2D.LinearGradientBrush(New Point(0, 0), New Point(0, TipSize.Height), Color.FromKnownColor(KnownColor.ControlLightLight), Color.FromKnownColor(KnownColor.ControlLight))
+                                g.FillRectangle(lgb, BalloonRect)
+                            End Using
+                        Else
+                            Using sb As New SolidBrush(Me.BackColor)
+                                g.FillRectangle(sb, BalloonRect)
+                            End Using
+                        End If
+                    End If
+
+                    'should be the same as above...
+                    '...cept for the plus 3 below...
+                    If IconImage IsNot Nothing Then
+                        If Image IsNot Nothing Then
+                            'custom image
+                            g.DrawImageUnscaled(Image, New Point(DataOffsetPoint.X + 3, DataOffsetPoint.Y + 2))
+                        Else
+                            'standard image
+                            g.DrawImage(IconImage, New Rectangle(DataOffsetPoint.X + 3, DataOffsetPoint.Y + 2, 16, 16))
+                        End If
+                    End If
+
+                    DataOffsetPoint.X += GetIconMargin()
+
+                    g.TranslateTransform(DataOffsetPoint.X + 3, DataOffsetPoint.Y)
+                    HTMLParser.PaintHTML(TipText, g, TipSize.Width - RightPadding, HTMLRenderStatus)
                     g.ResetTransform()
-                Case ShadowModes.Complex
+                    'end same as above
+
+                    Using p As New Pen(mc_BorderColor)
+                        g.DrawRectangle(p, BalloonRect)
+                    End Using
+
+                End If
+                If Shadow Then
                     Using bShadow As New Bitmap(BalloonRect.Width + BalloonShadowBlur, BalloonRect.Height + BalloonShadowBlur)
                         Using gShadow = Graphics.FromImage(bShadow)
-                            gShadow.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
-                            Using sb As New SolidBrush(Color.FromArgb(63, ShadowBaseColor))
-                                gShadow.TranslateTransform(BalloonShadowBlur / 2, BalloonShadowBlur / 2)
-                                gShadow.FillRectangle(sb, BalloonRect)
-                            End Using
+                            gShadow.TranslateTransform(CSng(BalloonShadowBlur / 2), CSng(BalloonShadowBlur / 2))
+                            gShadow.DrawImageUnscaled(bTip, Point.Empty)
                         End Using
+                        bShadow.Filters.AlphaMask(Color.Transparent, Color.FromArgb(127, ShadowBaseColor))
                         bShadow.Filters.GausianBlur(BalloonShadowBlur)
-                        g.DrawImage(bShadow, Rect.Width - bShadow.Width, Rect.Height - bShadow.Height)
+                        gOutput.DrawImage(bShadow, Rect.Width - bShadow.Width, Rect.Height - bShadow.Height)
                     End Using
-            End Select
-
-            Using lgb As New System.Drawing.Drawing2D.LinearGradientBrush(New Point(0, 0), New Point(0, TipSize.Height), Color.FromKnownColor(KnownColor.ControlLightLight), Color.FromKnownColor(KnownColor.ControlLight))
-                g.FillRectangle(lgb, BalloonRect)
+                End If
             End Using
-
-            'should be the same as above...
-            '...cept for the plus 3 below...
-            If IconImage IsNot Nothing Then g.DrawImage(IconImage, New Rectangle(DataOffsetPoint.X + 3, DataOffsetPoint.Y + 2, 16, 16))
-
-            If Me.ToolTipIcon <> Windows.Forms.ToolTipIcon.None Then
-                DataOffsetPoint.X += 22
-            End If
-            g.TranslateTransform(DataOffsetPoint.X + 3, DataOffsetPoint.Y)
-            HTMLParser.PaintHTML(TipText, g, TipSize.Width - RightPadding, HTMLRenderStatus)
-            g.ResetTransform()
-            'end same as above
-
-            Using p As New Pen(DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.Control), Color.FromKnownColor(KnownColor.ControlText)))
-                g.DrawRectangle(p, BalloonRect)
-            End Using
-        End If
+            gOutput.DrawImageUnscaled(bTip, Point.Empty)
+        End Using
     End Sub
 
     Public Function HTMLRenderStatus() As HTMLParser.Status
@@ -630,9 +635,9 @@ Public Class HTMLToolTip
     Const BalloonBorderMargin As Integer = 12
     Const BalloonPointerHeight As Integer = 21
     Const BalloonPointerStartAt As Integer = 16
-    Const BalloonShadowDepth As Integer = 4
-    Const BalloonShadowBlur As Integer = 4
-    Const RightPadding As Integer = 4
+    Public BalloonShadowDepth As Integer = 4
+    Public BalloonShadowBlur As Integer = 4
+    Const RightPadding As Integer = 4 'right padding for the normal tooltip (isBalloon = false)
 
     Delegate Sub HTMLToolTip_Disposed_cb(ByVal sender As Object, ByVal e As System.EventArgs)
     Private Sub HTMLToolTip_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Disposed

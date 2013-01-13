@@ -21,7 +21,55 @@ Partial Class SpellCheckTextBox
     Public Sub ShowDialog() Implements iSpellCheckDialog.ShowDialog
         If CurrentDictionary IsNot Nothing AndAlso CurrentDictionary.Loading = False Then
             Using SpellCheckDialog As New SpellCheckDialog
-                SpellCheckDialog.ShowDialog(parentTextBox, Me)
+                Dim SpellCheckResults = SpellCheckDialog.ShowDialog(parentTextBox, Me, parentTextBox.Text)
+
+                'update the text box...
+
+                'lock window from updating
+                DrawSpellingErrors = False
+                extTextBoxCommon.LockWindowUpdate(Control.Handle)
+                Control.SuspendLayout()
+                Dim SelStart = parentTextBox.SelectionStart
+                Dim SellLength = parentTextBox.SelectionLength
+
+
+                'Dim mc_parentRichTextBox = TryCast(parentTextBox, RichTextBox)
+                If parentRichTextBox IsNot Nothing Then
+                    'rich text box :(... use alternate method ... this will ensure that the formatting isn't lost
+                    'qwertyuiop - would be nicer if this did this in one undo move...
+                    For Each word In (From xItem In SpellCheckResults Where xItem.Changed = True AndAlso xItem.NewWord <> xItem.OrigWord).ToArray.Reverse
+                        parentRichTextBox.Select(word.StartIndex, word.OrigWord.Length)
+                        parentRichTextBox.SelectedText = word.NewWord
+                    Next
+                    CType(parentRichTextBox, TextBoxBase).ClearUndo()
+                Else
+                    'standard text box .. can just replace all of the text
+
+                    'Get old scroll bar position
+                    Dim OldVertPos = extTextBoxCommon.GetScrollBarLocation(parentTextBox)
+
+                    Dim NewText As String = parentTextBox.Text
+                    For Each word In (From xItem In SpellCheckResults Where xItem.Changed = True AndAlso xItem.NewWord <> xItem.OrigWord).ToArray.Reverse
+                        NewText = Strings.Left(NewText, word.StartIndex) & _
+                                  word.NewWord & _
+                                  Strings.Right(NewText, Len(NewText) - (word.StartIndex + word.OrigWord.Length))
+                    Next
+
+                    'replace the text
+                    parentTextBox.Text = NewText
+
+                    'Set scroll bars to what they were
+                    extTextBoxCommon.SetScrollBarLocation(parentTextBox, OldVertPos) ' set Vscroll to last saved pos.
+                End If
+
+                parentTextBox.SelectionStart = SelStart
+                parentTextBox.SelectionLength = SellLength
+
+                'unlock window updates
+                DrawSpellingErrors = True
+                Control.ResumeLayout()
+                extTextBoxCommon.LockWindowUpdate(IntPtr.Zero)
+
             End Using
         End If
     End Sub
@@ -30,17 +78,11 @@ Partial Class SpellCheckTextBox
 
 #Region "Ease of access"
 
-    Protected Friend ReadOnly Property parentTextBox() As TextBoxBase
-        Get
-            Return TryCast(MyBase.Control, TextBoxBase)
-        End Get
-    End Property
+    Private WithEvents extTextBoxContextMenu As extTextBoxContextMenu
 
-    Protected Friend ReadOnly Property parentRichTextBox() As RichTextBox
-        Get
-            Return TryCast(MyBase.Control, RichTextBox)
-        End Get
-    End Property
+    Private WithEvents parentTextBox As TextBoxBase
+
+    Private WithEvents parentRichTextBox As RichTextBox
 
 #End Region
 
@@ -55,9 +97,16 @@ Partial Class SpellCheckTextBox
         End Get
     End Property
 
-    Public Overrides ReadOnly Property ControlType() As System.Type
+    Public Overrides ReadOnly Property ControlTypes() As IEnumerable(Of System.Type)
         Get
-            Return GetType(TextBoxBase)
+            Return New System.Type() {GetType(TextBoxBase)}
+        End Get
+    End Property
+
+    Public Overrides ReadOnly Property RequiredExtensions() As System.Collections.Generic.List(Of System.Type)
+        Get
+            RequiredExtensions = New List(Of System.Type)
+            RequiredExtensions.Add(GetType(extTextBoxContextMenu))
         End Get
     End Property
 

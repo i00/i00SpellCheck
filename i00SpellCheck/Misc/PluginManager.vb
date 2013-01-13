@@ -25,8 +25,8 @@ Public Class PluginManager(Of T)
 
     Private Class PluginsWithWeight
         Public PluginClass As T
-        Public Weight As Integer
-        Public Sub New(ByVal PluginClass As T, Optional ByVal Weight As Integer = 0)
+        Public Weight As Double
+        Public Sub New(ByVal PluginClass As T, Optional ByVal Weight As Double = 0)
             Me.PluginClass = PluginClass
             Me.Weight = Weight
         End Sub
@@ -42,7 +42,7 @@ Public Class PluginManager(Of T)
 
                     Dim Classes = Types.GetClassesOfType(a)
                     For Each item In Classes
-                        Dim weight = 0
+                        Dim weight = 0.0
                         Dim asd = item.Type.GetCustomAttributes(False).OfType(Of PluginWeightAttribute)().FirstOrDefault
                         If asd IsNot Nothing Then
                             weight = asd.Weight
@@ -93,14 +93,14 @@ End Class
     Public Class PluginWeightAttribute
     Inherits System.Attribute
 
-    Dim mc_Weight As Integer
-    Public ReadOnly Property Weight() As Integer
+    Dim mc_Weight As Double
+    Public ReadOnly Property Weight() As Double
         Get
             Return mc_Weight
         End Get
     End Property
 
-    Public Sub New(ByVal Weight As Integer)
+    Public Sub New(ByVal Weight As Double)
         mc_Weight = Weight
     End Sub
 End Class

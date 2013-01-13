@@ -31,9 +31,9 @@ Partial Public Class SpellCheckDataGridView
     End Sub
 
     'Lets the EnableSpellCheck() know what ControlTypes we can spellcheck
-    Public Overrides ReadOnly Property ControlType() As System.Type
+    Public Overrides ReadOnly Property ControlTypes() As IEnumerable(Of System.Type)
         Get
-            Return GetType(DataGridView)
+            Return New System.Type() {GetType(DataGridView)}
         End Get
     End Property
 
@@ -68,7 +68,9 @@ Partial Public Class SpellCheckDataGridView
 #Region "Painting"
 
     Public Overrides Sub RepaintControl()
-        parentDataGridView.Invalidate()
+        If parentDataGridView IsNot Nothing Then
+            parentDataGridView.Invalidate()
+        End If
     End Sub
 
     Private Sub DataGridView_CellPainting(ByVal sender As Object, ByVal e As System.Windows.Forms.DataGridViewCellPaintingEventArgs)
