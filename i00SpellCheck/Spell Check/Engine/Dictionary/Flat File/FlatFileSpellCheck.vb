@@ -169,14 +169,14 @@ Partial Class FlatFileDictionary
                 allmat = 10
             End If
             If nummat + allmat + firstfewmat > 0 Then
-                Dim SugguestionTxt = iWord
+                Dim SuggestionTxt = iWord
                 If ApoSRemoved Then
                     'add the 's back...
-                    If SugguestionTxt.EndsWith("'s", StringComparison.OrdinalIgnoreCase) = False OrElse SugguestionTxt.EndsWith("'") = False Then
-                        If SugguestionTxt.EndsWith("s", StringComparison.OrdinalIgnoreCase) Then
-                            SugguestionTxt &= "'"
+                    If SuggestionTxt.EndsWith("'s", StringComparison.OrdinalIgnoreCase) = False OrElse SuggestionTxt.EndsWith("'") = False Then
+                        If SuggestionTxt.EndsWith("s", StringComparison.OrdinalIgnoreCase) Then
+                            SuggestionTxt &= "'"
                         Else
-                            SugguestionTxt &= "'s"
+                            SuggestionTxt &= "'s"
                         End If
                     End If
                 End If
@@ -184,7 +184,7 @@ Partial Class FlatFileDictionary
                 If System.Text.RegularExpressions.Regex.Replace(iWord.ToLower, "(.)(\1)+", "$1") = theWordNoDups Then
                     Closeness = -1
                 End If
-                SpellCheckSuggestionsNonUser.Add(New SpellCheckSuggestionInfo(Closeness, SugguestionTxt))
+                SpellCheckSuggestionsNonUser.Add(New SpellCheckSuggestionInfo(Closeness, SuggestionTxt))
             End If
 
             'End If

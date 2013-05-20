@@ -10,6 +10,13 @@ Public Class frmTest
 
         'set the property grid to the extension
         PropertyGrid1.SelectedObject = RichTextBox1.ExtensionCast(Of TextBoxPrinter)()
+
+        'icon
+        Try
+            Me.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath)
+        Catch ex As Exception
+
+        End Try
     End Sub
 
     Private Sub tsbPrint_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsbPrint.Click

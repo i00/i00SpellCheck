@@ -25,20 +25,13 @@ Public Class SpellCheckFastColoredTextBox
 
     'Called when the control is loaded
     Overrides Sub Load()
-        Dim FastColoredTextBox = TryCast(Me.Control, FastColoredTextBox)
-        If FastColoredTextBox IsNot Nothing Then
-            'Add control specific event handlers
-            AddHandler FastColoredTextBox.TextChanged, AddressOf FastColoredTextBox_TextChanged
-            AddHandler FastColoredTextBox.VisibleRangeChanged, AddressOf FastColoredTextBox_VisibleRangeChanged
-            AddHandler FastColoredTextBox.VisualMarkerClick, AddressOf FastColoredTextBox_VisualMarkerClick
-            AddHandler FastColoredTextBox.Disposed, AddressOf FastColoredTextBox_Disposed
+        parentFastColoredTextBox = DirectCast(Me.Control, FastColoredTextBox)
 
-            SpellErrorStyle.FastColoredTextBox = FastColoredTextBox
-            CaseErrorStyle.FastColoredTextBox = FastColoredTextBox
-            IgnoreErrorStyle.FastColoredTextBox = FastColoredTextBox
+        SpellErrorStyle.FastColoredTextBox = parentFastColoredTextBox
+        CaseErrorStyle.FastColoredTextBox = parentFastColoredTextBox
+        IgnoreErrorStyle.FastColoredTextBox = parentFastColoredTextBox
 
-            LoadSettingsToObjects()
-        End If
+        LoadSettingsToObjects()
     End Sub
 
     'Lets the EnableSpellCheck() know what ControlTypes we can spellcheck
@@ -91,12 +84,8 @@ Public Class SpellCheckFastColoredTextBox
         End Get
     End Property
 
-    'Quick access to underlying FastColoredTextBox object
-    Private ReadOnly Property parentFastColoredTextBox() As FastColoredTextBox
-        Get
-            Return TryCast(MyBase.Control, FastColoredTextBox)
-        End Get
-    End Property
+    'Quick access to underlying FastColoredTextBox object... with events...
+    Private WithEvents parentFastColoredTextBox As FastColoredTextBox
 
 #End Region
 
@@ -107,7 +96,7 @@ Public Class SpellCheckFastColoredTextBox
     Private WithEvents SpellMenuItems As New Menu.AddSpellItemsToMenu() With {.ContextMenuStrip = ErrorMenu}
 
     'Error click
-    Private Sub FastColoredTextBox_VisualMarkerClick(ByVal sender As Object, ByVal e As FastColoredTextBoxNS.VisualMarkerEventArgs)
+    Private Sub FastColoredTextBox_VisualMarkerClick(ByVal sender As Object, ByVal e As FastColoredTextBoxNS.VisualMarkerEventArgs) Handles parentFastColoredTextBox.VisualMarkerClick
         If parentFastColoredTextBox.ReadOnly Then Exit Sub
         Dim ErrorStyleMarker = TryCast(e.Marker, ErrorStyle.ErrorStyleMarker)
         If ErrorStyleMarker IsNot Nothing Then
@@ -250,20 +239,21 @@ Public Class SpellCheckFastColoredTextBox
         tmrRepaint.Enabled = False
     End Sub
 
-    Private Sub FastColoredTextBox_Disposed(ByVal sender As Object, ByVal e As System.EventArgs)
+    Private Sub FastColoredTextBox_Disposed(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentFastColoredTextBox.Disposed
         tmrRepaint.Dispose()
         SpellErrorStyle.Dispose()
         IgnoreErrorStyle.Dispose()
         CaseErrorStyle.Dispose()
     End Sub
 
-    Private Sub FastColoredTextBox_VisibleRangeChanged(ByVal sender As Object, ByVal e As System.EventArgs)
+    Private Sub FastColoredTextBox_VisibleRangeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentFastColoredTextBox.VisibleRangeChanged
         tmrRepaint.Stop()
         tmrRepaint.Start()
     End Sub
 
-    Private Sub FastColoredTextBox_TextChanged(ByVal sender As System.Object, ByVal e As FastColoredTextBoxNS.TextChangedEventArgs)
-        UpdateErrors(e.ChangedRange)
+    Private Sub FastColoredTextBox_TextChanged(ByVal sender As System.Object, ByVal e As FastColoredTextBoxNS.TextChangedEventArgs) Handles parentFastColoredTextBox.TextChanged
+        'qwertyuiop - don't need this as the VisibleRangeChanged event gets called when text is changed :)
+        'UpdateErrors(e.ChangedRange)
     End Sub
 
     Private Sub UpdateErrors(ByVal Range As FastColoredTextBoxNS.Range)
@@ -324,101 +314,318 @@ Public Class SpellCheckFastColoredTextBox
 
 #Region "Test Harness"
 
+#Region "HTML Color Highlighting"
+
+    Private Class HTMLColorMap
+        Inherits Dictionary(Of String, String)
+
+        Public Shared ReadOnly Property ColorMapList() As HTMLColorMap
+            Get
+                Static mc_ColorMapList As New HTMLColorMap
+                Return mc_ColorMapList
+            End Get
+        End Property
+
+        Public Function GetDotNetColorName(ByVal HTMLColorName As String) As String
+            GetDotNetColorName = (From xItem In Me Where LCase(xItem.Value) = LCase(HTMLColorName) Select xItem.Key).FirstOrDefault
+            If GetDotNetColorName = "" Then
+                GetDotNetColorName = HTMLColorName
+            End If
+        End Function
+
+        Public Sub New()
+
+            'color mapping
+            MyBase.Add("ActiveCaptionText", "CaptionText")
+            MyBase.Add("ControlText", "ButtonText")
+            MyBase.Add("Desktop", "Background")
+            MyBase.Add("ControlLight", "ThreeDLightShadow")
+            MyBase.Add("ControlLightLight", "ThreeDHighlight")
+            MyBase.Add("Info", "InfoBackground")
+
+            'depriciated
+            MyBase.Add("GradientActiveCaption", "")
+            MyBase.Add("GradientInactiveCaption", "")
+            MyBase.Add("MenuBar", "")
+            MyBase.Add("MenuHighlight", "")
+            MyBase.Add("Control", "")
+            MyBase.Add("ControlDarkDark", "")
+            MyBase.Add("ControlDark", "")
+
+        End Sub
+    End Class
+
+    Private Sub TestHarness_TextChanged(ByVal sender As System.Object, ByVal e As FastColoredTextBoxNS.TextChangedEventArgs)
+        If parentFastColoredTextBox.Language = Language.HTML Then
+
+            Static cs As New ColorStyle(parentFastColoredTextBox)
+            If parentFastColoredTextBox.Styles(0) Is Nothing OrElse Not (TypeOf parentFastColoredTextBox.Styles(0) Is ColorStyle) Then
+                'make it first...
+                parentFastColoredTextBox.ClearStylesBuffer()
+                parentFastColoredTextBox.AddStyle(cs)
+                'Dim Styles = (From xItem In parentFastColoredTextBox.Styles Where xItem IsNot cs).ToList
+                'Styles.Insert(0, cs)
+                'For i = LBound(parentFastColoredTextBox.Styles) To UBound(parentFastColoredTextBox.Styles)
+                '    parentFastColoredTextBox.Styles(i) = Styles(i)
+                'Next
+            End If
+
+            Static ColorMatch As String
+            If ColorMatch = "" Then
+                Dim lstColorMatch As New List(Of String)
+                lstColorMatch.Add("#[a-f0-9]{6}\b") 'match "#ff00ff"
+                lstColorMatch.Add("\brgb\(\s*?\d+?\s*?\,\s*?\d+?\s*?\,\s*?\d+?\s*?\)") 'match "rgb(255, 0, 255)"
+                '\s.*?
+
+                'match known colors (such as "red")
+                For Each item In [Enum].GetValues(GetType(KnownColor))
+                    If HTMLColorMap.ColorMapList.ContainsKey(item.ToString) Then
+                        If HTMLColorMap.ColorMapList(item.ToString) = "" Then
+                            'depriciated color
+                        Else
+                            lstColorMatch.Add("\b" & HTMLColorMap.ColorMapList(item.ToString) & "\b")
+                        End If
+                    Else
+                        lstColorMatch.Add("\b" & item.ToString & "\b")
+                    End If
+                Next
+                ColorMatch = "(" & Join(lstColorMatch.ToArray, "|") & ")"
+            End If
+
+            e.ChangedRange.ClearStyle(cs)
+            e.ChangedRange.SetStyle(cs, ColorMatch, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        End If
+    End Sub
+
+    Private Class ColorStyle
+        Inherits TextStyle
+
+        Dim parent As FastColoredTextBox
+        Public Sub New(ByVal parent As FastColoredTextBox)
+            MyBase.New(Nothing, Nothing, Drawing.FontStyle.Regular)
+            Me.parent = parent
+        End Sub
+
+        Public Overrides Sub Draw(ByVal gr As Graphics, ByVal position As Point, ByVal range As Range)
+            Dim rect As Rectangle = New Rectangle(position, Style.GetSizeOfRange(range))
+            rect.Inflate(1, 1)
+            Using path As System.Drawing.Drawing2D.GraphicsPath = Style.GetRoundedRectangle(rect, 7)
+
+                'try is here as otherwise if the word is "red" for eg and the "ed" part is off the visible area, the range.Text will be "r"... this does not translate to a html color
+                Dim DrawBorder As Boolean
+
+                Try
+                    Dim BGColor As Color
+                    Try
+                        BGColor = ColorTranslator.FromHtml(HTMLColorMap.ColorMapList.GetDotNetColorName(range.Text))
+                    Catch ex As Exception
+                        'try the css rgb()
+                        Dim TextColorSection = range.Text.Substring(range.Text.IndexOf("(") + 1)
+                        TextColorSection = TextColorSection.Substring(0, TextColorSection.IndexOf(")"))
+                        TextColorSection = System.Text.RegularExpressions.Regex.Replace(TextColorSection, "\s", "")
+                        Dim arrColors = (From xItem In Split(TextColorSection, ",") Select CInt(Math.Min(Val(xItem), 255))).ToArray
+                        BGColor = Color.FromArgb(255, arrColors(0), arrColors(1), arrColors(2))
+                    End Try
+                    Using sb As New SolidBrush(BGColor)
+                        'MyBase.BackgroundBrush = sb
+                        gr.FillPath(sb, path)
+                    End Using
+
+                    If CInt(BGColor.R) + CInt(BGColor.G) + CInt(BGColor.B) < 383 Then
+                        'color is dark so make text light :)
+                        MyBase.ForeBrush = New SolidBrush(Color.White)
+                    Else
+                        'color is light so make text dark :)
+                        MyBase.ForeBrush = New SolidBrush(Color.Black)
+                    End If
+
+                    DrawBorder = (255 * 3) - (CInt(BGColor.R) + CInt(BGColor.G) + CInt(BGColor.B)) < 64
+
+                Catch ex As Exception
+                    MyBase.ForeBrush = New SolidBrush(Color.Black)
+                End Try
+                MyBase.Draw(gr, position, range)
+
+                If DrawBorder Then
+                    'color is nearly invisible ... so add a border...
+                    Using p As New Pen(Color.LightGray)
+                        gr.DrawPath(p, path)
+                    End Using
+                End If
+            End Using
+
+        End Sub
+    End Class
+
+#End Region
+
     Public Function SetupControl(ByVal Control As System.Windows.Forms.Control) As Control Implements i00SpellCheck.iTestHarness.SetupControl
+
         Dim FastColoredTextBox = TryCast(Control, FastColoredTextBox)
         If FastColoredTextBox IsNot Nothing Then
-            FastColoredTextBox.LeftBracket = "("c
-            FastColoredTextBox.RightBracket = ")"c
+            Dim pnlHolder As New Panel
+            Dim pnlOptions As New Panel
+            pnlOptions.Dock = DockStyle.Bottom
+            pnlHolder.Controls.Add(pnlOptions)
 
-            DirectCast(FastColoredTextBox.SpellCheck(), SpellCheckFastColoredTextBox).SpellCheckMatch = "('.*$|"".*?"")"
+            Dim CodeRadioButtonNames() As String = {"VB.Net", "HTML"}
+            Dim OptionLeftPos As Integer
+            For Each item In CodeRadioButtonNames
+                Dim CodeRadioButton As New RadioButton
+                CodeRadioButton.Text = item
+                CodeRadioButton.Left = OptionLeftPos
+                CodeRadioButton.AutoSize = True
+                OptionLeftPos += CodeRadioButton.Width
+                pnlOptions.Controls.Add(CodeRadioButton)
+                AddHandler CodeRadioButton.CheckedChanged, AddressOf CodeRadioButton_CheckedChanged
+            Next
+            pnlOptions.Height = pnlOptions.Controls(0).Height
+            pnlHolder.Dock = DockStyle.Fill
+
+            'AddHandler FastColoredTextBox.TextChanged, AddressOf TestHarness_TextChanged
+            FastColoredTextBox.Dock = DockStyle.Fill
+
+            TestWebBrowser = New WebBrowser
+            TestWebBrowser.AllowWebBrowserDrop = False
+            TestWebBrowser.IsWebBrowserContextMenuEnabled = False
+            TestWebBrowser.Dock = DockStyle.Fill
+            TestWebBrowser.DocumentText = "<body></body>"
+            AddHandler TestWebBrowser.Navigating, AddressOf TestWebBrowser_Navigating
+
+            TestSplitContainer = New SplitContainer
+            TestSplitContainer.BackColor = i00SpellCheck.DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.Highlight), Color.FromKnownColor(KnownColor.Info), 63)
+            TestSplitContainer.Orientation = Orientation.Horizontal
+            TestSplitContainer.Dock = DockStyle.Fill
+            TestSplitContainer.Panel1.Controls.Add(FastColoredTextBox)
+            TestSplitContainer.Panel2.Controls.Add(TestWebBrowser)
+
+            pnlHolder.Controls.Add(TestSplitContainer)
+            TestSplitContainer.SplitterDistance = CInt((TestSplitContainer.Height - TestSplitContainer.SplitterWidth) * 0.75)
+            TestSplitContainer.BringToFront()
+
+            'select an option
+            pnlOptions.Controls.OfType(Of RadioButton).First.Checked = True
 
             AddHandler FastColoredTextBox.TextChanged, AddressOf TestHarness_TextChanged
 
-            FastColoredTextBox.Text = "'Simple test to check spelling with 3rd party controls" & vbCrLf & _
-                   "'This test is done on the FastColoredTextBox (open source control) that is hosted on CodeProject" & vbCrLf & _
-                   "'The article can be found at: http://www.codeproject.com/Articles/161871/Fast-Colored-TextBox-for-syntax-highlighting" & vbCrLf & _
-                   "" & vbCrLf & _
-                   "'i00 Does not take credit for any work in the FastColoredTextBox.dll" & vbCrLf & _
-                   "'i00 is however solely responsible for the spellcheck plugin to interface with FastColoredTextBox" & vbCrLf & _
-                   "" & vbCrLf & _
-                   "'As you can see only comments and string blocks are corrected" & vbCrLf & _
-                   "'This is due to the SpellCheckMatch property being set" & vbCrLf & _
-                   "" & vbCrLf & _
-                   "'Click on a missspelled word to correct..." & vbCrLf & _
-                   "" & vbCrLf & _
-                   "Dim test = ""Test with some bad spellling!""" & vbCrLf & _
-                   "" & vbCrLf & _
-                   "#Region ""Char""" & vbCrLf & _
-                   "   " & vbCrLf & _
-                   "   ''' <summary>" & vbCrLf & _
-                   "   ''' Char and style" & vbCrLf & _
-                   "   ''' </summary>" & vbCrLf & _
-                   "   Public Structure CharStyle" & vbCrLf & _
-                   "       Public c As Char" & vbCrLf & _
-                   "       Public style As StyleIndex" & vbCrLf & _
-                   "   " & vbCrLf & _
-                   "       Public Sub CharStyle(ByVal ch As Char)" & vbCrLf & _
-                   "           c = ch" & vbCrLf & _
-                   "           Style = StyleIndex.None" & vbCrLf & _
-                   "       End Sub" & vbCrLf & _
-                   "   " & vbCrLf & _
-                   "   End Structure" & vbCrLf & _
-                   "   " & vbCrLf & _
-                   "#End Region"
-            Return FastColoredTextBox
+            Return pnlHolder
         Else
             Return Nothing
         End If
 
+
     End Function
 
-    Dim KeywordStyle As TextStyle = New TextStyle(Brushes.Blue, Nothing, FontStyle.Regular)
-    Dim CommentStyle As TextStyle = New TextStyle(Brushes.Green, Nothing, FontStyle.Regular)
-    Dim StringStyle As TextStyle = New TextStyle(Brushes.Brown, Nothing, FontStyle.Regular)
+    Private Sub TestFastColoredTextBox_TextChanged(ByVal sender As System.Object, ByVal e As FastColoredTextBoxNS.TextChangedEventArgs) Handles parentFastColoredTextBox.TextChanged
+        If TestWebBrowser IsNot Nothing AndAlso TestWebBrowser.Document IsNot Nothing AndAlso TestWebBrowser.Document.Body IsNot Nothing Then
+            TestWebBrowser.Document.Body.InnerHtml = parentFastColoredTextBox.Text
+        End If
+    End Sub
 
-    Private Sub TestHarness_TextChanged(ByVal sender As System.Object, ByVal e As FastColoredTextBoxNS.TextChangedEventArgs)
-        'clear style of changed range
-        e.ChangedRange.ClearStyle(KeywordStyle, CommentStyle, StringStyle)
+    Dim TestWebBrowser As WebBrowser
+    Dim TestSplitContainer As SplitContainer
 
-        e.ChangedRange.SetStyle(StringStyle, """.*?""")
-        e.ChangedRange.SetStyle(CommentStyle, "'.*$|(\s|^)rem\s.*$", System.Text.RegularExpressions.RegexOptions.Multiline Or System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+    Private Sub TestWebBrowser_Navigating(ByVal sender As Object, ByVal e As System.Windows.Forms.WebBrowserNavigatingEventArgs)
+        e.Cancel = True
+        Try
+            System.Diagnostics.Process.Start(e.Url.AbsoluteUri)
+        Catch ex As Exception
 
-        'DataTypes
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(Boolean|Byte|Char|Date|Decimal|Double|Integer|Long|Object|SByte|Short|Single|String|UInteger|ULong|UShort|Variant)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'Operators
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(AddressOf|And|AndAlso|Is|IsNot|Like|Mod|New|Not|Or|OrElse|Xor)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'Constants
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(False|Me|MyBase|MyClass|Nothing|True)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'CommonKeywords
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(As|Of|New|End)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'CommonKeywords
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(As|Of|New|End)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'FunctionKeywords
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(CBool|CByte|CChar|CDate|CDec|CDbl|CInt|CLng|CObj|CSByte|CShort|CSng|CStr|CType|CUInt|CULng|CUShort|DirectCast|GetType|TryCast|TypeOf)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'ParamModifiers
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(ByRef|ByVal|Optional|ParamArray)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'AccessModifiers
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(Friend|Private|Protected|Public)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'OtherModifiers
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(Const|Custom|Default|Global|MustInherit|MustOverride|Narrowing|NotInheritable|NotOverridable|Overloads|Overridable|Overrides|Partial|ReadOnly|Shadows|Shared|Static|Widening|WithEvents|WriteOnly)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'Statements
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(Throw|Stop|Return|Resume|AddHandler|RemoveHandler|RaiseEvent|Option|Let|GoTo|GoSub|Call|Continue|Dim|ReDim|Erase|On|Error|Exit)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'GlobalConstructs
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(Namespace|Class|Imports|Implements|Inherits|Interface|Delegate|Module|Structure|Enum)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'TypeLevelConstructs
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(Sub|Function|Handles|Declare|Lib|Alias|Get|Set|Property|Operator|Event)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'Constructs
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(SyncLock|Using|With|Do|While|Loop|Wend|Try|Catch|When|Finally|If|Then|Else|For|To|Step|Each|In|Next|Select|Case)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-        'ContextKeywords
-        e.ChangedRange.SetStyle(KeywordStyle, "\b(Ansi|Auto|Unicode|Preserve|Until)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+        End Try
+    End Sub
 
-        'Region
-        e.ChangedRange.SetStyle(KeywordStyle, "^\s{0,}#region\b|^\s{0,}#end\s{1,}region\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase Or System.Text.RegularExpressions.RegexOptions.Multiline)
+    Private Sub CodeRadioButton_CheckedChanged(ByVal sender As System.Object, ByVal e As System.EventArgs)
 
-        'clear folding markers
-        e.ChangedRange.ClearFoldingMarkers()
-        'set folding markers
-        e.ChangedRange.SetFoldingMarkers("^\s{0,}#region\b", "^\s{0,}#end\s{1,}region\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase Or System.Text.RegularExpressions.RegexOptions.Singleline) 'allow to collapse #region blocks
+        Dim oSender = DirectCast(sender, RadioButton)
+
+        If oSender.Checked = True Then
+            Select Case oSender.Text
+                Case "VB.Net"
+                    'parentFastColoredTextBox.LeftBracket = "("c
+                    'parentFastColoredTextBox.RightBracket = ")"c
+
+                    parentFastColoredTextBox.Language = Language.VB
+
+                    SpellCheckMatch = "('.*$|"".*?"")"
+
+                    TestSplitContainer.Panel2Collapsed = True
+
+                    parentFastColoredTextBox.Text = "'Simple test to check spelling with 3rd party controls" & vbCrLf & _
+                           "'This test is done on the FastColoredTextBox (open source control) that is hosted on CodeProject" & vbCrLf & _
+                           "'The article can be found at: http://www.codeproject.com/Articles/161871/Fast-Colored-TextBox-for-syntax-highlighting" & vbCrLf & _
+                           "" & vbCrLf & _
+                           "'i00 Does not take credit for any work in the FastColoredTextBox.dll" & vbCrLf & _
+                           "'i00 is however solely responsible for the spellcheck plugin to interface with FastColoredTextBox" & vbCrLf & _
+                           "" & vbCrLf & _
+                           "'As you can see only comments and string blocks are corrected" & vbCrLf & _
+                           "'This is due to the SpellCheckMatch property being set" & vbCrLf & _
+                           "" & vbCrLf & _
+                           "'Click on a missspelled word to correct..." & vbCrLf & _
+                           "" & vbCrLf & _
+                           "Dim test = ""Test with some bad spellling!""" & vbCrLf & _
+                           "" & vbCrLf & _
+                           "#Region ""Char""" & vbCrLf & _
+                           "   " & vbCrLf & _
+                           "   ''' <summary>" & vbCrLf & _
+                           "   ''' Char and style" & vbCrLf & _
+                           "   ''' </summary>" & vbCrLf & _
+                           "   Public Structure CharStyle" & vbCrLf & _
+                           "       Public c As Char" & vbCrLf & _
+                           "       Public style As StyleIndex" & vbCrLf & _
+                           "   " & vbCrLf & _
+                           "       Public Sub CharStyle(ByVal ch As Char)" & vbCrLf & _
+                           "           c = ch" & vbCrLf & _
+                           "           Style = StyleIndex.None" & vbCrLf & _
+                           "       End Sub" & vbCrLf & _
+                           "   " & vbCrLf & _
+                           "   End Structure" & vbCrLf & _
+                           "   " & vbCrLf & _
+                           "#End Region"
+                Case "HTML"
+                    'parentFastColoredTextBox.LeftBracket = "<"c
+                    'parentFastColoredTextBox.RightBracket = ">"c
+
+                    TestSplitContainer.Panel2Collapsed = False
+
+
+                    parentFastColoredTextBox.Language = Language.HTML
+
+                    SpellCheckMatch = "(?<!<[^>]*)[^<^>]*"
+
+                    'LinkColor here is used to demo css rgb()
+                    Dim LinkColor As Color = i00SpellCheck.DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.HotTrack), Color.FromKnownColor(KnownColor.WindowText))
+                    Dim LinkColorHTML = "rgb(" & LinkColor.R & ", " & LinkColor.G & ", " & LinkColor.B & ")"
+
+                    Dim BGColorHTML = ColorTranslator.ToHtml(i00SpellCheck.DrawingFunctions.BlendColor(Color.FromKnownColor(KnownColor.Highlight), Color.FromKnownColor(KnownColor.Window), 63))
+
+                    parentFastColoredTextBox.Text = "<table style=""border:1px solid highlight;font-family:Arial;font-size:10 pt"" bgcolor=""" & BGColorHTML & """>" & vbCrLf & _
+                           "    <tr>" & vbCrLf & _
+                           "        <td valign=top>" & vbCrLf & _
+                           "            <img src=""http://i00productions.org/i00logo/?size=48"">" & vbCrLf & _
+                           "        </td>" & vbCrLf & _
+                           "        <td>" & vbCrLf & _
+                           "            This is a test done on the <i>FastColoredTextBox</i> (open source control) that is hosted on CodeProject<br>" & vbCrLf & _
+                           "            The article can be found <a style=""color:" & LinkColorHTML & """ href=""http://www.codeproject.com/Articles/161871/Fast-Colored-TextBox-for-syntax-highlighting"">here</a><br>" & vbCrLf & _
+                           "            <br>" & vbCrLf & _
+                           "            i00 <b>does not</b> take credit for any work in the <i>FastColoredTextBox.dll</i> used in this project<br>" & vbCrLf & _
+                           "            i00 is however solely responsible for the spellcheck plugin to interface with <i>FastColoredTextBox</i><br>" & vbCrLf & _
+                           "            <br>" & vbCrLf & _
+                           "            As you can see HTML tags are not corrected<br>" & vbCrLf & _
+                           "            This is due to the <i>SpellCheckMatch</i> property being set<br>" & vbCrLf & _
+                           "            <br>" & vbCrLf & _
+                           "            Click on a missspelled word to correct...<br>" & vbCrLf & _
+                           "            <br>" & vbCrLf & _
+                           "            Test with some bad spellling!" & vbCrLf & _
+                           "        </td>" & vbCrLf & _
+                           "    </tr>" & vbCrLf & _
+                           "</table>"
+            End Select
+
+            parentFastColoredTextBox.SelectionStart = 0
+            parentFastColoredTextBox.SelectionLength = 0
+            parentFastColoredTextBox.DoCaretVisible()
+
+        End If
 
     End Sub
 

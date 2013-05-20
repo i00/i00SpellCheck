@@ -72,7 +72,7 @@ Public Class Synonyms
 
     <System.ComponentModel.DisplayName("Count")> _
     <System.ComponentModel.Description("The count of words that have synonyms specified in the selected syn file")> _
-    Public ReadOnly Property SynonymCount() As Long
+    Public Overridable ReadOnly Property SynonymCount() As Long
         Get
             If FileIO.FileSystem.FileExists(File) Then
                 Using sr As New IO.StreamReader(File)

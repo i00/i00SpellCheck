@@ -16,6 +16,14 @@ Public Class PropertyEditor
     Implements System.Windows.Forms.Design.IWindowsFormsEditorService
     Implements IDisposable
 
+    <AttributeUsage(AttributeTargets.Property Or AttributeTargets.Field)> _
+    Public MustInherit Class CustomDropdownListAttribute
+        Inherits System.Attribute
+
+        Public MustOverride Function List() As List(Of Object)
+
+    End Class
+
     Public Shared Function PaintProperty(ByVal theObject As Object, ByVal g As Graphics, ByVal Bounds As Rectangle, Optional ByVal OverrideTypeEditor As System.Reflection.MemberInfo = Nothing) As Boolean
 StartOver:
         Dim ObjectType As System.Reflection.MemberInfo = If(TypeOf theObject Is Type, DirectCast(theObject, Type), theObject.GetType)
@@ -64,6 +72,17 @@ EnumList:
         ElseIf theObject IsNot Nothing AndAlso TypeOf theObject Is [Enum] Then
             'show list
             GoTo EnumList
+        Else
+            'check custom list...
+            Dim DropListAttrib = ObjectType.GetCustomAttributes(True).OfType(Of CustomDropdownListAttribute).FirstOrDefault()
+            If DropListAttrib IsNot Nothing Then
+                Dim DropList = DirectCast(System.Activator.CreateInstance(DropListAttrib.GetType), CustomDropdownListAttribute).List()
+                If DropList IsNot Nothing Then
+                    Editor = New EnumUITypeEditor(Editor)
+                    DirectCast(Editor, EnumUITypeEditor).ListOverride = DropList
+                    GoTo ReloadEditor
+                End If
+            End If
         End If
         If OverrideTypeEditor IsNot Nothing Then
             OverrideTypeEditor = Nothing

@@ -1,6 +1,6 @@
 ﻿Imports i00SpellCheck
 
-Public Class Form1
+Public Class frmTest
 
     Private Sub Form1_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
 
@@ -13,7 +13,7 @@ Public Class Form1
         Using MessageBoxManager As New MessageBoxManager
             MessageBoxManager.Yes = "Hunspell"
             MessageBoxManager.No = "i00"
-            Select Case MsgBox("The Hunspell thesaurus uses alot of memory." & vbCrLf & "This is used for the ""Change to"" sugguestions." & vbCrLf & vbCrLf & "Do you want to load the Hunspell thesaurus or use the i00 Spell Check synonyms instead?", MsgBoxStyle.Exclamation Or MsgBoxStyle.YesNo) = MsgBoxResult.Yes
+            Select Case MsgBox("The Hunspell thesaurus uses alot of memory." & vbCrLf & "This is used for the ""Change to"" suggestions." & vbCrLf & vbCrLf & "Do you want to load the Hunspell thesaurus or use the i00 Spell Check synonyms instead?", MsgBoxStyle.Exclamation Or MsgBoxStyle.YesNo) = MsgBoxResult.Yes
                 Case MsgBoxResult.Yes 'Hunspell thesaurus
                     Dim Hunspell_Syn As New Hunspell_Syn
                     Hunspell_Syn.File = "th_en_US.dat"
@@ -24,6 +24,8 @@ Public Class Form1
         End Using
 
         Me.EnableControlExtensions()
+
+        PropertyGrid1.SelectedObject = TextBox1.ExtensionCast(Of i00SpellCheck.SpellCheckTextBox)()
 
     End Sub
 End Class

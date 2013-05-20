@@ -247,8 +247,7 @@ NextControl:
             If frmSplash.ShowDialog(Me) = False Then
                 Close()
             End If
-            Dim ToolTipDonate As New i00SpellCheck.HTMLToolTip()
-
+            
             Dim HTMLToolTip = New i00SpellCheck.HTMLToolTip With {.IsBalloon = True, .ToolTipTitle = "Thanks for downloading...", .ToolTipIcon = ToolTipIcon.Info}
             HTMLToolTip.ToolTipOrientation = i00SpellCheck.HTMLToolTip.ToolTipOrientations.TopLeft
             'add a bit more of a shadow to make it appear more 
@@ -270,7 +269,7 @@ NextControl:
             ProcessPrefCounter.GridData.PenWidth = 0
 
             frmPerformanceMonitor.AddPerformanceCounter(i00SpellCheck.DictionaryPerformanceCounter.CatName, i00SpellCheck.DictionaryPerformanceCounter.WordCheckCounterName, "", Color.Red, 60000)
-            frmPerformanceMonitor.AddPerformanceCounter(i00SpellCheck.DictionaryPerformanceCounter.CatName, i00SpellCheck.DictionaryPerformanceCounter.SugguestionLookupCounterName, "", Color.Aqua, 60000)
+            frmPerformanceMonitor.AddPerformanceCounter(i00SpellCheck.DictionaryPerformanceCounter.CatName, i00SpellCheck.DictionaryPerformanceCounter.SuggestionLookupCounterName, "", Color.Aqua, 60000)
 
             frmPerformanceMonitor.AnimationPoint = Me.RectangleToScreen(tsbPerformanceMonitor.Bounds)
             frmPerformanceMonitor.Show(Me)

@@ -33,7 +33,7 @@ Partial Public Class Dictionary
                 Comparative = 8 'er
                 Superlative = 16 'ist
                 PastParticiple = 32 'en
-                'tion - sugguestion
+                'tion - suggestion
 
                 'need stuff for??:
                 'ian - comedian, politic-ian, utop-ian, austral-ian, as-ian - EnumName: Origin

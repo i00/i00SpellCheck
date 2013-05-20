@@ -35,15 +35,23 @@
         Return IO.Path.Combine(IO.Path.GetDirectoryName(Filename), IO.Path.GetFileNameWithoutExtension(Filename)) & ".aff"
     End Function
 
+    Public Overrides Function ToString() As String
+        Return LoadedFileName
+    End Function
+
+    Dim LoadedFileName As String
+
     Public Overrides Sub LoadFromFileInternal(ByVal Filename As String)
         NHunspell = New NHunspell.Hunspell(GetAffFile(Filename), Filename)
 
         'user dict
         LoadUserDictionary(Filename)
-        'add to the sugguestions...
+        'add to the suggestions...
         For Each item In (From xItem In UserWordList Where xItem.State = SpellCheckWordError.OK).ToArray
             NHunspell.Add(item.Word)
         Next
+
+        LoadedFileName = Filename
     End Sub
 
     Public Overrides Sub SaveInternal(ByVal Filename As String, Optional ByVal ForceFullSave As Boolean = False)

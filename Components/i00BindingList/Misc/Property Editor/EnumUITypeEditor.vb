@@ -21,6 +21,8 @@ Friend Class EnumUITypeEditor
         Me.editor = editor
     End Sub
 
+    Public ListOverride As List(Of Object)
+
     Public Overrides Function EditValue(ByVal context As System.ComponentModel.ITypeDescriptorContext, ByVal provider As System.IServiceProvider, ByVal value As Object) As Object
         If TypeOf value Is [Enum] Then
 
@@ -29,6 +31,16 @@ Friend Class EnumUITypeEditor
                 PropertyEditorListView = New PropertyEditorListView(edSvc, editor)
 
                 PropertyEditorListView.EnumValue = DirectCast(value, [Enum])
+                edSvc.DropDownControl(PropertyEditorListView)
+
+                Return PropertyEditorListView.EnumValue
+            End If
+        ElseIf ListOverride IsNot Nothing Then
+            Dim edSvc As System.Windows.Forms.Design.IWindowsFormsEditorService = DirectCast(provider.GetService(GetType(System.Windows.Forms.Design.IWindowsFormsEditorService)), System.Windows.Forms.Design.IWindowsFormsEditorService)
+            If edSvc IsNot Nothing Then
+                PropertyEditorListView = New PropertyEditorListView(edSvc, editor)
+
+                PropertyEditorListView.Items.AddRange(ListOverride.ToArray)
                 edSvc.DropDownControl(PropertyEditorListView)
 
                 Return PropertyEditorListView.EnumValue

@@ -156,7 +156,7 @@ Partial Class SpellCheckDialog
         '
         Me.cmsHTMLSpellCheck.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mtsChangeTo, Me.tstbChangeTo, Me.tsiRevertTo})
         Me.cmsHTMLSpellCheck.Name = "ContextMenuStrip1"
-        Me.cmsHTMLSpellCheck.Size = New System.Drawing.Size(161, 69)
+        Me.cmsHTMLSpellCheck.Size = New System.Drawing.Size(161, 91)
         '
         'mtsChangeTo
         '

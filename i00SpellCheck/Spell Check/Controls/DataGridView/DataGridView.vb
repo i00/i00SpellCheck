@@ -222,7 +222,7 @@ Partial Public Class SpellCheckDataGridView
             Dim GridData As New System.ComponentModel.BindingList(Of GridViewData)
             GridData.Add(New GridViewData("This is a grid view example to demonistrate that i00 Spell Check can be used in grids!"))
             GridData.Add(New GridViewData("So comeon and edit a cell!"))
-            DataGridView.DefaultCellStyle.WrapMode = DataGridViewTriState.True
+            DataGridView.DefaultCellStyle.WrapMode = DataGridViewTriState.False
             DataGridView.Dock = DockStyle.Fill
             DataGridView.BorderStyle = BorderStyle.None
 

@@ -18,7 +18,7 @@ Public NotInheritable Class DictionaryPerformanceCounter
 
     Public Const CatName As String = "i00 SpellCheck"
     Public Const WordCheckCounterName As String = "Word check"
-    Public Const SugguestionLookupCounterName As String = "Sugguestion lookup"
+    Public Const SuggestionLookupCounterName As String = "Suggestion lookup"
 
     Public Shared Sub Remove()
         'delete the counter
@@ -46,7 +46,7 @@ Public NotInheritable Class DictionaryPerformanceCounter
 
                 averageCount64 = New CounterCreationData()
                 averageCount64.CounterType = PerformanceCounterType.RateOfCountsPerSecond32
-                averageCount64.CounterName = SugguestionLookupCounterName
+                averageCount64.CounterName = SuggestionLookupCounterName
                 counterDataCollection.Add(averageCount64)
 
                 PerformanceCounterCategory.Create(CatName, _
@@ -79,22 +79,22 @@ Public NotInheritable Class DictionaryPerformanceCounter
         End Get
     End Property
 
-    Private Shared mc_SugguestionLookupCounter As PerformanceCounter
-    Public Shared ReadOnly Property SugguestionLookupCounter() As PerformanceCounter
+    Private Shared mc_SuggestionLookupCounter As PerformanceCounter
+    Public Shared ReadOnly Property SuggestionLookupCounter() As PerformanceCounter
         Get
             Static TriedToCreate As Boolean
-            If TriedToCreate = False AndAlso mc_SugguestionLookupCounter Is Nothing Then
+            If TriedToCreate = False AndAlso mc_SuggestionLookupCounter Is Nothing Then
                 TriedToCreate = True
                 Try
                     Instate()
                     If PerformanceCounterCategory.Exists(CatName) Then
-                        mc_SugguestionLookupCounter = New PerformanceCounter(CatName, SugguestionLookupCounterName, False)
+                        mc_SuggestionLookupCounter = New PerformanceCounter(CatName, SuggestionLookupCounterName, False)
                     End If
                 Catch ex As Exception
 
                 End Try
             End If
-            Return mc_SugguestionLookupCounter
+            Return mc_SuggestionLookupCounter
         End Get
     End Property
 

@@ -338,6 +338,10 @@ Public Class extTextBoxContextMenu
     Public Event MenuClosed(ByVal sender As Object, ByVal e As System.Windows.Forms.ToolStripDropDownClosedEventArgs)
 
     Private Sub ContextMenuStrip_Closed(ByVal sender As Object, ByVal e As System.Windows.Forms.ToolStripDropDownClosedEventArgs) Handles ContextMenuStrip.Closed
+        'qwertyuiop - can't check for SourceControl here unfortunantly ...
+        'as if the ContextMenuStrip menu was open and user right-clicks somewhere else by the time the ContextMenuStrip.Closed event is
+        'called the .SourceControl property has already been changed even though it was opened on this text box :(
+        'If DirectCast(sender, System.Windows.Forms.ContextMenuStrip).SourceControl IsNot MyBase.Control Then Return
 
         LastMenuSpellClickReturn = MenuSpellClickReturn
         MenuSpellClickReturn = Nothing
@@ -350,6 +354,8 @@ Public Class extTextBoxContextMenu
     End Sub
 
     Private Sub ContextMenuStrip_LocationChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles ContextMenuStrip.LocationChanged
+        If DirectCast(sender, System.Windows.Forms.ContextMenuStrip).SourceControl IsNot MyBase.Control Then Return
+
         Static LocationChanging As Boolean
         If LocationChanging Then Exit Sub
         LocationChanging = True
@@ -379,6 +385,8 @@ Public Class extTextBoxContextMenu
     End Sub
 
     Private Sub ContextMenuStrip_ItemAdded(ByVal sender As Object, ByVal e As System.Windows.Forms.ToolStripItemEventArgs) Handles ContextMenuStrip.ItemAdded
+        If DirectCast(sender, System.Windows.Forms.ContextMenuStrip).SourceControl IsNot MyBase.Control Then Return
+
         CheckContextMenuLocation()
     End Sub
 
@@ -406,13 +414,16 @@ AllDone:
     End Sub
 
     Private Sub ContextMenuStrip_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles ContextMenuStrip.SizeChanged
+        If DirectCast(sender, System.Windows.Forms.ContextMenuStrip).SourceControl IsNot MyBase.Control Then Return
+
         CheckContextMenuLocation()
     End Sub
 
     Public Event MenuOpening(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs)
 
     Private Sub ContextMenuStrip_Opening(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles ContextMenuStrip.Opening
-       
+        If DirectCast(sender, System.Windows.Forms.ContextMenuStrip).SourceControl IsNot MyBase.Control Then Return
+
         If ContextMenuStrip.Visible = True Then
             'already showing ... no need to run this...
             Exit Sub

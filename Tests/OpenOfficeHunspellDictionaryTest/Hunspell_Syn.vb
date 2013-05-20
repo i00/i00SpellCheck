@@ -30,10 +30,10 @@
     Public Overrides Function FindWord(ByVal Word As String) As System.Collections.Generic.List(Of i00SpellCheck.Synonyms.FindWordReturn)
         If Thes Is Nothing Then Return Nothing
 
-        Dim Sugguestions = Thes.Lookup(Word)
-        If Sugguestions Is Nothing Then Return Nothing
+        Dim Suggestions = Thes.Lookup(Word)
+        If Suggestions Is Nothing Then Return Nothing
         Dim ReturnResult As New List(Of i00SpellCheck.Synonyms.FindWordReturn)
-        For Each item In Sugguestions.Meanings
+        For Each item In Suggestions.Meanings
             Dim FindWordReturn As New i00SpellCheck.Synonyms.FindWordReturn
             FindWordReturn.TypeDescription = item.Description
             'FindWordReturn.WordType = i00SpellCheck.Synonyms.FindWordReturn.WordTypes.Other

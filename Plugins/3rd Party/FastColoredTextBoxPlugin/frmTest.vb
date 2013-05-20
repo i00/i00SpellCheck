@@ -8,7 +8,10 @@ Public Class frmTest
         ControlExtensions.LoadSingleControlExtension(FastColoredTextBox1, New SpellCheckFastColoredTextBox)
 
         'load the test data
-        DirectCast(FastColoredTextBox1.SpellCheck(), iTestHarness).SetupControl(FastColoredTextBox1)
+        Dim AddControl = DirectCast(FastColoredTextBox1.SpellCheck(), iTestHarness).SetupControl(FastColoredTextBox1)
+        AddControl.Dock = DockStyle.Fill
+        Me.Controls.Add(AddControl)
+        AddControl.BringToFront()
 
         ''The following will spell check strings not in html tags!
         'DirectCast(FastColoredTextBox1.SpellCheck(), FastColoredTextBoxPlugin.SpellCheckFastColoredTextBox).SpellCheckMatch = "(?<!<[^>]*)[^<^>]*"

@@ -96,6 +96,7 @@ Public Class Menu
                     'had to create a new one each time ... otherwise it doesn't fade when moving between items
                     SpellToolTip.Dispose()
                     SpellToolTip = New HTMLToolTip
+
                     ShowTip(WordDef, tsi)
                 Else
                     HideTip(tsi)
@@ -348,8 +349,15 @@ Public Class Menu
                             tsi.Enabled = False
                             ContextMenuStrip.Items.Add(tsi)
                         Else
-                            Dim TopCloseness = Suggestions.First.Closness
-                            Dim FilteredSuggestions = (From xItem In Suggestions Order By xItem.Closness Descending, xItem.Word Ascending Where xItem.Closness >= TopCloseness * 0.75).ToArray
+                            Dim TopCloseness = Suggestions.Max(Function(x As Dictionary.SpellCheckSuggestionInfo) x.Closness)
+                            Dim FilteredSuggestions As Dictionary.SpellCheckSuggestionInfo()
+                            If TopCloseness = 0 Then
+                                'this dictionary doesn't prioritize words on a closeness rating... just do it in order
+                                FilteredSuggestions = Suggestions.ToArray
+                            Else
+                                FilteredSuggestions = (From xItem In Suggestions Order By xItem.Closness Descending, xItem.Word Ascending Where xItem.Closness >= TopCloseness * 0.75).ToArray
+                            End If
+
                             FilteredSuggestions = (From xItem In FilteredSuggestions Where Array.IndexOf(FilteredSuggestions, xItem) < 15).ToArray
 
                             For Each item In FilteredSuggestions
@@ -361,7 +369,7 @@ Public Class Menu
                                 'AddHandler tsi.SelectionChanged, AddressOf SpellToolTip_SelectionChanged
                                 ContextMenuStrip.Items.Add(tsi)
                             Next
-                        End If
+                            End If
                     End If
             End Select
         End Sub

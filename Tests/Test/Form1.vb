@@ -3,8 +3,10 @@
 Public Class Form1
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+
+        
         ''For the status bar to show the dictionary loading stats
-        ''dictionary only loads 1st time you call EnableSpellCheck
+        ''dictionary only loads 1st time you call EnableControlExtensions
         AddHandler SpellCheckFormExtension.DictionaryLoaded, AddressOf DictionaryLoaded
         tslStatus.Text = "Loading dictionary..."
 
@@ -219,7 +221,7 @@ Public Class Form1
                 'Incorrect - Offer suggestions
                 Dim Suggestions = i00SpellCheck.Dictionary.DefaultDictionary.SpellCheckSuggestions(tsbSuggestionLookup.Text)
                 If Suggestions.Count = 0 Then
-                    MsgBox("Your word was not in the dictionary and no sugguestions could be made")
+                    MsgBox("Your word was not in the dictionary and no suggestions could be made")
                     Return
                 End If
                 Dim TopCloseness = Suggestions.Max(Function(x As i00SpellCheck.Dictionary.SpellCheckSuggestionInfo) x.Closness)
@@ -227,7 +229,7 @@ Public Class Form1
                 FilteredSuggestions = (From xItem In FilteredSuggestions Where Array.IndexOf(FilteredSuggestions, xItem) < 15).ToArray
 
                 MsgBox("Found " & FilteredSuggestions.Count & " suggestion" & If(FilteredSuggestions.Count = 1, "", "s") & If(FilteredSuggestions.Count = 0, "", ":" & vbCrLf & Join(FilteredSuggestions, vbCrLf)) & vbCrLf & vbCrLf & _
-                       "This sugguestion lookup uses closeness tolerance of 25% to filter results and limited to 15 results.")
+                       "This suggestion lookup uses closeness tolerance of 25% to filter results and limited to 15 results.")
             End If
         End If
     End Sub

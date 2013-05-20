@@ -37,9 +37,9 @@ Public Class AboutScreen
         lblReferences.Width = pnlReferences.ClientSize.Width - lblReferences.Left - System.Windows.Forms.SystemInformation.VerticalScrollBarWidth
         lblReferences.Text = Join((From xItem In a.GetReferencedAssemblies Order By xItem.Name Select xItem.Name).ToArray, vbCrLf)
 
-        Dim fi As FileVersionInfo = FileVersionInfo.GetVersionInfo(a.Location)
+        'Dim fi As FileVersionInfo = FileVersionInfo.GetVersionInfo(a.Location)
 
-        lblVersion.Text = "Version: " & fi.ProductVersion
+        lblVersion.Text = "Version: " & a.GetName.Version.ToString
 
         SelectedTab = New TabItem("About")
         Tabs.Add(SelectedTab)

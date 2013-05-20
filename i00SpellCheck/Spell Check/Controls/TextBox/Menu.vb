@@ -93,7 +93,8 @@ Partial Class SpellCheckTextBox
     Private Sub extTextBoxContextMenu_MenuOpening(ByVal sender As Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles extTextBoxContextMenu.MenuOpening
 
         'If ContextMenuStrip.SourceControl Is parentTextBox Then
-        
+        'SpellMenuItems.RemoveSpellMenuItems()
+
         If OKToSpellCheck Then
             SpellMenuItems.ContextMenuStrip = extTextBoxContextMenu.ContextMenuStrip
             If Settings.IgnoreWordOverride(extTextBoxContextMenu.MenuSpellClickReturn.Word) Then

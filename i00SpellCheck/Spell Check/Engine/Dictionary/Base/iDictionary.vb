@@ -66,7 +66,7 @@ Partial Public MustInherit Class Dictionary
     End Class
 
     Public Function SpellCheckSuggestions(ByVal Word As String) As List(Of SpellCheckSuggestionInfo)
-        Dim pc = DictionaryPerformanceCounter.SugguestionLookupCounter
+        Dim pc = DictionaryPerformanceCounter.SuggestionLookupCounter
         If pc IsNot Nothing Then
             pc.Increment()
         End If
@@ -120,7 +120,17 @@ Partial Public MustInherit Class Dictionary
 
     Public MustOverride Sub Remove(ByVal Item As String)
 
-    Public Shared DefaultDictionary As Dictionary
+    Public Shared Event DefaultDictionaryChanged(ByVal sender As Object, ByVal e As EventArgs)
+    Private Shared mc_DefaultDictionary As Dictionary
+    Public Shared Property DefaultDictionary() As Dictionary
+        Get
+            Return mc_DefaultDictionary
+        End Get
+        Set(ByVal value As Dictionary)
+            mc_DefaultDictionary = value
+            RaiseEvent DefaultDictionaryChanged(Nothing, EventArgs.Empty)
+        End Set
+    End Property
 
     Public MustOverride ReadOnly Property Count() As Integer
 

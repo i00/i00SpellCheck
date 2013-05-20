@@ -164,7 +164,7 @@
     <Compile Include="Spell Check\Engine\iTestHarness.vb" />
     <Compile Include="Spell Check\Engine\Menu.vb">
     </Compile>
-    <Compile Include="Spell Check\Engine\SpellCheckControlBase.vb" />
+    <Compile Include="Spell Check\Engine\Controls\SpellCheckControlBase.vb" />
     <Compile Include="Misc\DrawingFunctions.vb" />
     <Compile Include="Controls\BufferedPanel.vb" />
     <Compile Include="Extras\Crossword Generator\ExtendedListView.vb">

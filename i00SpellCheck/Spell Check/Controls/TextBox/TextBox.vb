@@ -60,7 +60,7 @@ Public Class SpellCheckTextBox
         Set(ByVal value As Boolean)
             If mc_RenderCompatibility <> value Then
                 mc_RenderCompatibility = value
-                parentTextBox.Invalidate() 'OnRedraw()
+                RepaintControl() 'parentTextBox.Invalidate() 'OnRedraw()
             End If
         End Set
     End Property
@@ -71,13 +71,18 @@ Public Class SpellCheckTextBox
     Private Sub parentTextBox_TextChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentTextBox.TextChanged
         'Standard TextBoxes do not fire the WM_PAINT event when adding text so need to do it this way
         If TypeOf parentTextBox Is TextBox Then
-            parentTextBox.Invalidate()
+            'parentTextBox.Invalidate()
+            RepaintControl()
         End If
     End Sub
 
     Private Sub parentTextBox_MultilineChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles parentTextBox.MultilineChanged
         Dim senderTextBox = TryCast(sender, TextBoxBase)
         If senderTextBox IsNot Nothing Then
+            If TypeOf senderTextBox Is DataGridViewTextBoxEditingControl Then
+                'always enabled 
+                Return
+            End If
             If senderTextBox.Multiline Then
                 senderTextBox.EnableSpellCheck()
             Else
@@ -123,8 +128,7 @@ Public Class SpellCheckTextBox
         parentTextBox = DirectCast(Control, TextBoxBase)
         parentRichTextBox = TryCast(Control, RichTextBox)
         extTextBoxContextMenu = Control.ExtensionCast(Of extTextBoxContextMenu)()
-
-        If parentTextBox.Multiline = False Then parentTextBox.DisableSpellCheck()
+        If parentTextBox.Multiline = False AndAlso Not (TypeOf parentTextBox Is DataGridViewTextBoxEditingControl) Then parentTextBox.DisableSpellCheck()
         RepaintControl()
 
     End Sub
@@ -155,7 +159,7 @@ Public Class SpellCheckTextBox
 
             RichTextBox.AppendText(If(RichTextBox.Text = "", "", vbCrLf & vbCrLf) & "i00SpellCheck has built in support for RichTextBoxes!" & vbCrLf & _
                                "The quic brown fox junped ovr the lazy dog!" & vbCrLf & _
-                               "You can right click to see spelling sugguestions for words and to add/ignore/remove words from the dictionary." & vbCrLf & _
+                               "You can right click to see spelling suggestions for words and to add/ignore/remove words from the dictionary." & vbCrLf & _
                                "If you ignre a word you can hold ctrl down to underlne all ignored words!" & vbCrLf & _
                                "The initial dictionary may take a little while to load ... it holds more than 150 000 words!")
 

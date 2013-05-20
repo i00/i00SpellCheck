@@ -39,9 +39,20 @@ Partial Public Class Dictionary
             ofd.Filter = "Dictionary Files (" & Me.DicFileFilter & ")|" & Me.DicFileFilter & "|All Files (*.*)|*.*"
             ofd.FilterIndex = 0
             If ofd.ShowDialog = Windows.Forms.DialogResult.OK Then
-                Me.LoadFromFile(ofd.FileName)
+                Dim ReturnObj = Me
+                Try
+                    'we need to create a new instance of the class for the property changed event to be fired :(...
+                    ReturnObj = DirectCast(System.Activator.CreateInstance(Me.GetType), Dictionary)
+                Catch ex As Exception
+                    'failed ... maybe the class requires constructor prams?
+                    '... oh well just load the new dictionary ... interface may not redraw for existing words
+
+                End Try
+                ReturnObj.LoadFromFile(ofd.FileName)
+                Return ReturnObj
+            Else
+                Return Me 'no changes
             End If
-            Return Me
         End Using
     End Function
 

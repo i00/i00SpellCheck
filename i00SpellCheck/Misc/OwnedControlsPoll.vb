@@ -76,6 +76,12 @@ Public Class OwnedControlsPoll
         If ControlPolls.Contains(MasterControl) = False Then
             ControlPolls.Add(MasterControl)
 
+            Dim SplitContainer = TryCast(MasterControl, SplitContainer)
+            If SplitContainer IsNot Nothing Then
+                MonitorControl(SplitContainer.Panel1)
+                MonitorControl(SplitContainer.Panel2)
+            End If
+
             AddHandler MasterControl.ControlAdded, AddressOf Control_ControlAdded
             AddHandler MasterControl.Disposed, AddressOf Control_Disposed
 

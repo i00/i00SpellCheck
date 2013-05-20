@@ -29,6 +29,8 @@ Public Class SpellCheckDialog
     Dim MenuCurrentWord As HTMLSpellCheck.SpellCheckDialogWords
 
     Private Sub cmsHTMLSpellCheck_LocationChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles cmsHTMLSpellCheck.LocationChanged
+        If HtmlSpellCheck1.Document Is Nothing Then Return
+
         Static LocationChanging As Boolean
         If LocationChanging Then Exit Sub
         LocationChanging = True
@@ -173,7 +175,7 @@ Public Class SpellCheckDialog
             ctl.Visible = False
             ctl.Dock = DockStyle.Fill
         Next
-        ShowHideSugguestions(False)
+        ShowHideSuggestions(False)
         pnlPleaseWait.SendToBack()
         pnlPleaseWait.Visible = True
 
@@ -230,7 +232,7 @@ Public Class SpellCheckDialog
                 'select this word :)
                 e.Word.Selected = True
             End If
-            ShowHideSugguestions(pnlSuggestions.Visible)
+            ShowHideSuggestions(pnlSuggestions.Visible)
 
             'If btnSkip.Enabled = False Then
             '    Dim SelectedWord = Me.SelectedWord()
@@ -249,7 +251,7 @@ Public Class SpellCheckDialog
             pnlSuggestions.Invoke(HtmlSpellCheck1_SelectionChanged_cb, sender, e)
         Else
             FillSuggestions()
-            ShowHideSugguestions(True)
+            ShowHideSuggestions(True)
             txtChangeTo.Focus()
             ChangeToUseOldWord = True
             txtChangeTo_TextChanged(txtChangeTo, EventArgs.Empty)
@@ -381,7 +383,7 @@ ReCheck:
                     If theSelectedWord IsNot Nothing Then
                         theSelectedWord.Selected = False
                     End If
-                    ShowHideSugguestions(False)
+                    ShowHideSuggestions(False)
                 Else
                     If MoveToNextWordError() Then
                         'found a word... 
@@ -430,7 +432,7 @@ ReCheck:
         If pbChangeAll.Visible Then pbChangeAll.SafeInvoke(Function(x As ProgressBar) InlineAssignHelper(x.Visible, False))
         If ChangeingAll Then
             ChangeingAll = False
-            ShowHideSugguestions(pnlSuggestions.Visible)
+            ShowHideSuggestions(pnlSuggestions.Visible)
         End If
         If SelectedWord() Is Nothing AndAlso MoveToNextWordError() = False Then
             CompleteSpellCheck()
@@ -444,14 +446,14 @@ ReCheck:
             theSelectedWord.SpellCheckState = HTMLSpellCheck.SpellCheckDialogWords.SpellCheckStates.OK
         End If
         btnSkip_Click(btnSkip, EventArgs.Empty)
-        ShowHideSugguestions(pnlSuggestions.Visible)
+        ShowHideSuggestions(pnlSuggestions.Visible)
     End Sub
 
-    Private Delegate Sub ShowHideSugguestions_cb(ByVal Show As Boolean)
-    Private Sub ShowHideSugguestions(ByVal Show As Boolean)
+    Private Delegate Sub ShowHideSuggestions_cb(ByVal Show As Boolean)
+    Private Sub ShowHideSuggestions(ByVal Show As Boolean)
         If pnlSuggestions.InvokeRequired Then
-            Dim ShowHideSugguestions_cb As New ShowHideSugguestions_cb(AddressOf ShowHideSugguestions)
-            pnlSuggestions.Invoke(ShowHideSugguestions_cb, Show)
+            Dim ShowHideSuggestions_cb As New ShowHideSuggestions_cb(AddressOf ShowHideSuggestions)
+            pnlSuggestions.Invoke(ShowHideSuggestions_cb, Show)
         Else
             Dim theSelectedWord = SelectedWord()
 
@@ -624,7 +626,7 @@ ReCheck:
             End If
         Next
         btnRevertAll.Enabled = False
-        ShowHideSugguestions(pnlSuggestions.Visible)
+        ShowHideSuggestions(pnlSuggestions.Visible)
 
         HtmlSpellCheck1.StartSpellCheck()
     End Sub
@@ -641,7 +643,7 @@ ReCheck:
         Dim SelectedWord = Me.SelectedWord
         If SelectedWord IsNot Nothing Then SelectedWord.Selected = False
 
-        ShowHideSugguestions(False)
+        ShowHideSuggestions(False)
 
         btnChangeAll.Enabled = False
         mt_ChangeAll = New System.Threading.Thread(AddressOf ChangeAll)
@@ -855,7 +857,4 @@ ReCheck:
         txtChangeTo_TextChanged(txtChangeTo, EventArgs.Empty)
     End Sub
 
-    Private Sub btnClose_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnClose.Click
-
-    End Sub
 End Class

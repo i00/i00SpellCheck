@@ -50,6 +50,8 @@ Public MustInherit Class ControlExtension
 
 #End Region
 
+    Public Event Loaded(ByVal sender As Object, ByVal e As EventArgs)
+
     <System.ComponentModel.Description("Control Extensions that are required to be loaded prior to this ControlExtension")> _
     <System.ComponentModel.Browsable(False)> _
     <System.ComponentModel.DisplayName("Required Extensions")> _
@@ -103,6 +105,9 @@ Public MustInherit Class ControlExtension
 
         Application.AddMessageFilter(Me)
         Load()
+
+        RaiseEvent Loaded(Me, EventArgs.Empty)
+
     End Sub
 
     MustOverride Sub Load()

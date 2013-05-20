@@ -22,7 +22,6 @@ Partial Class frmTest
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmTest))
         Me.PropertyGrid1 = New System.Windows.Forms.PropertyGrid
         Me.ToolStrip2 = New System.Windows.Forms.ToolStrip
         Me.tsbPrint = New System.Windows.Forms.ToolStripButton
@@ -74,7 +73,6 @@ Partial Class frmTest
         Me.Controls.Add(Me.RichTextBox1)
         Me.Controls.Add(Me.PropertyGrid1)
         Me.Controls.Add(Me.ToolStrip2)
-        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MinimumSize = New System.Drawing.Size(400, 300)
         Me.Name = "frmTest"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen

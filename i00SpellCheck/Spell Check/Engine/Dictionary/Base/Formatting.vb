@@ -29,8 +29,7 @@ Partial Public MustInherit Class Dictionary
         End Function
 
         Public Shared Function AllInCaps(ByVal CompareWord As String) As Boolean
-            Dim ChrsInWord = CStr((From xItem In CompareWord Select xItem Where Asc(LCase(xItem)) >= 97 AndAlso Asc(LCase(xItem)) <= 122).ToArray)
-            If ChrsInWord = UCase(ChrsInWord) Then
+            If CompareWord = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToUpper(CompareWord) Then
                 'all letters in this word are caps
                 Return True
             End If

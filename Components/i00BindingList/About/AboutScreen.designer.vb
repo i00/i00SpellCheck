@@ -296,7 +296,7 @@ Partial Class AboutScreen
         Me.MinimumSize = New System.Drawing.Size(364, 305)
         Me.Name = "AboutScreen"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
-        Me.Text = "About i00 Spell Check"
+        Me.Text = "About i00 Binding List"
         Me.bpLogo.ResumeLayout(False)
         Me.bpLogo.PerformLayout()
         Me.pnlTabHolders.ResumeLayout(False)

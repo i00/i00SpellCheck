@@ -25,6 +25,7 @@ Public MustInherit Class SpellCheckControlBase
     Const WM_KEYDOWN As Integer = &H100
     Const WM_KEYUP As Integer = &H101
 
+
     Private Sub SpellCheckControlBase_PreFilterMessage(ByVal sender As Object, ByRef e As PreFilterMessageEventArgs) Handles Me.PreFilterMessage
         Static ctlPressed As Boolean
         Select Case e.m.Msg
