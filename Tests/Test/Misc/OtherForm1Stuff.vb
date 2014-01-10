@@ -48,6 +48,19 @@ Partial Class Form1
         End Using
     End Function
 
+    Private Function GetSelectedTabsSpellCheckControl() As Control
+        'find the current tabs spell check control by locating the property grid...
+        Dim ctl As Control = tabSpellControls.SelectedTab
+        Do Until ctl Is Nothing
+            Dim PropertyGrid = TryCast(ctl, ControlExtPropGrid)
+            If PropertyGrid IsNot Nothing Then
+                Return PropertyGrid.SelectedObject
+            End If
+            ctl = tabSpellControls.SelectedTab.GetNextControl(ctl, True)
+        Loop
+        Return Nothing
+    End Function
+
     Private Sub Form1_Load_2(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 
         Dim SpellCheckAssembly = System.Reflection.Assembly.Load("i00SpellCheck")
@@ -119,7 +132,10 @@ Partial Class Form1
                     Dim iTestHarness = TryCast(ControlExtension, iTestHarness)
 
                     If iTestHarness IsNot Nothing Then
-                        InsertControl = iTestHarness.SetupControl(item)
+                        Dim ToBeInsertControl = iTestHarness.SetupControl(item)
+                        If ToBeInsertControl IsNot item Then
+                            InsertControl = ToBeInsertControl
+                        End If
                         If InsertControl Is Nothing Then GoTo NextControl
                     End If
                 Next

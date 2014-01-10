@@ -14,7 +14,6 @@
 'as part of other software, it is not a complete software package, thus i00 Productions is not 
 'responsible for any legal ramifications that software using this product breaches.
 
-Imports i00SpellCheck
 
 Public Class clsGrid
     Inherits i00SpellCheck.BufferedPanel
@@ -219,6 +218,7 @@ Public Class clsGrid
                 'only select entries newer or equal to the firstDate
                 GraphValues = (From xItem In GridValues Where xItem.Time >= FirstDate.Time Order By xItem.Time).ToList
             End If
+            GridValues = GraphValues
 
             If GraphValues.Count = 0 Then Exit Function
 

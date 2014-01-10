@@ -520,7 +520,7 @@ Public Class frmPerformanceMonitor
                 If tsiCounterOwner.GridData.GridValues.Count >= 1 Then
                     Dim Average As String = tsiCounterOwner.GridData.GetAverage.ToString
                     Dim AverageExcluding0 As String
-                    Dim ItemsNot0 = (From xItem In tsiCounterOwner.GridData.GridValues Where xItem.Value <> 0 Select xItem.Value)
+                    Dim ItemsNot0 = (From xItem In tsiCounterOwner.GridData.GridValues Where xItem.Value <> 0 Select xItem.Value).ToArray
                     If ItemsNot0.Count > 0 Then
                         AverageExcluding0 = ItemsNot0.Average.ToString
                     Else

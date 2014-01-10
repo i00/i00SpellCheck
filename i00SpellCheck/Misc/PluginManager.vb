@@ -23,7 +23,7 @@ Public Class PluginManager(Of T)
         End Function
     End Class
 
-    Private Class PluginsWithWeight
+    Public Class PluginsWithWeight
         Public PluginClass As T
         Public Weight As Double
         Public Sub New(ByVal PluginClass As T, Optional ByVal Weight As Double = 0)
@@ -32,35 +32,75 @@ Public Class PluginManager(Of T)
         End Sub
     End Class
 
-    Public Shared ReadOnly Property GetPlugins() As List(Of T)
+#If VBC_VER <= 9.0 Then
+    Const DebuggerShadowCopyOK As Boolean = False
+#Else
+    Const DebuggerShadowCopyOK as Boolean =True 
+#End If
+
+    Shared ShadowCopyDebuggerOverride As Boolean
+
+    Public Shared ReadOnly Property GetPlugins(Optional ByVal PluginLocation As String = "", Optional ByVal ShadowCopy As Boolean = False) As List(Of T)
         Get
+            If PluginLocation = "" Then
+                PluginLocation = IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly.Location())
+            End If
+
             Dim PluginsWithWeight = New List(Of PluginsWithWeight)
 
-            For Each file In FileIO.FileSystem.GetFiles(IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly.Location()), FileIO.SearchOption.SearchTopLevelOnly, "*.dll", "*.exe")
+            For Each file In FileIO.FileSystem.GetFiles(PluginLocation, FileIO.SearchOption.SearchTopLevelOnly, "*.dll", "*.exe")
                 Try
-                    Dim a = System.Reflection.Assembly.LoadFile(file)
+                    Dim a As System.Reflection.Assembly
 
-                    Dim Classes = Types.GetClassesOfType(a)
-                    For Each item In Classes
-                        Dim weight = 0.0
-                        Dim asd = item.Type.GetCustomAttributes(False).OfType(Of PluginWeightAttribute)().FirstOrDefault
-                        If asd IsNot Nothing Then
-                            weight = asd.Weight
+
+                    If DebuggerShadowCopyOK = False AndAlso ShadowCopy AndAlso Debugger.IsAttached Then
+                        'debugger issues with vs<=9.0
+                        Static AskedToShadowCopy As Boolean = False
+                        If AskedToShadowCopy = False Then
+                            AskedToShadowCopy = True
+                            If MsgBox("The VS9 or prior debugger is attached, this debugger is not fully compatable with loading shadow copy plugins." & vbCrLf & vbCrLf & "Plugins will still work, but any breakpoints located within the calling function, within its call stack, or within plugins will not be able to locate the line for the break point." & vbCrLf & vbCrLf & "This will not effect the deployed product." & vbCrLf & vbCrLf & "Do you wish to disable shadow copying for plugins in this session?", MsgBoxStyle.Exclamation Or MsgBoxStyle.YesNo) = MsgBoxResult.No Then
+                                'enable shadow copy
+                                ShadowCopyDebuggerOverride = True
+                            End If
                         End If
 
-                        Try
-                            PluginsWithWeight.Add(New PluginsWithWeight(item.CreateObject, weight))
-                        Catch ex As Exception
+                        ShadowCopy = ShadowCopyDebuggerOverride
+                    End If
 
-                        End Try
-                    Next
+                    If ShadowCopy Then
+                        a = System.Reflection.Assembly.Load(My.Computer.FileSystem.ReadAllBytes(file))
+                    Else
+                        a = System.Reflection.Assembly.LoadFile(file)
+                    End If
+                    PluginsWithWeight.AddRange(GetPluginsFromAssembly(a))
                 Catch ex As Exception
 
                 End Try
             Next
 
+
             Return (From xItem In PluginsWithWeight Order By xItem.Weight Descending Select xItem.PluginClass).ToList
 
+        End Get
+    End Property
+
+    Public Shared ReadOnly Property GetPluginsFromAssembly(ByVal a As System.Reflection.Assembly) As List(Of PluginsWithWeight)
+        Get
+            GetPluginsFromAssembly = New List(Of PluginsWithWeight)
+            Dim Classes = Types.GetClassesOfType(a)
+            For Each item In Classes
+                Dim weight = 0.0
+                Dim PluginWeightAttribute = item.Type.GetCustomAttributes(False).OfType(Of PluginWeightAttribute)().FirstOrDefault
+                If PluginWeightAttribute IsNot Nothing Then
+                    weight = PluginWeightAttribute.Weight
+                End If
+
+                Try
+                    GetPluginsFromAssembly.Add(New PluginsWithWeight(item.CreateObject, weight))
+                Catch ex As Exception
+
+                End Try
+            Next
         End Get
     End Property
 

@@ -87,13 +87,15 @@ Public Module SpellCheckFormExtension
     <System.Runtime.CompilerServices.Extension()> _
     Public Sub EnableSpellCheck(ByVal sender As Control)
         If sender.ExtensionCast(Of SpellCheckControlBase)() IsNot Nothing Then
-            'this control has been spellchecked before... enable it?
-            If DisabledSpellCheckControls.Contains(sender) Then
-                DisabledSpellCheckControls.Remove(sender)
-                sender.SpellCheck.RepaintControl()
-            End If
+            'this control has been spellchecked before...
         Else
             sender.SpellCheck()
+        End If
+        'Check that the spell check has been enabled for this control...
+        '(single line text boxes for eg disable themselves by default when the extension is loaded)
+        If DisabledSpellCheckControls.Contains(sender) Then
+            DisabledSpellCheckControls.Remove(sender)
+            sender.SpellCheck.RepaintControl()
         End If
     End Sub
 

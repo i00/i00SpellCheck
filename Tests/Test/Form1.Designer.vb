@@ -33,15 +33,24 @@ Partial Class Form1
         Me.ToolStrip2 = New System.Windows.Forms.ToolStrip
         Me.tsbExamples = New System.Windows.Forms.ToolStripDropDownButton
         Me.CrosswordSolverToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.MenuTextSeperator3 = New i00SpellCheck.MenuTextSeperator
         Me.tsbSuggestionLookup = New System.Windows.Forms.ToolStripTextBox
+        Me.MenuTextSeperator1 = New i00SpellCheck.MenuTextSeperator
         Me.tstbAnagramLookup = New System.Windows.Forms.ToolStripTextBox
+        Me.MenuTextSeperator2 = New i00SpellCheck.MenuTextSeperator
         Me.tstbScrabbleHelper = New System.Windows.Forms.ToolStripTextBox
         Me.tsbAbout = New System.Windows.Forms.ToolStripButton
         Me.ToolStripDropDownButton2 = New System.Windows.Forms.ToolStripDropDownButton
+        Me.MenuTextSeperator4 = New i00SpellCheck.MenuTextSeperator
         Me.SpellingErrorToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.tsiCPSpellingError = New i00SpellCheck.tsiColorPicker
         Me.CaseErrorToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.tsiCPCaseError = New i00SpellCheck.tsiColorPicker
         Me.IgnoredWordToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.tsiCPIgnoreColor = New i00SpellCheck.tsiColorPicker
+        Me.MenuTextSeperator5 = New i00SpellCheck.MenuTextSeperator
         Me.tsiDrawStyle = New System.Windows.Forms.ToolStripComboBox
+        Me.MenuTextSeperator6 = New i00SpellCheck.MenuTextSeperator
         Me.ShowErrorsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.ShowIgnoredToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.WhenCtrlIsPressedToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
@@ -59,15 +68,6 @@ Partial Class Form1
         Me.DataGridViewTextBoxColumn1 = New System.Windows.Forms.DataGridViewTextBoxColumn
         Me.ContextMenuStrip1 = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.AsdToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.MenuTextSeperator3 = New i00SpellCheck.MenuTextSeperator
-        Me.MenuTextSeperator1 = New i00SpellCheck.MenuTextSeperator
-        Me.MenuTextSeperator2 = New i00SpellCheck.MenuTextSeperator
-        Me.MenuTextSeperator4 = New i00SpellCheck.MenuTextSeperator
-        Me.tsiCPSpellingError = New i00SpellCheck.tsiColorPicker
-        Me.tsiCPCaseError = New i00SpellCheck.tsiColorPicker
-        Me.tsiCPIgnoreColor = New i00SpellCheck.tsiColorPicker
-        Me.MenuTextSeperator5 = New i00SpellCheck.MenuTextSeperator
-        Me.MenuTextSeperator6 = New i00SpellCheck.MenuTextSeperator
         Me.ToolStrip1.SuspendLayout()
         Me.ToolStrip2.SuspendLayout()
         Me.ToolStrip3.SuspendLayout()
@@ -153,15 +153,42 @@ Partial Class Form1
         Me.CrosswordSolverToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.CrosswordSolverToolStripMenuItem.Text = "Crossword Generator"
         '
+        'MenuTextSeperator3
+        '
+        Me.MenuTextSeperator3.AutoSize = False
+        Me.MenuTextSeperator3.BackColor = System.Drawing.SystemColors.Control
+        Me.MenuTextSeperator3.ForeColor = System.Drawing.SystemColors.ControlDark
+        Me.MenuTextSeperator3.Name = "MenuTextSeperator3"
+        Me.MenuTextSeperator3.Size = New System.Drawing.Size(1920, 18)
+        Me.MenuTextSeperator3.Text = "Suggestion Lookup:"
+        '
         'tsbSuggestionLookup
         '
         Me.tsbSuggestionLookup.Name = "tsbSuggestionLookup"
         Me.tsbSuggestionLookup.Size = New System.Drawing.Size(100, 23)
         '
+        'MenuTextSeperator1
+        '
+        Me.MenuTextSeperator1.AutoSize = False
+        Me.MenuTextSeperator1.BackColor = System.Drawing.SystemColors.Control
+        Me.MenuTextSeperator1.ForeColor = System.Drawing.SystemColors.ControlDark
+        Me.MenuTextSeperator1.Name = "MenuTextSeperator1"
+        Me.MenuTextSeperator1.Size = New System.Drawing.Size(1920, 18)
+        Me.MenuTextSeperator1.Text = "Anagram Lookup:"
+        '
         'tstbAnagramLookup
         '
         Me.tstbAnagramLookup.Name = "tstbAnagramLookup"
         Me.tstbAnagramLookup.Size = New System.Drawing.Size(100, 23)
+        '
+        'MenuTextSeperator2
+        '
+        Me.MenuTextSeperator2.AutoSize = False
+        Me.MenuTextSeperator2.BackColor = System.Drawing.SystemColors.Control
+        Me.MenuTextSeperator2.ForeColor = System.Drawing.SystemColors.ControlDark
+        Me.MenuTextSeperator2.Name = "MenuTextSeperator2"
+        Me.MenuTextSeperator2.Size = New System.Drawing.Size(1920, 18)
+        Me.MenuTextSeperator2.Text = "Scrabble Helper:"
         '
         'tstbScrabbleHelper
         '
@@ -187,12 +214,30 @@ Partial Class Form1
         Me.ToolStripDropDownButton2.Size = New System.Drawing.Size(92, 22)
         Me.ToolStripDropDownButton2.Text = "Customize"
         '
+        'MenuTextSeperator4
+        '
+        Me.MenuTextSeperator4.AutoSize = False
+        Me.MenuTextSeperator4.BackColor = System.Drawing.SystemColors.Control
+        Me.MenuTextSeperator4.ForeColor = System.Drawing.SystemColors.ControlDark
+        Me.MenuTextSeperator4.Name = "MenuTextSeperator4"
+        Me.MenuTextSeperator4.Size = New System.Drawing.Size(1920, 18)
+        Me.MenuTextSeperator4.Text = "Colors:"
+        '
         'SpellingErrorToolStripMenuItem
         '
         Me.SpellingErrorToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsiCPSpellingError})
         Me.SpellingErrorToolStripMenuItem.Name = "SpellingErrorToolStripMenuItem"
         Me.SpellingErrorToolStripMenuItem.Size = New System.Drawing.Size(181, 22)
         Me.SpellingErrorToolStripMenuItem.Text = "Spelling Error"
+        '
+        'tsiCPSpellingError
+        '
+        Me.tsiCPSpellingError.AutoSize = False
+        Me.tsiCPSpellingError.Colors = CType(resources.GetObject("tsiCPSpellingError.Colors"), System.Collections.Generic.List(Of System.Drawing.Color))
+        Me.tsiCPSpellingError.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.None
+        Me.tsiCPSpellingError.Name = "tsiCPSpellingError"
+        Me.tsiCPSpellingError.Persistent = True
+        Me.tsiCPSpellingError.SelectedColor = System.Drawing.Color.Red
         '
         'CaseErrorToolStripMenuItem
         '
@@ -201,6 +246,15 @@ Partial Class Form1
         Me.CaseErrorToolStripMenuItem.Size = New System.Drawing.Size(181, 22)
         Me.CaseErrorToolStripMenuItem.Text = "Case Error"
         '
+        'tsiCPCaseError
+        '
+        Me.tsiCPCaseError.AutoSize = False
+        Me.tsiCPCaseError.Colors = CType(resources.GetObject("tsiCPCaseError.Colors"), System.Collections.Generic.List(Of System.Drawing.Color))
+        Me.tsiCPCaseError.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.None
+        Me.tsiCPCaseError.Name = "tsiCPCaseError"
+        Me.tsiCPCaseError.Persistent = True
+        Me.tsiCPCaseError.SelectedColor = System.Drawing.Color.Green
+        '
         'IgnoredWordToolStripMenuItem
         '
         Me.IgnoredWordToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsiCPIgnoreColor})
@@ -208,12 +262,39 @@ Partial Class Form1
         Me.IgnoredWordToolStripMenuItem.Size = New System.Drawing.Size(181, 22)
         Me.IgnoredWordToolStripMenuItem.Text = "Ignored Word"
         '
+        'tsiCPIgnoreColor
+        '
+        Me.tsiCPIgnoreColor.AutoSize = False
+        Me.tsiCPIgnoreColor.Colors = CType(resources.GetObject("tsiCPIgnoreColor.Colors"), System.Collections.Generic.List(Of System.Drawing.Color))
+        Me.tsiCPIgnoreColor.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.None
+        Me.tsiCPIgnoreColor.Name = "tsiCPIgnoreColor"
+        Me.tsiCPIgnoreColor.Persistent = True
+        Me.tsiCPIgnoreColor.SelectedColor = System.Drawing.Color.Blue
+        '
+        'MenuTextSeperator5
+        '
+        Me.MenuTextSeperator5.AutoSize = False
+        Me.MenuTextSeperator5.BackColor = System.Drawing.SystemColors.Control
+        Me.MenuTextSeperator5.ForeColor = System.Drawing.SystemColors.ControlDark
+        Me.MenuTextSeperator5.Name = "MenuTextSeperator5"
+        Me.MenuTextSeperator5.Size = New System.Drawing.Size(1920, 18)
+        Me.MenuTextSeperator5.Text = "Style:"
+        '
         'tsiDrawStyle
         '
         Me.tsiDrawStyle.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.tsiDrawStyle.Items.AddRange(New Object() {"Default", "Boxed In", "Opera", "Draft Plan"})
         Me.tsiDrawStyle.Name = "tsiDrawStyle"
         Me.tsiDrawStyle.Size = New System.Drawing.Size(121, 23)
+        '
+        'MenuTextSeperator6
+        '
+        Me.MenuTextSeperator6.AutoSize = False
+        Me.MenuTextSeperator6.BackColor = System.Drawing.SystemColors.Control
+        Me.MenuTextSeperator6.ForeColor = System.Drawing.SystemColors.ControlDark
+        Me.MenuTextSeperator6.Name = "MenuTextSeperator6"
+        Me.MenuTextSeperator6.Size = New System.Drawing.Size(1920, 18)
+        Me.MenuTextSeperator6.Text = "Misc:"
         '
         'ShowErrorsToolStripMenuItem
         '
@@ -346,87 +427,6 @@ Partial Class Form1
         Me.AsdToolStripMenuItem.Name = "AsdToolStripMenuItem"
         Me.AsdToolStripMenuItem.Size = New System.Drawing.Size(92, 22)
         Me.AsdToolStripMenuItem.Text = "asd"
-        '
-        'MenuTextSeperator3
-        '
-        Me.MenuTextSeperator3.AutoSize = False
-        Me.MenuTextSeperator3.BackColor = System.Drawing.SystemColors.Control
-        Me.MenuTextSeperator3.ForeColor = System.Drawing.SystemColors.ControlDark
-        Me.MenuTextSeperator3.Name = "MenuTextSeperator3"
-        Me.MenuTextSeperator3.Size = New System.Drawing.Size(1920, 18)
-        Me.MenuTextSeperator3.Text = "Suggestion Lookup:"
-        '
-        'MenuTextSeperator1
-        '
-        Me.MenuTextSeperator1.AutoSize = False
-        Me.MenuTextSeperator1.BackColor = System.Drawing.SystemColors.Control
-        Me.MenuTextSeperator1.ForeColor = System.Drawing.SystemColors.ControlDark
-        Me.MenuTextSeperator1.Name = "MenuTextSeperator1"
-        Me.MenuTextSeperator1.Size = New System.Drawing.Size(1920, 18)
-        Me.MenuTextSeperator1.Text = "Anagram Lookup:"
-        '
-        'MenuTextSeperator2
-        '
-        Me.MenuTextSeperator2.AutoSize = False
-        Me.MenuTextSeperator2.BackColor = System.Drawing.SystemColors.Control
-        Me.MenuTextSeperator2.ForeColor = System.Drawing.SystemColors.ControlDark
-        Me.MenuTextSeperator2.Name = "MenuTextSeperator2"
-        Me.MenuTextSeperator2.Size = New System.Drawing.Size(1920, 18)
-        Me.MenuTextSeperator2.Text = "Scrabble Helper:"
-        '
-        'MenuTextSeperator4
-        '
-        Me.MenuTextSeperator4.AutoSize = False
-        Me.MenuTextSeperator4.BackColor = System.Drawing.SystemColors.Control
-        Me.MenuTextSeperator4.ForeColor = System.Drawing.SystemColors.ControlDark
-        Me.MenuTextSeperator4.Name = "MenuTextSeperator4"
-        Me.MenuTextSeperator4.Size = New System.Drawing.Size(1920, 18)
-        Me.MenuTextSeperator4.Text = "Colors:"
-        '
-        'tsiCPSpellingError
-        '
-        Me.tsiCPSpellingError.AutoSize = False
-        Me.tsiCPSpellingError.Colors = CType(resources.GetObject("tsiCPSpellingError.Colors"), System.Collections.Generic.List(Of System.Drawing.Color))
-        Me.tsiCPSpellingError.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.None
-        Me.tsiCPSpellingError.Name = "tsiCPSpellingError"
-        Me.tsiCPSpellingError.Persistent = True
-        Me.tsiCPSpellingError.SelectedColor = System.Drawing.Color.Red
-        '
-        'tsiCPCaseError
-        '
-        Me.tsiCPCaseError.AutoSize = False
-        Me.tsiCPCaseError.Colors = CType(resources.GetObject("tsiCPCaseError.Colors"), System.Collections.Generic.List(Of System.Drawing.Color))
-        Me.tsiCPCaseError.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.None
-        Me.tsiCPCaseError.Name = "tsiCPCaseError"
-        Me.tsiCPCaseError.Persistent = True
-        Me.tsiCPCaseError.SelectedColor = System.Drawing.Color.Green
-        '
-        'tsiCPIgnoreColor
-        '
-        Me.tsiCPIgnoreColor.AutoSize = False
-        Me.tsiCPIgnoreColor.Colors = CType(resources.GetObject("tsiCPIgnoreColor.Colors"), System.Collections.Generic.List(Of System.Drawing.Color))
-        Me.tsiCPIgnoreColor.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.None
-        Me.tsiCPIgnoreColor.Name = "tsiCPIgnoreColor"
-        Me.tsiCPIgnoreColor.Persistent = True
-        Me.tsiCPIgnoreColor.SelectedColor = System.Drawing.Color.Blue
-        '
-        'MenuTextSeperator5
-        '
-        Me.MenuTextSeperator5.AutoSize = False
-        Me.MenuTextSeperator5.BackColor = System.Drawing.SystemColors.Control
-        Me.MenuTextSeperator5.ForeColor = System.Drawing.SystemColors.ControlDark
-        Me.MenuTextSeperator5.Name = "MenuTextSeperator5"
-        Me.MenuTextSeperator5.Size = New System.Drawing.Size(1920, 18)
-        Me.MenuTextSeperator5.Text = "Style:"
-        '
-        'MenuTextSeperator6
-        '
-        Me.MenuTextSeperator6.AutoSize = False
-        Me.MenuTextSeperator6.BackColor = System.Drawing.SystemColors.Control
-        Me.MenuTextSeperator6.ForeColor = System.Drawing.SystemColors.ControlDark
-        Me.MenuTextSeperator6.Name = "MenuTextSeperator6"
-        Me.MenuTextSeperator6.Size = New System.Drawing.Size(1920, 18)
-        Me.MenuTextSeperator6.Text = "Misc:"
         '
         'Form1
         '

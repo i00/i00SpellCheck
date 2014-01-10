@@ -545,6 +545,35 @@ ReCheck:
         CompleteTooltip = Nothing
     End Sub
 
+    Private Const WM_SYSCOMMAND As Integer = &H112
+    Private Const SC_CONTEXTHELP As Integer = &HF180
+
+    Protected Overrides Sub WndProc(ByRef m As System.Windows.Forms.Message)
+        Select Case m.Msg
+            Case WM_SYSCOMMAND
+                Select Case m.WParam.ToInt32
+                    Case SC_CONTEXTHELP
+                        'close tool tips...
+                        For Each item In ControlToolTips.ToArray
+                            item.Hide(pnlContent)
+                            ControlToolTips.Remove(item)
+                            item.Dispose()
+                        Next
+
+                        For Each ctl In (From xItem In pnlContent.Controls.OfType(Of Button)() Where xItem.Tag IsNot Nothing AndAlso TypeOf xItem.Tag Is String AndAlso xItem.Tag.ToString <> "" Order By xItem.Top Ascending)
+                            'we have a tool tip
+                            Dim toolTip As New HTMLToolTip
+                            ControlToolTips.Add(toolTip)
+
+                            Dim TipSizeF = HTMLParser.PaintHTML(ctl.Tag.ToString, Nothing, , toolTip.HTMLRenderStatus).Size
+                            toolTip.ShowHTML(ctl.Tag.ToString, pnlContent, New Point(ctl.Bounds.Right, CInt(Int(ctl.Bounds.Top + ((ctl.Bounds.Height - TipSizeF.Height) / 2)))), 10000)
+                        Next
+                        Return
+                End Select
+        End Select
+        MyBase.WndProc(m)
+    End Sub
+
     Private Sub SpellCheckDialog_KeyDown(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles Me.KeyDown
         Select Case e.KeyCode
             Case Keys.F1
@@ -598,10 +627,6 @@ ReCheck:
             Case Keys.Shift, Keys.ShiftKey
                 Me.AcceptButton = btnChange
         End Select
-    End Sub
-
-    Private Sub SpellCheckDialog_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
-
     End Sub
 
     Private Sub btnRevert_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnRevert.Click

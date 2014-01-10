@@ -12,6 +12,8 @@ Public Class Form1
 
         'If the control specified is a form then all owned forms will AUTOMATICALLY have their textboxes 
         'spellchecked also! (An example can be seen in the "New Form" button)
+
+
     End Sub
 
 #Region "About button"

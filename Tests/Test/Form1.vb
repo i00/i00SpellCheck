@@ -12,6 +12,7 @@ Public Class Form1
 
         'ControlExtensionAdded/Removed events are called whenever a spell check is created (auto or manual) on a control
         'Here this is used to process new textboxes for owner-draw events
+
         AddHandler ControlExtensions.ControlExtensionAdded, AddressOf ControlExtensionAdded
         AddHandler ControlExtensions.ControlExtensionRemoved, AddressOf ControlExtensionRemoved
 
@@ -330,7 +331,7 @@ Public Class Form1
 
     Private Sub tabSpellControls_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles tabSpellControls.SelectedIndexChanged
         UpdateEnabledCheck()
-        Dim selectedTabSpellCheckControl = (From xItem In tabSpellControls.SelectedTab.Controls.OfType(Of Control)() Where xItem.SpellCheck IsNot Nothing).FirstOrDefault
+        Dim selectedTabSpellCheckControl = GetSelectedTabsSpellCheckControl()
         If selectedTabSpellCheckControl IsNot Nothing Then
             tsbSpellCheck.Visible = TypeOf selectedTabSpellCheckControl.SpellCheck Is i00SpellCheck.SpellCheckControlBase.iSpellCheckDialog
         Else
@@ -339,7 +340,7 @@ Public Class Form1
     End Sub
 
     Private Sub UpdateEnabledCheck()
-        Dim selectedTabSpellCheckControl = (From xItem In tabSpellControls.SelectedTab.Controls.OfType(Of Control)() Where xItem.SpellCheck IsNot Nothing).FirstOrDefault
+        Dim selectedTabSpellCheckControl = GetSelectedTabsSpellCheckControl()
         If selectedTabSpellCheckControl Is Nothing Then
             tsiEnabled.Visible = False
         Else
@@ -376,8 +377,10 @@ Public Class Form1
         End If
     End Sub
 
+
+
     Private Sub tsiEnabled_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsiEnabled.Click
-        Dim selectedTabSpellCheckControl = (From xItem In tabSpellControls.SelectedTab.Controls.OfType(Of Control)() Where xItem.SpellCheck IsNot Nothing).FirstOrDefault
+        Dim selectedTabSpellCheckControl = GetSelectedTabsSpellCheckControl()
         If selectedTabSpellCheckControl IsNot Nothing Then
             If selectedTabSpellCheckControl.IsSpellCheckEnabled Then
                 selectedTabSpellCheckControl.DisableSpellCheck()

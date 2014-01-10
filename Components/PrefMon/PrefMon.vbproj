@@ -128,16 +128,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\i00SpellCheck\i00SpellCheck.vbproj">
-      <Project>{27D0D9B3-719C-46B7-9F03-3F91E82E7436}</Project>
-      <Name>i00SpellCheck</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\Delete.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\i00SpellCheck\i00SpellCheck.vbproj">
+      <Project>{27D0D9B3-719C-46B7-9F03-3F91E82E7436}</Project>
+      <Name>i00SpellCheck</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

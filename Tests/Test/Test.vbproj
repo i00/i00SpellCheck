@@ -155,6 +155,10 @@
       <Project>{D640FBFD-A239-4E43-9818-ECBB9F7A09F3}</Project>
       <Name>FastColoredTextBoxPlugin</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Plugins\KonamiCode\KonamiCode.vbproj">
+      <Project>{37B1A256-FFF8-4C5C-9271-E66C89036EC5}</Project>
+      <Name>KonamiCode</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Plugins\LabelPlugin\LabelPlugin.vbproj">
       <Project>{0812402A-DBD8-4DC2-9886-2AF9075E9F1D}</Project>
       <Name>LabelPlugin</Name>

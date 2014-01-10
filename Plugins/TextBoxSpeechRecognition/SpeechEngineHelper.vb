@@ -30,12 +30,20 @@ Partial Class TextBoxSpeechRecognition
         Private Shared Sub TextBox_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles RecognitionTextBox.KeyPress
             Select Case Asc(e.KeyChar)
                 Case Keys.Enter, Keys.Return
-                    'qwertyuiop - doesnt work ????
-                    'oh well can still use timer and balloon click
+                    'doesnt work if PreviewKey handles this
                     e.Handled = True
                     CommitRecognition()
                 Case Keys.Escape
                     CancelRecognition()
+            End Select
+        End Sub
+
+        Private Shared Sub RecognitionTextBox_PreviewKeyDown(ByVal sender As Object, ByVal e As PreviewKeyDownEventArgs) Handles RecognitionTextBox.PreviewKeyDown
+            Select Case e.KeyCode
+                Case Keys.Enter
+                    'qwertyuiop - doesnt work properly ????
+                    'places an enter after the recognition is commited ... don't know how to work around this
+                    CommitRecognition()
             End Select
         End Sub
 
@@ -147,8 +155,8 @@ Partial Class TextBoxSpeechRecognition
                 'write the spoken text
                 If tmpText <> "" Then
                     ExistingText &= " " & tmpText
-                    RecognitionTextBox.SelectedText = Trim(ExistingText) & " "
                 End If
+                RecognitionTextBox.SelectedText = Trim(ExistingText) & " "
                 DictateCancel = True
             End If
             RecognitionTextBox = Nothing
